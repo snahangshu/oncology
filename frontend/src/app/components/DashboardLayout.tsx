@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { useAppDispatch, useAppSelector } from '../store';
 import { logout } from '../store/authSlice';
+import { api } from '../shared/api';
 import {
   LayoutDashboard,
   Users,
@@ -27,9 +28,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await api.post('/users/logout');
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      dispatch(logout());
+      navigate('/login');
+    }
   };
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);

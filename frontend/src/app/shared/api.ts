@@ -1,29 +1,16 @@
 import axios from 'axios';
 import { store } from '../store';
-import { setTokens, logout } from '../store/authSlice';
+import { logout } from '../store/authSlice';
 
 const API_BASE = 'http://localhost:8000/api/v1';
 
 export const api = axios.create({
   baseURL: API_BASE,
+  withCredentials: true, // Crucial: This forces the browser to automatically attach HttpOnly cookies to every request!
   headers: {
     'Content-Type': 'application/json',
   },
 });
-
-// Request interceptor to automatically add authorization header
-api.interceptors.request.use(
-  (config) => {
-    const token = store.getState().auth.token;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // Response interceptor to handle auto token refresh on 401s
 api.interceptors.response.use(
@@ -31,36 +18,25 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Check if error is 401 and request has not been retried yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Check if error is 401 (Unauthorized) and request has not been retried yet
+    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/users/login') {
       originalRequest._retry = true;
-      const refreshToken = store.getState().auth.refreshToken;
 
-      if (refreshToken) {
-        try {
-          // Perform the token refresh using standard axios directly to bypass the interceptor loop
-          const refreshResponse = await axios.post(`${API_BASE}/users/refresh`, {
-            refresh_token: refreshToken,
-          });
+      try {
+        // Attempt to hit the refresh endpoint
+        // The browser will automatically send the HttpOnly 'refresh_token' cookie!
+        const refreshResponse = await axios.post(`${API_BASE}/users/refresh`, {}, { withCredentials: true });
 
-          if (refreshResponse.status === 200) {
-            const data = refreshResponse.data;
-            // Update the state and cookies with new tokens
-            store.dispatch(setTokens({ token: data.access_token, refreshToken: data.refresh_token }));
-
-            // Update auth header for original request and replay it
-            originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
-            return api(originalRequest);
-          }
-        } catch (refreshError) {
-          // Refresh failed, log user out
-          store.dispatch(logout());
-          return Promise.reject(refreshError);
+        if (refreshResponse.status === 200) {
+          // The backend successfully issued a new access_token HttpOnly cookie
+          // We can just replay the original request, and the browser will attach the new cookie!
+          return api(originalRequest);
         }
+      } catch (refreshError) {
+        // Refresh failed (e.g. refresh_token expired), log user out
+        store.dispatch(logout());
+        return Promise.reject(refreshError);
       }
-      
-      // If no refresh token, log user out
-      store.dispatch(logout());
     }
     
     return Promise.reject(error);
