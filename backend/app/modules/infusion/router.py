@@ -5,6 +5,35 @@ from app.modules.infusion.schemas import ScheduleProposal, OverrideRequest, Over
 from app.modules.infusion.service import InfusionService
 
 router = APIRouter()
+from pydantic import BaseModel
+from fastapi import status
+
+class SafetyRequest(BaseModel):
+    proposed_regimen: str
+    allergies: str
+    current_meds: str
+    renal_function: str
+    hepatic_function: str
+
+class ToxicityRequest(BaseModel):
+    clinical_note: str
+
+@router.post("/{patient_id}/safety-check", status_code=status.HTTP_202_ACCEPTED)
+def safety_check(patient_id: int, request: SafetyRequest):
+    """Trigger the DrugSafetyAgent to check for clinical safety conflicts."""
+    from app.workers.tasks.safety_checks import run_drug_safety_check
+    task = run_drug_safety_check.delay(
+        patient_id, request.proposed_regimen, request.allergies,
+        request.current_meds, request.renal_function, request.hepatic_function
+    )
+    return {"status": "processing", "task_id": task.id}
+
+@router.post("/{patient_id}/assess-toxicity", status_code=status.HTTP_202_ACCEPTED)
+def assess_toxicity(patient_id: int, request: ToxicityRequest):
+    """Trigger the ToxicityAssessmentAgent to grade post-cycle side effects."""
+    from app.workers.tasks.safety_checks import assess_infusion_toxicity
+    task = assess_infusion_toxicity.delay(patient_id, request.clinical_note)
+    return {"status": "processing", "task_id": task.id}
 
 @router.get("/schedule", response_model=ScheduleProposal)
 def get_infusion_schedule(

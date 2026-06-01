@@ -40,6 +40,13 @@ async def upload_document(
         task_id=task.id
     )
 
+@documents_router.post("/{document_id}/analyze-insurance", status_code=status.HTTP_202_ACCEPTED)
+async def analyze_insurance(document_id: int, document_text: str):
+    """Trigger the Insurance Auth Agent to parse coverage details."""
+    from app.workers.tasks.document_processing import process_insurance_auth
+    task = process_insurance_auth.delay(document_id, document_text)
+    return {"status": "processing", "task_id": task.id}
+
 @documents_router.get("/{document_id}/status", response_model=CompletenessResult)
 def get_document_status(
     document_id: int,
