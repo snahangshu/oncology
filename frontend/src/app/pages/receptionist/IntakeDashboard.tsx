@@ -75,6 +75,7 @@ export default function IntakeDashboard() {
                 label={doc.label}
                 existingData={(intake as any)[doc.id]}
                 onUploadSuccess={() => queryClient.invalidateQueries({ queryKey: ['intake', patientId] })}
+                allowDefer={doc.id === 'insurance_authorization'}
               />
             ))}
           </div>
@@ -127,7 +128,7 @@ export default function IntakeDashboard() {
 }
 
 // Sub-component for individual upload zones
-function DocumentUploadZone({ patientId, docType, label, existingData, onUploadSuccess }: any) {
+function DocumentUploadZone({ patientId, docType, label, existingData, onUploadSuccess, allowDefer }: any) {
   const [isUploading, setIsUploading] = useState(false);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -152,6 +153,24 @@ function DocumentUploadZone({ patientId, docType, label, existingData, onUploadS
     }
   }, [patientId, docType, label, onUploadSuccess]);
 
+  const handleDefer = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('document_type', docType);
+      await api.post(`/intake/${patientId}/defer`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success(`${label} deferred to Patient Portal!`);
+      onUploadSuccess();
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Deferral failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
@@ -163,29 +182,33 @@ function DocumentUploadZone({ patientId, docType, label, existingData, onUploadS
     maxFiles: 1
   });
 
+  const isDeferred = existingData && existingData.fileType === "deferred";
+
   return (
     <Card className={`border-dashed border-2 transition-all duration-300 ${
       existingData 
-        ? 'bg-emerald-950/20 border-emerald-500/30' 
+        ? (isDeferred ? 'bg-amber-950/20 border-amber-500/30' : 'bg-emerald-950/20 border-emerald-500/30')
         : isDragActive 
           ? 'bg-cyan-950/30 border-cyan-400' 
           : 'bg-slate-900/50 border-slate-700/50 hover:border-slate-500'
     }`}>
-      <CardContent className="p-6">
+      <CardContent className="p-6 relative">
         {existingData ? (
           <div className="flex flex-col items-center justify-center text-center space-y-3">
-            <div className="p-3 bg-emerald-500/20 rounded-full">
-              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+            <div className={`p-3 rounded-full ${isDeferred ? 'bg-amber-500/20' : 'bg-emerald-500/20'}`}>
+              <CheckCircle2 className={`w-8 h-8 ${isDeferred ? 'text-amber-400' : 'text-emerald-400'}`} />
             </div>
             <div>
-              <p className="text-sm font-bold text-emerald-100">{label}</p>
-              <p className="text-xs text-emerald-400/70 truncate w-40 mt-1" title={existingData.originalName}>
+              <p className={`text-sm font-bold ${isDeferred ? 'text-amber-100' : 'text-emerald-100'}`}>{label}</p>
+              <p className={`text-xs truncate w-40 mt-1 ${isDeferred ? 'text-amber-400/70' : 'text-emerald-400/70'}`} title={existingData.originalName}>
                 {existingData.originalName}
               </p>
             </div>
-            <a href={existingData.fileUrl} target="_blank" rel="noreferrer" className="text-xs text-cyan-400 hover:underline">
-              View Document
-            </a>
+            {!isDeferred && (
+              <a href={existingData.fileUrl} target="_blank" rel="noreferrer" className="text-xs text-cyan-400 hover:underline">
+                View Document
+              </a>
+            )}
           </div>
         ) : (
           <div {...getRootProps()} className="cursor-pointer flex flex-col items-center justify-center text-center space-y-3 min-h-[140px]">
@@ -203,6 +226,20 @@ function DocumentUploadZone({ patientId, docType, label, existingData, onUploadS
                 {isDragActive ? "Drop here!" : "Drag & Drop or Click"}
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Deferral Button (Only shown if allowDefer is true and it hasn't been uploaded yet) */}
+        {allowDefer && !existingData && !isUploading && (
+          <div className="absolute top-2 right-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleDefer}
+              className="text-xs bg-slate-800/80 border-slate-700/50 hover:bg-slate-700 text-slate-300"
+            >
+              Defer to Patient
+            </Button>
           </div>
         )}
       </CardContent>

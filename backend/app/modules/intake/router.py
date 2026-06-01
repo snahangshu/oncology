@@ -93,6 +93,35 @@ def update_intake_status(
     db.refresh(intake)
     return {"message": "Status updated", "intake": intake}
 
+@router.post("/{patient_id}/defer")
+def defer_document(
+    patient_id: int,
+    document_type: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
+    if not intake:
+        raise HTTPException(status_code=404, detail="Intake case not found")
+
+    # Limit deferrals to specific documents if desired, or all of them.
+    valid_types = ["referral_letter", "pathology_report", "imaging_report", "insurance_authorization"]
+    if document_type not in valid_types:
+        raise HTTPException(status_code=400, detail="Invalid document_type")
+
+    doc_metadata = {
+        "originalName": "Deferred to Patient Portal",
+        "fileUrl": "#",
+        "fileType": "deferred",
+        "uploadedAt": datetime.utcnow().isoformat(),
+        "public_id": None
+    }
+
+    setattr(intake, document_type, doc_metadata)
+    recalculate_status(intake)
+    db.commit()
+    db.refresh(intake)
+    return {"message": f"{document_type} deferred successfully", "intake": intake}
+
 @router.delete("/{patient_id}/document/{document_type}")
 def delete_document(
     patient_id: int,
