@@ -12,11 +12,18 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from app.shared.base_model import Base
+from app.config import settings
 import app.modules.intake.models  # noqa
 import app.modules.scheduling.models  # noqa
 import app.modules.infusion.models  # noqa
 import app.modules.audit.models  # noqa
+import app.modules.users.models  # noqa
+import app.modules.doctors.models  # noqa
 
 target_metadata = Base.metadata
 
@@ -32,7 +39,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = settings.DATABASE_URL
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -51,8 +58,10 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    configuration = config.get_section(config.config_ini_section, {})
+    configuration["sqlalchemy.url"] = settings.DATABASE_URL
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

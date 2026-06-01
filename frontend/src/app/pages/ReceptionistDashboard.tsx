@@ -1,0 +1,297 @@
+import { useState, useEffect } from 'react';
+import { Users, Calendar, Clock, Plus, UserPlus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { api } from '../shared/api';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import { Calendar as CalendarComponent } from '../components/ui/calendar';
+
+const waitingPatients = [
+  { id: 1, name: 'Alice Johnson', type: 'Walk-in', waitTime: '12 min', status: 'Waiting' },
+  { id: 2, name: 'Bob Williams', type: 'Scheduled', waitTime: '5 min', status: 'Waiting' },
+  { id: 3, name: 'Carol Davis', type: 'Walk-in', waitTime: '28 min', status: 'In Prep' },
+  { id: 4, name: 'David Brown', type: 'Scheduled', waitTime: '2 min', status: 'Waiting' },
+];
+
+const todayAppointments = [
+  { id: 1, time: '09:00 AM', patient: 'Maria Garcia', doctor: 'Dr. Chen', status: 'Completed' },
+  { id: 2, time: '09:30 AM', patient: 'John Smith', doctor: 'Dr. Rodriguez', status: 'In Progress' },
+  { id: 3, time: '10:00 AM', patient: 'Emma Wilson', doctor: 'Dr. Chen', status: 'Scheduled' },
+  { id: 4, time: '10:30 AM', patient: 'Michael Brown', doctor: 'Dr. Park', status: 'Scheduled' },
+  { id: 5, time: '11:00 AM', patient: 'Sarah Lee', doctor: 'Dr. Chen', status: 'Scheduled' },
+];
+
+export default function ReceptionistDashboard() {
+  const [waitingRoomList, setWaitingRoomList] = useState(waitingPatients);
+  const [isLoading, setIsLoading] = useState(true);
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [newPatient, setNewPatient] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    insurance: '',
+  });
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const response = await api.get('/dashboards/receptionist');
+        const count = response.data.waiting_patients;
+        if (count !== undefined) {
+          const newLen = Math.max(1, count);
+          const adjusted = Array.from({ length: newLen }).map((_, i) => {
+            const mock = waitingPatients[i % waitingPatients.length];
+            return {
+              id: i + 1,
+              name: mock.name,
+              type: mock.type,
+              waitTime: mock.waitTime,
+              status: mock.status,
+            };
+          });
+          setWaitingRoomList(adjusted);
+        }
+      } catch (err) {
+        console.error('Error fetching receptionist dashboard:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
+
+  const handleRegisterPatient = () => {
+    console.log('Registering patient:', newPatient);
+    setNewPatient({ firstName: '', lastName: '', email: '', phone: '', insurance: '' });
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-400 bg-clip-text text-transparent mb-2">
+            Receptionist Interface
+          </h1>
+          <p className="text-slate-400">Manage patient flow and appointments</p>
+        </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-white shadow-lg shadow-cyan-500/20">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Register Patient
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-slate-900 border-slate-700/30">
+            <DialogHeader>
+              <DialogTitle className="text-white flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-cyan-400" />
+                Register New Patient
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-slate-300">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={newPatient.firstName}
+                    onChange={(e) => setNewPatient({ ...newPatient, firstName: e.target.value })}
+                    className="bg-slate-800/50 border-slate-700/30 text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-slate-300">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={newPatient.lastName}
+                    onChange={(e) => setNewPatient({ ...newPatient, lastName: e.target.value })}
+                    className="bg-slate-800/50 border-slate-700/30 text-white"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-300">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={newPatient.email}
+                  onChange={(e) => setNewPatient({ ...newPatient, email: e.target.value })}
+                  className="bg-slate-800/50 border-slate-700/30 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-slate-300">Phone</Label>
+                <Input
+                  id="phone"
+                  value={newPatient.phone}
+                  onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })}
+                  className="bg-slate-800/50 border-slate-700/30 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="insurance" className="text-slate-300">Insurance Provider</Label>
+                <Select onValueChange={(value) => setNewPatient({ ...newPatient, insurance: value })}>
+                  <SelectTrigger className="bg-slate-800/50 border-slate-700/30 text-white">
+                    <SelectValue placeholder="Select insurance" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-700/30">
+                    <SelectItem value="blue-cross">Blue Cross Blue Shield</SelectItem>
+                    <SelectItem value="aetna">Aetna</SelectItem>
+                    <SelectItem value="united">United Healthcare</SelectItem>
+                    <SelectItem value="cigna">Cigna</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={handleRegisterPatient}
+                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+              >
+                Register Patient
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Waiting Room Queue */}
+        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-cyan-400" />
+              Waiting Room Queue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {isLoading ? (
+                <div className="text-slate-400 text-center py-8">
+                  <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-2" />
+                  Loading waiting queue...
+                </div>
+              ) : waitingRoomList.map((patient, index) => (
+                <div
+                  key={patient.id}
+                  className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-cyan-500/50 transition-all animate-in slide-in-from-left duration-500"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-white">{patient.name}</h4>
+                    <Badge
+                      variant="outline"
+                      className={
+                        patient.status === 'In Prep'
+                          ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
+                          : 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10'
+                      }
+                    >
+                      {patient.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-400">{patient.type}</span>
+                    <span className="text-rose-400 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {patient.waitTime}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Appointment Calendar */}
+        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-emerald-400" />
+              Appointment Calendar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CalendarComponent
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              className="rounded-xl border-slate-700/30 bg-slate-800/20"
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Today's Appointments */}
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-violet-400" />
+              Today's Schedule
+            </CardTitle>
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-600 hover:to-cyan-600 text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Appointment
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {todayAppointments.map((apt, index) => (
+              <div
+                key={apt.id}
+                className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-violet-500/50 transition-all animate-in slide-in-from-bottom duration-500"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="text-center">
+                      <p className="text-cyan-400">{apt.time}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-white">{apt.patient}</h4>
+                      <p className="text-slate-400 text-sm">{apt.doctor}</p>
+                    </div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={
+                      apt.status === 'Completed'
+                        ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
+                        : apt.status === 'In Progress'
+                        ? 'border-violet-500/50 text-violet-400 bg-violet-500/10 animate-pulse'
+                        : 'border-slate-500/30 text-slate-400 bg-slate-500/10'
+                    }
+                  >
+                    {apt.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
