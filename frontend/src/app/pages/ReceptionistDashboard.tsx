@@ -92,84 +92,13 @@ export default function ReceptionistDashboard() {
           </h1>
           <p className="text-slate-400">Manage patient flow and appointments</p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-white shadow-lg shadow-cyan-500/20">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Register Patient
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-slate-900 border-slate-700/30">
-            <DialogHeader>
-              <DialogTitle className="text-white flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-cyan-400" />
-                Register New Patient
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-slate-300">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={newPatient.firstName}
-                    onChange={(e) => setNewPatient({ ...newPatient, firstName: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700/30 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-slate-300">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={newPatient.lastName}
-                    onChange={(e) => setNewPatient({ ...newPatient, lastName: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700/30 text-white"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-300">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newPatient.email}
-                  onChange={(e) => setNewPatient({ ...newPatient, email: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/30 text-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-slate-300">Phone</Label>
-                <Input
-                  id="phone"
-                  value={newPatient.phone}
-                  onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/30 text-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="insurance" className="text-slate-300">Insurance Provider</Label>
-                <Select onValueChange={(value) => setNewPatient({ ...newPatient, insurance: value })}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700/30 text-white">
-                    <SelectValue placeholder="Select insurance" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-700/30">
-                    <SelectItem value="blue-cross">Blue Cross Blue Shield</SelectItem>
-                    <SelectItem value="aetna">Aetna</SelectItem>
-                    <SelectItem value="united">United Healthcare</SelectItem>
-                    <SelectItem value="cigna">Cigna</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                onClick={handleRegisterPatient}
-                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
-              >
-                Register Patient
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          onClick={() => window.location.href = '/receptionist/patients/new'}
+          className="bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-white shadow-lg shadow-cyan-500/20"
+        >
+          <UserPlus className="w-4 h-4 mr-2" />
+          Register Patient
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

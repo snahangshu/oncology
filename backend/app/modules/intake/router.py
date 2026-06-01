@@ -1,54 +1,122 @@
-from fastapi import APIRouter, Depends, UploadFile, File, status
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, status
 from sqlalchemy.orm import Session
+from datetime import datetime
+import cloudinary.uploader
+
 from app.dependencies import get_db
-from app.modules.intake.schemas import IntakeFormRequest, IntakeFormResponse, DocumentUploadResponse, CompletenessResult
-from app.modules.intake.service import IntakeService
+from app.modules.intake.schemas import OncologyIntakeSchema
+from app.modules.intake.models import OncologyIntake, Patient
 
 router = APIRouter()
 documents_router = APIRouter()
 
-@router.post("", response_model=IntakeFormResponse, status_code=status.HTTP_201_CREATED)
-def submit_intake(
-    request: IntakeFormRequest,
-    db: Session = Depends(get_db)
-):
-    """Submit a patient intake form and triage clinical urgency."""
-    intake_service = IntakeService(db)
-    return intake_service.process_intake(request)
+def recalculate_status(intake: OncologyIntake):
+    total_required = 4
+    uploaded_count = 0
+    if intake.referral_letter: uploaded_count += 1
+    if intake.pathology_report: uploaded_count += 1
+    if intake.imaging_report: uploaded_count += 1
+    if intake.insurance_authorization: uploaded_count += 1
 
-@documents_router.post("/upload", response_model=DocumentUploadResponse, status_code=status.HTTP_202_ACCEPTED)
+    intake.completion_percentage = int((uploaded_count / total_required) * 100)
+    intake.intake_status = "COMPLETE" if uploaded_count == total_required else "INCOMPLETE"
+
+@router.get("/{patient_id}", response_model=OncologyIntakeSchema)
+def get_intake_by_patient(patient_id: int, db: Session = Depends(get_db)):
+    intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
+    if not intake:
+        raise HTTPException(status_code=404, detail="Intake not found for patient")
+    return intake
+
+@router.post("/{patient_id}/upload")
 async def upload_document(
     patient_id: int,
+    document_type: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    """Upload a clinical document and trigger asynchronous verification."""
-    import os
-    import shutil
-    from app.workers.tasks.document_processing import process_uploaded_doc
+    intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
+    if not intake:
+        raise HTTPException(status_code=404, detail="Intake case not found")
 
-    os.makedirs("uploads", exist_ok=True)
-    file_path = f"uploads/{patient_id}_{file.filename}"
+    valid_types = ["referral_letter", "pathology_report", "imaging_report", "insurance_authorization"]
+    if document_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Invalid document_type. Must be one of {valid_types}")
+
+    # Read file data
+    contents = await file.read()
     
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        # Stream buffer directly to Cloudinary
+        result = cloudinary.uploader.upload(
+            contents,
+            resource_type="auto",
+            folder=f"oncology_intakes/{patient_id}"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cloudinary upload failed: {str(e)}")
 
-    task = process_uploaded_doc.delay(patient_id, file_path)
-    return DocumentUploadResponse(
-        document_id=patient_id,
-        status="processing",
-        task_id=task.id
-    )
+    doc_metadata = {
+        "originalName": file.filename,
+        "fileUrl": result.get("secure_url"),
+        "fileType": file.content_type,
+        "uploadedAt": datetime.utcnow().isoformat(),
+        "public_id": result.get("public_id")
+    }
 
-@documents_router.get("/{document_id}/status", response_model=CompletenessResult)
-def get_document_status(
-    document_id: int,
+    # Dynamically assign metadata to the correct JSON column
+    setattr(intake, document_type, doc_metadata)
+    
+    # Auto-calculate completeness
+    recalculate_status(intake)
+    db.commit()
+    db.refresh(intake)
+
+    return {"message": f"{document_type} uploaded successfully", "intake": intake}
+
+@router.patch("/{patient_id}/status")
+def update_intake_status(
+    patient_id: int,
+    force_status: str = Form(None), # The requested Manual override!
     db: Session = Depends(get_db)
 ):
-    """Retrieve completeness check results for a document."""
-    return CompletenessResult(
-        document_id=document_id,
-        is_complete=True,
-        missing_sections=[],
-        extracted_metadata={"notes": "All required sections are present."}
-    )
+    intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
+    if not intake:
+        raise HTTPException(status_code=404, detail="Intake not found")
+
+    if force_status in ["COMPLETE", "INCOMPLETE"]:
+        intake.intake_status = force_status
+    else:
+        recalculate_status(intake)
+        
+    db.commit()
+    db.refresh(intake)
+    return {"message": "Status updated", "intake": intake}
+
+@router.delete("/{patient_id}/document/{document_type}")
+def delete_document(
+    patient_id: int,
+    document_type: str,
+    db: Session = Depends(get_db)
+):
+    intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
+    if not intake:
+        raise HTTPException(status_code=404, detail="Intake not found")
+
+    valid_types = ["referral_letter", "pathology_report", "imaging_report", "insurance_authorization"]
+    if document_type not in valid_types:
+        raise HTTPException(status_code=400, detail="Invalid document type")
+
+    # Fetch Cloudinary public_id and delete it from their servers
+    doc_metadata = getattr(intake, document_type)
+    if doc_metadata and "public_id" in doc_metadata:
+        try:
+            cloudinary.uploader.destroy(doc_metadata["public_id"])
+        except Exception:
+            print("Failed to delete from cloudinary, but proceeding to clear local DB")
+
+    setattr(intake, document_type, None)
+    recalculate_status(intake)
+    db.commit()
+    db.refresh(intake)
+    return {"message": "Document deleted", "intake": intake}
