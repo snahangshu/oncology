@@ -68,14 +68,17 @@ export default function Signup() {
       loginFormData.append('username', formData.email);
       loginFormData.append('password', formData.password);
 
-      const loginResponse = await api.post('/users/login', loginFormData, {
+      await api.post('/users/login', loginFormData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
 
-      const { access_token, refresh_token } = loginResponse.data;
-      const registeredUser = registerResponse.data;
+      // Fetch user profile detail immediately after successful login
+      // The HttpOnly cookies are automatically sent!
+      const userResponse = await api.get('/users/me');
+
+      const registeredUser = userResponse.data;
 
       const userObj = {
         id: String(registeredUser.id),
@@ -85,7 +88,7 @@ export default function Signup() {
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${registeredUser.email}`,
       };
 
-      dispatch(login({ user: userObj, token: access_token, refreshToken: refresh_token }));
+      dispatch(login({ user: userObj }));
 
       // 3. Smart redirect
       if (registeredUser.role === 'ADMIN') {

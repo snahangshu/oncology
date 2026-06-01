@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
-import { useAppSelector } from './store';
+import { useAppSelector, useAppDispatch } from './store';
+import { setUser, setInitialized } from './store/authSlice';
+import { api } from './shared/api';
 import { DashboardLayout } from './components/DashboardLayout';
 import { Toaster } from './components/ui/sonner';
 import Login from './pages/Login';
@@ -12,7 +15,11 @@ import NurseDashboard from './pages/NurseDashboard';
 import PatientDashboard from './pages/PatientDashboard';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { isAuthenticated, isInitialized } = useAppSelector((state) => state.auth);
+
+  if (!isInitialized) {
+    return <div className="min-h-screen bg-[#070a13] flex items-center justify-center text-cyan-400">Loading session...</div>;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -22,7 +29,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AuthRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { isAuthenticated, isInitialized } = useAppSelector((state) => state.auth);
+
+  if (!isInitialized) {
+    return <div className="min-h-screen bg-[#070a13] flex items-center justify-center text-cyan-400">Loading session...</div>;
+  }
 
   if (isAuthenticated) {
     return <Navigate to="/role-selector" replace />;
@@ -32,6 +43,29 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        // Attempt to fetch user profile. If an HttpOnly session cookie exists, this will succeed!
+        const response = await api.get('/users/me');
+        const profile = response.data;
+        dispatch(setUser({
+          id: String(profile.id),
+          name: profile.full_name,
+          email: profile.email,
+          role: profile.role,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
+        }));
+      } catch (error) {
+        // No session cookie or expired
+        dispatch(setInitialized());
+      }
+    };
+    initAuth();
+  }, [dispatch]);
+
   return (
     <div className="dark">
       <BrowserRouter>
@@ -61,7 +95,11 @@ export default function App() {
 
           <Route
             path="/role-selector"
-            element={<RoleSelector />}
+            element={
+              <ProtectedRoute>
+                <RoleSelector />
+              </ProtectedRoute>
+            }
           />
 
           <Route

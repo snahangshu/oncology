@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 import jwt
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -15,8 +15,9 @@ from app.config import settings
 
 router = APIRouter()
 
-@router.post("/login", response_model=Token)
+@router.post("/login")
 def login_for_access_token(
+    response: Response,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db)
 ):
@@ -37,17 +38,39 @@ def login_for_access_token(
     expires_at = (datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)).isoformat()
     repo.create_refresh_token(user.id, refresh_token, expires_at)
 
-    return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+    # Set secure HttpOnly cookies
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        samesite="lax",
+        secure=False, # False for localhost HTTP development
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+        max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+    )
 
-@router.post("/refresh", response_model=Token)
-def refresh_access_token(request: RefreshTokenRequest, db: Session = Depends(get_db)):
+    return {"message": "Successfully logged in"}
+
+@router.post("/refresh")
+def refresh_access_token(request: Request, response: Response, db: Session = Depends(get_db)):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+        
     repo = UserRepository(db)
-    db_token = repo.get_refresh_token(request.refresh_token)
+    db_token = repo.get_refresh_token(refresh_token)
     if not db_token:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     
     try:
-        payload = jwt.decode(request.refresh_token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=[ALGORITHM])
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=401, detail="Invalid token type")
         email = payload.get("email")
@@ -63,7 +86,22 @@ def refresh_access_token(request: RefreshTokenRequest, db: Session = Depends(get
         data={"email": user.email}, expires_delta=access_token_expires
     )
 
-    return Token(access_token=access_token, refresh_token=request.refresh_token, token_type="bearer")
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+
+    return {"message": "Token refreshed successfully"}
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
+    return {"message": "Successfully logged out"}
 
 @router.post("/register", response_model=UserResponse)
 def register_user(user_in: UserCreate, db: Session = Depends(get_db)):

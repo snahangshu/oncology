@@ -26,20 +26,15 @@ export default function Login() {
       formData.append('username', email);
       formData.append('password', password);
 
-      const response = await api.post('/users/login', formData, {
+      await api.post('/users/login', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
 
-      const { access_token, refresh_token } = response.data;
-
-      // Fetch user profile detail
-      const userResponse = await api.get('/users/me', {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      });
+      // Fetch user profile detail immediately after successful login
+      // The HttpOnly cookies are automatically sent!
+      const userResponse = await api.get('/users/me');
 
       const profile = userResponse.data;
       const userObj = {
@@ -50,7 +45,7 @@ export default function Login() {
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
       };
 
-      dispatch(login({ user: userObj, token: access_token, refreshToken: refresh_token }));
+      dispatch(login({ user: userObj }));
       toast.success('Login successful!');
       
       // Smart redirect
