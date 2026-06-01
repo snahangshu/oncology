@@ -1,0 +1,56 @@
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List, Dict, Any
+
+class InsuranceDetailsSchema(BaseModel):
+    provider_name: str = Field(..., description="Name of the insurance provider")
+    policy_number: str = Field(..., description="Insurance policy number")
+    group_number: Optional[str] = Field(None, description="Optional group number")
+
+class IntakeFormRequest(BaseModel):
+    first_name: str = Field(..., min_length=1)
+    last_name: str = Field(..., min_length=1)
+    date_of_birth: str = Field(..., description="Format: YYYY-MM-DD")
+    email: EmailStr
+    phone: str
+    primary_diagnosis: Optional[str] = Field(None, description="Primary clinical diagnosis if known")
+    patient_comments: Optional[str] = Field(None, description="Patient's condition description/comments")
+    insurance_details: InsuranceDetailsSchema
+
+class IntakeFormResponse(BaseModel):
+    patient_id: int
+    status: str = Field("received", description="Status of the intake form processing")
+    urgency_level: Optional[str] = Field(None, description="Classified clinical urgency level")
+    completeness_checked: bool = Field(False)
+
+class DocumentUploadRequest(BaseModel):
+    patient_id: int
+    document_type: str = Field(..., description="E.g., Pathology Report, Referral Letter")
+
+class DocumentUploadResponse(BaseModel):
+    document_id: int
+    status: str
+    task_id: str
+
+class CompletenessResult(BaseModel):
+    document_id: int
+    is_complete: bool
+    missing_sections: List[str] = Field(default_factory=list)
+    extracted_metadata: Dict[str, Any] = Field(default_factory=dict)
+
+from enum import Enum
+
+class UrgencyLevel(str, Enum):
+    ROUTINE = "ROUTINE"
+    URGENT = "URGENT"
+    EMERGENT = "EMERGENT"
+
+class UrgencyClassificationRequest(BaseModel):
+    patient_id: int
+    clinical_notes: str
+
+class UrgencyClassificationResponse(BaseModel):
+    patient_id: int
+    urgency_level: UrgencyLevel
+    confidence_score: float = Field(..., ge=0.0, le=1.0)
+    reasoning: Optional[str] = None
+
