@@ -119,23 +119,32 @@ export default function PatientDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all hover:shadow-lg hover:shadow-cyan-500/10">
           <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 shadow-lg">
-                <Calendar className="w-6 h-6 text-white" />
+            {appointmentsList.length > 0 ? (
+              <>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 shadow-lg">
+                    <Calendar className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-white">Next Appointment</h3>
+                    <p className="text-slate-400 text-sm">{appointmentsList[0].date} at {appointmentsList[0].time}</p>
+                  </div>
+                </div>
+                <Separator className="bg-slate-700/30 mb-4" />
+                <div className="space-y-2 mb-4">
+                  <p className="text-slate-300">{appointmentsList[0].doctor}</p>
+                  <p className="text-slate-400 text-sm">{appointmentsList[0].type}</p>
+                </div>
+                <Button className="w-full bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-white">
+                  View Details
+                </Button>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 h-full space-y-4">
+                <Calendar className="w-8 h-8 text-slate-600" />
+                <p className="text-slate-400 text-sm text-center">No upcoming appointments scheduled.</p>
               </div>
-              <div>
-                <h3 className="text-white">Next Appointment</h3>
-                <p className="text-slate-400 text-sm">June 15, 2026 at 10:00 AM</p>
-              </div>
-            </div>
-            <Separator className="bg-slate-700/30 mb-4" />
-            <div className="space-y-2 mb-4">
-              <p className="text-slate-300">Dr. Sarah Chen</p>
-              <p className="text-slate-400 text-sm">Follow-up Consultation</p>
-            </div>
-            <Button className="w-full bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-white">
-              View Details
-            </Button>
+            )}
           </CardContent>
         </Card>
 
