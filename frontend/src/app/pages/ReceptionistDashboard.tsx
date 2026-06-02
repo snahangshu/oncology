@@ -39,7 +39,8 @@ const todayAppointments = [
 ];
 
 export default function ReceptionistDashboard() {
-  const [waitingRoomList, setWaitingRoomList] = useState(waitingPatients);
+  const [waitingRoomList, setWaitingRoomList] = useState<any[]>([]);
+  const [todayAppointmentsList, setTodayAppointmentsList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [newPatient, setNewPatient] = useState({
@@ -92,20 +93,9 @@ export default function ReceptionistDashboard() {
     const fetchDashboard = async () => {
       try {
         const response = await api.get('/dashboards/receptionist');
-        const count = response.data.waiting_patients;
-        if (count !== undefined) {
-          const newLen = Math.max(1, count);
-          const adjusted = Array.from({ length: newLen }).map((_, i) => {
-            const mock = waitingPatients[i % waitingPatients.length];
-            return {
-              id: i + 1,
-              name: mock.name,
-              type: mock.type,
-              waitTime: mock.waitTime,
-              status: mock.status,
-            };
-          });
-          setWaitingRoomList(adjusted);
+        if (response.data) {
+          setWaitingRoomList(response.data.waiting_patients || []);
+          setTodayAppointmentsList(response.data.today_appointments || []);
         }
       } catch (err) {
         console.error('Error fetching receptionist dashboard:', err);
@@ -338,7 +328,11 @@ export default function ReceptionistDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {todayAppointments.map((apt, index) => (
+            {todayAppointmentsList.length === 0 && !isLoading ? (
+               <div className="text-slate-400 text-center py-8">
+                 No appointments scheduled for today.
+               </div>
+            ) : todayAppointmentsList.map((apt, index) => (
               <div
                 key={apt.id}
                 className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-violet-500/50 transition-all animate-in slide-in-from-bottom duration-500"

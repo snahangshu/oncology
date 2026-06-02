@@ -15,6 +15,8 @@ import {
   DialogTrigger,
 } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
+import { PatientSchedulingModal } from '../components/PatientSchedulingModal';
+import { PatientIntakeWizard } from '../components/PatientIntakeWizard';
 
 const PHASE_1_DOCS = [
   { id: 'referral_letter', label: 'GP Referral Letter' },
@@ -72,17 +74,19 @@ export default function PatientDashboard() {
         const prescriptions = response.data.recent_prescriptions || [];
         
         if (appointments.length > 0) {
-          const merged = appointments.map((apt: any, index: number) => {
+          const merged = appointments.map((apt: any) => {
             return {
-              id: index + 1,
-              date: apt.date,
-              time: '10:00 AM',
-              doctor: apt.doctor,
-              type: apt.department + ' Consultation',
-              status: 'Confirmed',
+              id: apt.appointment_id,
+              date: new Date(apt.start_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
+              time: new Date(apt.start_time).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+              doctor: apt.doctor_name,
+              type: `${apt.specialty} Consultation`,
+              status: apt.status.charAt(0).toUpperCase() + apt.status.slice(1),
             };
           });
           setAppointmentsList(merged);
+        } else {
+          setAppointmentsList([]);
         }
         
         if (prescriptions.length > 0) {
@@ -163,24 +167,22 @@ export default function PatientDashboard() {
             <p className="text-slate-300 text-sm mb-4">
               Need to see a doctor? Schedule a new appointment with your preferred healthcare provider.
             </p>
-            <Button 
-              onClick={() => {
-                if (!intake) {
-                  toast.error('Intake information is currently unavailable.');
-                  return;
-                }
-                if (intake.intake_status !== 'COMPLETE') {
-                  toast.error('Please upload all Required Intake Documents below before scheduling an appointment.', {
-                    duration: 5000,
-                  });
-                } else {
-                  toast.success('Proceeding to appointment scheduling... (Feature coming soon)');
-                }
-              }}
-              className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
-            >
-              Schedule Now
-            </Button>
+            {!intake || intake.intake_status !== 'COMPLETE' ? (
+              <Button 
+                onClick={() => {
+                  if (!intake) {
+                    toast.error('Intake information is currently unavailable.');
+                  } else {
+                    toast.error('Please upload all Required Intake Documents below before scheduling an appointment.', { duration: 5000 });
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+              >
+                Schedule Now
+              </Button>
+            ) : (
+              <PatientSchedulingModal patientId={intake.patient_id} />
+            )}
           </CardContent>
         </Card>
       </div>
@@ -205,28 +207,17 @@ export default function PatientDashboard() {
           ) : (
             <div className="space-y-8">
               
-              {/* Phase 1 */}
+              {/* Phase 1 Guided Wizard */}
               <div className="space-y-4">
                 <h3 className="text-white font-bold border-b border-slate-700/50 pb-2">Required Intake Documents</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {PHASE_1_DOCS.map(doc => {
-                    const phase1Docs = allDocs['PHASE_1'] || [];
-                    const uploadedFiles = phase1Docs.filter((d: any) => d.document_type === doc.id.toUpperCase());
-                    return (
-                      <PatientDocumentUploadZone 
-                        key={doc.id}
-                        docType={doc.id}
-                        label={doc.label}
-                        existingData={(intake as any)[doc.id]}
-                        uploadedFiles={uploadedFiles}
-                        onUploadSuccess={() => {
-                          queryClient.invalidateQueries({ queryKey: ['my_intake'] });
-                          queryClient.invalidateQueries({ queryKey: ['my_documents'] });
-                        }}
-                      />
-                    )
-                  })}
-                </div>
+                <PatientIntakeWizard 
+                  intake={intake} 
+                  allDocs={allDocs} 
+                  onUploadSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: ['my_intake'] });
+                    queryClient.invalidateQueries({ queryKey: ['my_documents'] });
+                  }} 
+                />
               </div>
 
               {/* Phase 2 & 3 Combined for Patient View */}
