@@ -45,10 +45,6 @@ def get_nurse_dashboard():
 @router.get("/patient", dependencies=[Depends(require_role([Role.PATIENT]))])
 def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIENT]))):
     return {
-        "upcoming_appointments": [
-            {"date": "2026-06-15", "doctor": "Dr. Sarah Adams", "department": "Oncology"}
-        ],
-        "recent_prescriptions": [
-            {"date": "2026-05-20", "medication": "Ibuprofen 400mg"}
-        ]
+        "upcoming_appointments": [],
+        "recent_prescriptions": []
     }

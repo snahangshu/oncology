@@ -1,9 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Calendar, FileText, Clock, Upload, Plus, Heart } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useDropzone } from 'react-dropzone';
+import { Calendar, FileText, Clock, Upload, Plus, Heart, CheckCircle2, Loader2, FileUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { api } from '../shared/api';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -13,63 +16,53 @@ import {
 } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
 
-const upcomingAppointments = [
-  {
-    id: 1,
-    date: 'June 15, 2026',
-    time: '10:00 AM',
-    doctor: 'Dr. Sarah Chen',
-    type: 'Follow-up Consultation',
-    status: 'Confirmed',
-  },
-  {
-    id: 2,
-    date: 'July 3, 2026',
-    time: '2:30 PM',
-    doctor: 'Dr. Michael Rodriguez',
-    type: 'Annual Physical',
-    status: 'Confirmed',
-  },
+const PHASE_1_DOCS = [
+  { id: 'referral_letter', label: 'GP Referral Letter' },
+  { id: 'pathology_report', label: 'Pathology Report' },
+  { id: 'imaging_report', label: 'Staging Imaging Report' },
+  { id: 'insurance_authorization', label: 'Insurance Authorization' }
 ];
 
-const medicalHistory = [
-  {
-    id: 1,
-    date: 'May 28, 2026',
-    doctor: 'Dr. Sarah Chen',
-    diagnosis: 'Seasonal Allergies',
-    notes: 'Prescribed antihistamines. Patient responded well to treatment.',
-    prescriptions: ['Cetirizine 10mg - Once daily'],
-  },
-  {
-    id: 2,
-    date: 'March 15, 2026',
-    doctor: 'Dr. Michael Rodriguez',
-    diagnosis: 'Annual Physical - Routine Checkup',
-    notes: 'All vitals normal. Continue current exercise routine.',
-    prescriptions: ['Multivitamin - Once daily'],
-  },
-  {
-    id: 3,
-    date: 'January 10, 2026',
-    doctor: 'Dr. Sarah Chen',
-    diagnosis: 'Upper Respiratory Infection',
-    notes: 'Rest recommended. Follow-up if symptoms persist beyond 7 days.',
-    prescriptions: ['Amoxicillin 500mg - Three times daily for 7 days'],
-  },
+const PHASE_2_DOCS = [
+  { id: 'cbc_report', label: 'CBC Report' },
+  { id: 'cmp_report', label: 'CMP Report' },
+  { id: 'medication_list', label: 'Medication List' },
+  { id: 'allergy_record', label: 'Allergy Record' }
 ];
 
-const activePrescriptions = [
-  { name: 'Cetirizine', dosage: '10mg', frequency: 'Once daily', refillsLeft: 3 },
-  { name: 'Multivitamin', dosage: 'Standard', frequency: 'Once daily', refillsLeft: 5 },
+const PHASE_3_DOCS = [
+  { id: 'consultation_note', label: 'Consultation Note' },
+  { id: 'nursing_note', label: 'Nursing Note' },
+  { id: 'surgery_report', label: 'Surgery Report' },
+  { id: 'discharge_summary', label: 'Discharge Summary' },
+  { id: 'radiation_report', label: 'Radiation Report' }
 ];
+
+const upcomingAppointments: any[] = [];
+const medicalHistory: any[] = [];
+const activePrescriptions: any[] = [];
 
 export default function PatientDashboard() {
+  const queryClient = useQueryClient();
   const [appointmentsList, setAppointmentsList] = useState(upcomingAppointments);
   const [prescriptionsList, setPrescriptionsList] = useState(activePrescriptions);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDragging, setIsDragging] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+
+  const { data: intake, isLoading: intakeLoading } = useQuery({
+    queryKey: ['my_intake'],
+    queryFn: async () => {
+      const res = await api.get('/intake/me');
+      return res.data;
+    }
+  });
+
+  const { data: allDocs = {}, isLoading: docsLoading } = useQuery({
+    queryKey: ['my_documents'],
+    queryFn: async () => {
+      const res = await api.get(`/intake/me/documents`);
+      return res.data;
+    }
+  });
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -112,24 +105,6 @@ export default function PatientDashboard() {
     fetchDashboard();
   }, []);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files);
-    const fileNames = files.map(f => f.name);
-    setUploadedFiles(prev => [...prev, ...fileNames]);
-  }, []);
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
@@ -144,23 +119,32 @@ export default function PatientDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all hover:shadow-lg hover:shadow-cyan-500/10">
           <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 shadow-lg">
-                <Calendar className="w-6 h-6 text-white" />
+            {appointmentsList.length > 0 ? (
+              <>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 shadow-lg">
+                    <Calendar className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-white">Next Appointment</h3>
+                    <p className="text-slate-400 text-sm">{appointmentsList[0].date} at {appointmentsList[0].time}</p>
+                  </div>
+                </div>
+                <Separator className="bg-slate-700/30 mb-4" />
+                <div className="space-y-2 mb-4">
+                  <p className="text-slate-300">{appointmentsList[0].doctor}</p>
+                  <p className="text-slate-400 text-sm">{appointmentsList[0].type}</p>
+                </div>
+                <Button className="w-full bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-white">
+                  View Details
+                </Button>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 h-full space-y-4">
+                <Calendar className="w-8 h-8 text-slate-600" />
+                <p className="text-slate-400 text-sm text-center">No upcoming appointments scheduled.</p>
               </div>
-              <div>
-                <h3 className="text-white">Next Appointment</h3>
-                <p className="text-slate-400 text-sm">June 15, 2026 at 10:00 AM</p>
-              </div>
-            </div>
-            <Separator className="bg-slate-700/30 mb-4" />
-            <div className="space-y-2 mb-4">
-              <p className="text-slate-300">Dr. Sarah Chen</p>
-              <p className="text-slate-400 text-sm">Follow-up Consultation</p>
-            </div>
-            <Button className="w-full bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-white">
-              View Details
-            </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -179,12 +163,101 @@ export default function PatientDashboard() {
             <p className="text-slate-300 text-sm mb-4">
               Need to see a doctor? Schedule a new appointment with your preferred healthcare provider.
             </p>
-            <Button className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
+            <Button 
+              onClick={() => {
+                if (!intake) {
+                  toast.error('Intake information is currently unavailable.');
+                  return;
+                }
+                if (intake.intake_status !== 'COMPLETE') {
+                  toast.error('Please upload all Required Intake Documents below before scheduling an appointment.', {
+                    duration: 5000,
+                  });
+                } else {
+                  toast.success('Proceeding to appointment scheduling... (Feature coming soon)');
+                }
+              }}
+              className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+            >
               Schedule Now
             </Button>
           </CardContent>
         </Card>
       </div>
+
+      {/* Upload Documents (Real Cloudinary Integration) */}
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Upload className="w-5 h-5 text-emerald-400" />
+            Medical Document Portal
+          </CardTitle>
+          <p className="text-sm text-slate-400">Upload requested documents to complete your intake and prepare for consultation.</p>
+        </CardHeader>
+        <CardContent>
+          {intakeLoading || docsLoading ? (
+            <div className="text-slate-400 text-center py-8">
+              <Loader2 className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-2" />
+              Loading your intake checklist...
+            </div>
+          ) : !intake ? (
+            <div className="text-rose-400 text-center py-8">No intake case found for your profile.</div>
+          ) : (
+            <div className="space-y-8">
+              
+              {/* Phase 1 */}
+              <div className="space-y-4">
+                <h3 className="text-white font-bold border-b border-slate-700/50 pb-2">Required Intake Documents</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {PHASE_1_DOCS.map(doc => {
+                    const phase1Docs = allDocs['PHASE_1'] || [];
+                    const uploadedFiles = phase1Docs.filter((d: any) => d.document_type === doc.id.toUpperCase());
+                    return (
+                      <PatientDocumentUploadZone 
+                        key={doc.id}
+                        docType={doc.id}
+                        label={doc.label}
+                        existingData={(intake as any)[doc.id]}
+                        uploadedFiles={uploadedFiles}
+                        onUploadSuccess={() => {
+                          queryClient.invalidateQueries({ queryKey: ['my_intake'] });
+                          queryClient.invalidateQueries({ queryKey: ['my_documents'] });
+                        }}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Phase 2 & 3 Combined for Patient View */}
+              <div className="space-y-4">
+                <h3 className="text-white font-bold border-b border-slate-700/50 pb-2 pt-4">Additional Clinical Documents</h3>
+                <p className="text-sm text-slate-400 mb-4">You may upload historic labs, notes, or imaging requested by your doctor here.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[...PHASE_2_DOCS, ...PHASE_3_DOCS].map(doc => {
+                    const phase2Docs = allDocs['PHASE_2'] || [];
+                    const phase3Docs = allDocs['PHASE_3'] || [];
+                    const combined = [...phase2Docs, ...phase3Docs];
+                    const uploadedFiles = combined.filter((d: any) => d.document_type === doc.id.toUpperCase());
+                    
+                    return (
+                      <PatientTimeSeriesUploadZone 
+                        key={doc.id}
+                        docType={doc.id}
+                        label={doc.label}
+                        uploadedFiles={uploadedFiles}
+                        onUploadSuccess={() => queryClient.invalidateQueries({ queryKey: ['my_documents'] })}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
+
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
 
       {/* Upcoming Appointments */}
       <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
@@ -200,6 +273,10 @@ export default function PatientDashboard() {
               <div className="text-slate-400 text-center py-8">
                 <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-2" />
                 Loading appointments...
+              </div>
+            ) : appointmentsList.length === 0 ? (
+              <div className="text-slate-400 text-center py-8">
+                No upcoming appointments found.
               </div>
             ) : appointmentsList.map((apt, index) => (
               <div
@@ -228,6 +305,48 @@ export default function PatientDashboard() {
         </CardContent>
       </Card>
 
+      {/* Active Prescriptions */}
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Heart className="w-5 h-5 text-rose-400" />
+            Active Prescriptions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {isLoading ? (
+              <div className="text-slate-400 text-center py-8 col-span-2">
+                <div className="w-6 h-6 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin mx-auto mb-2" />
+                Loading prescriptions...
+              </div>
+            ) : prescriptionsList.length === 0 ? (
+              <div className="text-slate-400 text-center py-8 col-span-2">
+                No active prescriptions found.
+              </div>
+            ) : prescriptionsList.map((rx, index) => (
+              <div
+                key={index}
+                className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-rose-500/50 transition-all animate-in slide-in-from-bottom duration-500"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <h4 className="text-white mb-1">{rx.name}</h4>
+                <p className="text-slate-400 text-sm mb-2">{rx.dosage}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-slate-300 text-sm">{rx.frequency}</p>
+                  <Badge
+                    variant="outline"
+                    className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10"
+                  >
+                    {rx.refillsLeft} refills left
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      
       {/* Medical Records Timeline */}
       <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
         <CardHeader>
@@ -238,7 +357,11 @@ export default function PatientDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {medicalHistory.map((record, index) => (
+            {medicalHistory.length === 0 ? (
+              <div className="text-slate-400 text-center py-8">
+                No medical records found.
+              </div>
+            ) : medicalHistory.map((record, index) => (
               <Dialog key={record.id}>
                 <DialogTrigger asChild>
                   <div
@@ -301,95 +424,197 @@ export default function PatientDashboard() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Active Prescriptions */}
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Heart className="w-5 h-5 text-rose-400" />
-            Active Prescriptions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {isLoading ? (
-              <div className="text-slate-400 text-center py-8 col-span-2">
-                <div className="w-6 h-6 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin mx-auto mb-2" />
-                Loading prescriptions...
-              </div>
-            ) : prescriptionsList.map((rx, index) => (
-              <div
-                key={index}
-                className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-rose-500/50 transition-all animate-in slide-in-from-bottom duration-500"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <h4 className="text-white mb-1">{rx.name}</h4>
-                <p className="text-slate-400 text-sm mb-2">{rx.dosage}</p>
-                <div className="flex items-center justify-between">
-                  <p className="text-slate-300 text-sm">{rx.frequency}</p>
-                  <Badge
-                    variant="outline"
-                    className="border-cyan-500/30 text-cyan-400 bg-cyan-500/10"
-                  >
-                    {rx.refillsLeft} refills left
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Upload Documents */}
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Upload className="w-5 h-5 text-emerald-400" />
-            Upload Medical Documents
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all ${
-              isDragging
-                ? 'border-emerald-500 bg-emerald-500/10'
-                : 'border-slate-700/50 hover:border-slate-600/50'
-            }`}
-          >
-            <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <h4 className="text-white mb-2">Drop files here or click to upload</h4>
-            <p className="text-slate-400 text-sm mb-4">
-              Upload lab results, imaging, or other medical documents
-            </p>
-            <Button
-              variant="outline"
-              className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
-            >
-              Choose Files
-            </Button>
-          </div>
-          {uploadedFiles.length > 0 && (
-            <div className="mt-4 space-y-2">
-              <p className="text-slate-400 text-sm">Uploaded Files:</p>
-              {uploadedFiles.map((file, i) => (
-                <div
-                  key={i}
-                  className="p-2 rounded-lg bg-slate-800/30 border border-slate-700/30 text-slate-300 text-sm"
-                >
-                  {file}
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      
     </div>
   );
 }
 
 function Label({ children, className }: { children: React.ReactNode; className?: string }) {
   return <label className={className}>{children}</label>;
+}
+
+// Phase 1 Upload Zone
+function PatientDocumentUploadZone({ docType, label, existingData, uploadedFiles, onUploadSuccess }: any) {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+    const file = acceptedFiles[0];
+
+    const formData = new FormData();
+    formData.append('document_type', docType);
+    formData.append('file', file);
+
+    try {
+      setIsUploading(true);
+      await api.post(`/intake/me/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success(`${label} uploaded successfully!`);
+      onUploadSuccess();
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  }, [docType, label, onUploadSuccess]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+    },
+    maxFiles: 1
+  });
+
+  const isDeferred = existingData && existingData.fileType === "deferred";
+
+  return (
+    <Card className={`border-dashed border-2 transition-all duration-300 ${
+      existingData && !isDeferred
+        ? 'bg-emerald-950/20 border-emerald-500/30'
+        : isDragActive 
+          ? 'bg-cyan-950/30 border-cyan-400' 
+          : isDeferred
+            ? 'bg-amber-950/20 border-amber-500/30 hover:border-amber-400'
+            : 'bg-slate-900/50 border-slate-700/50 hover:border-slate-500'
+    }`}>
+      <CardContent className="p-4 relative">
+        {existingData && !isDeferred ? (
+          <div className="flex flex-col items-center justify-center text-center space-y-3 pt-2">
+            <div className="p-3 bg-emerald-500/20 rounded-full">
+              <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-emerald-100">{label}</p>
+              <p className="text-xs text-emerald-400/70 truncate w-40 mt-1" title={existingData.originalName}>
+                {existingData.originalName}
+              </p>
+            </div>
+            <a href={existingData.fileUrl} target="_blank" rel="noreferrer" className="text-xs text-cyan-400 hover:underline">
+              View Document
+            </a>
+          </div>
+        ) : (
+          <div {...getRootProps()} className="cursor-pointer flex flex-col items-center justify-center text-center space-y-3 min-h-[140px]">
+            <input {...getInputProps()} />
+            {isUploading ? (
+              <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+            ) : (
+              <div className={`p-3 rounded-full transition-colors ${isDeferred ? 'bg-amber-900/50 group-hover:bg-amber-800/50' : 'bg-slate-800/80 group-hover:bg-cyan-950/50'}`}>
+                <FileUp className={`w-8 h-8 ${isDragActive ? 'text-cyan-400' : isDeferred ? 'text-amber-400' : 'text-slate-400'}`} />
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-bold text-slate-200">
+                {label} {isDeferred && <span className="text-amber-400 text-xs ml-1">(Requested)</span>}
+              </p>
+              <p className={`text-xs mt-1 ${isDeferred ? 'text-amber-200/70' : 'text-slate-500'}`}>
+                {isDragActive ? "Drop here!" : "Drag & Drop or Click"}
+              </p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Phase 2/3 Time Series Upload Zone
+function PatientTimeSeriesUploadZone({ docType, label, uploadedFiles, onUploadSuccess }: any) {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+    const file = acceptedFiles[0];
+
+    const formData = new FormData();
+    formData.append('document_type', docType);
+    formData.append('file', file);
+
+    try {
+      setIsUploading(true);
+      await api.post(`/intake/me/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success(`${label} uploaded successfully!`);
+      onUploadSuccess();
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  }, [docType, label, onUploadSuccess]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+    },
+    maxFiles: 1
+  });
+
+  const hasFiles = uploadedFiles && uploadedFiles.length > 0;
+
+  return (
+    <Card className={`border-dashed border transition-all duration-300 ${
+      isDragActive 
+        ? 'bg-violet-950/30 border-violet-400' 
+        : 'bg-slate-900/30 border-slate-700/30 hover:border-slate-500/50'
+    }`}>
+      <CardContent className="p-0">
+        
+        {/* Top Dropzone */}
+        <div {...getRootProps()} className="cursor-pointer p-4 flex items-center justify-between group">
+          <input {...getInputProps()} />
+          <div className="flex items-center gap-3">
+             <div className="p-2 bg-slate-800/80 rounded-lg group-hover:bg-violet-900/50 transition-colors">
+               {isUploading ? <Loader2 className="w-5 h-5 text-violet-400 animate-spin" /> : <FileUp className={`w-5 h-5 ${isDragActive ? 'text-violet-400' : 'text-slate-400'}`} />}
+             </div>
+             <div>
+               <p className="text-sm font-bold text-slate-200 group-hover:text-violet-300 transition-colors">{label}</p>
+               <p className="text-xs text-slate-500 mt-0.5">{isDragActive ? "Drop here!" : "Click to add"}</p>
+             </div>
+          </div>
+          {hasFiles && (
+            <div className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-bold text-slate-300 border border-slate-700">
+              {uploadedFiles.length}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom List of Files */}
+        {hasFiles && (
+          <div className="bg-slate-950/50 p-3 max-h-[150px] overflow-y-auto border-t border-slate-800 space-y-2">
+            {uploadedFiles.map((file: any) => (
+              <a 
+                key={file.id} 
+                href={file.file_url} 
+                target="_blank" 
+                rel="noreferrer" 
+                className="flex items-center gap-2 p-2 rounded-md bg-slate-900 border border-slate-800 hover:border-violet-500/30 transition-colors group/link"
+              >
+                <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-slate-300 truncate group-hover/link:text-violet-300 transition-colors">
+                    {file.original_name}
+                  </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    {new Date(file.uploaded_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+
+      </CardContent>
+    </Card>
+  );
 }
