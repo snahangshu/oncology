@@ -163,7 +163,22 @@ export default function PatientDashboard() {
             <p className="text-slate-300 text-sm mb-4">
               Need to see a doctor? Schedule a new appointment with your preferred healthcare provider.
             </p>
-            <Button className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
+            <Button 
+              onClick={() => {
+                if (!intake) {
+                  toast.error('Intake information is currently unavailable.');
+                  return;
+                }
+                if (intake.intake_status !== 'COMPLETE') {
+                  toast.error('Please upload all Required Intake Documents below before scheduling an appointment.', {
+                    duration: 5000,
+                  });
+                } else {
+                  toast.success('Proceeding to appointment scheduling... (Feature coming soon)');
+                }
+              }}
+              className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+            >
               Schedule Now
             </Button>
           </CardContent>
