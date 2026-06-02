@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Clock, AlertCircle, FileText, Pill, CheckCircle, Sparkles, FlaskConical, Timer, CalendarDays, FilePlus, Activity, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { Clock, AlertCircle, FileText, Pill, CheckCircle, Sparkles, FlaskConical, Timer, CalendarDays, FilePlus, Activity, RefreshCw, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { api } from '../shared/api';
@@ -83,6 +84,7 @@ export default function DoctorDashboard() {
   const [diagnosis, setDiagnosis] = useState('');
   const [prescription, setPrescription] = useState('');
   const [notes, setNotes] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -94,6 +96,7 @@ export default function DoctorDashboard() {
             const richMock = richAppointments[index % richAppointments.length];
             return {
               id: apt.appointment_id,
+              patientId: apt.patient_id,
               patientName: apt.patient_name,
               time: apt.time,
               urgency: apt.urgency_level || (index === 0 ? 'Urgent' : 'Routine'),
@@ -275,11 +278,19 @@ export default function DoctorDashboard() {
                       </div>
                     </DialogTrigger>
                     <DialogContent className="bg-slate-900 border-slate-700/30 max-w-4xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
+                      <DialogHeader className="flex flex-row items-center justify-between mt-2">
                         <DialogTitle className="text-white flex items-center gap-2 text-xl">
                           <FileText className="w-6 h-6 text-violet-400" />
                           Patient Clinical Profile - {selectedPatient.patientName}
                         </DialogTitle>
+                        {selectedPatient.patientId && (
+                          <Button 
+                            onClick={() => navigate(`/patients/${selectedPatient.patientId}`)}
+                            className="bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition-colors"
+                          >
+                            View Clinical Workspace <ExternalLink className="w-4 h-4 ml-2" />
+                          </Button>
+                        )}
                       </DialogHeader>
 
                       <div className="space-y-6 mt-4">
