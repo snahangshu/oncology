@@ -2,13 +2,32 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, s
 from sqlalchemy.orm import Session
 from datetime import datetime
 import cloudinary.uploader
+from typing import List
 
 from app.dependencies import get_db
 from app.modules.intake.schemas import OncologyIntakeSchema
-from app.modules.intake.models import OncologyIntake, Patient
+from app.modules.intake.models import OncologyIntake, Patient, UploadedDocument, DocumentType, IntakePhase
+from app.modules.users.models import User, Role
+from app.modules.users.auth_deps import require_role
 
 router = APIRouter()
 documents_router = APIRouter()
+
+DOC_PHASE_MAP = {
+    DocumentType.REFERRAL_LETTER: IntakePhase.PHASE_1,
+    DocumentType.PATHOLOGY_REPORT: IntakePhase.PHASE_1,
+    DocumentType.IMAGING_REPORT: IntakePhase.PHASE_1,
+    DocumentType.INSURANCE_AUTHORIZATION: IntakePhase.PHASE_1,
+    DocumentType.CBC_REPORT: IntakePhase.PHASE_2,
+    DocumentType.CMP_REPORT: IntakePhase.PHASE_2,
+    DocumentType.MEDICATION_LIST: IntakePhase.PHASE_2,
+    DocumentType.ALLERGY_RECORD: IntakePhase.PHASE_2,
+    DocumentType.CONSULTATION_NOTE: IntakePhase.PHASE_3,
+    DocumentType.NURSING_NOTE: IntakePhase.PHASE_3,
+    DocumentType.SURGERY_REPORT: IntakePhase.PHASE_3,
+    DocumentType.DISCHARGE_SUMMARY: IntakePhase.PHASE_3,
+    DocumentType.RADIATION_REPORT: IntakePhase.PHASE_3,
+}
 
 def recalculate_status(intake: OncologyIntake):
     total_required = 4
@@ -20,6 +39,112 @@ def recalculate_status(intake: OncologyIntake):
 
     intake.completion_percentage = int((uploaded_count / total_required) * 100)
     intake.intake_status = "COMPLETE" if uploaded_count == total_required else "INCOMPLETE"
+
+@router.get("/me", response_model=OncologyIntakeSchema)
+def get_my_intake(
+    current_user: User = Depends(require_role([Role.PATIENT])),
+    db: Session = Depends(get_db)
+):
+    patient = db.query(Patient).filter(Patient.email == current_user.email).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient profile not found")
+        
+    intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient.id).first()
+    if not intake:
+        raise HTTPException(status_code=404, detail="Intake case not found")
+        
+    return intake
+
+@router.get("/me/documents")
+def get_my_documents(
+    current_user: User = Depends(require_role([Role.PATIENT])),
+    db: Session = Depends(get_db)
+):
+    patient = db.query(Patient).filter(Patient.email == current_user.email).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient profile not found")
+        
+    documents = db.query(UploadedDocument).filter(UploadedDocument.patient_id == patient.id).order_by(UploadedDocument.created_at.desc()).all()
+    
+    grouped = {
+        IntakePhase.PHASE_1.value: [],
+        IntakePhase.PHASE_2.value: [],
+        IntakePhase.PHASE_3.value: []
+    }
+    
+    for doc in documents:
+        grouped[doc.phase.value].append({
+            "id": doc.id,
+            "document_type": doc.document_type.value,
+            "original_name": doc.original_name,
+            "file_url": doc.file_url,
+            "uploaded_at": doc.created_at.isoformat() if doc.created_at else None,
+            "status": doc.status
+        })
+        
+    return grouped
+
+@router.post("/me/upload")
+async def upload_my_document(
+    document_type: str = Form(...),
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_role([Role.PATIENT])),
+    db: Session = Depends(get_db)
+):
+    patient = db.query(Patient).filter(Patient.email == current_user.email).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient profile not found")
+        
+    intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient.id).first()
+    if not intake:
+        raise HTTPException(status_code=404, detail="Intake case not found")
+
+    try:
+        doc_enum = DocumentType(document_type.upper())
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid document_type. Must be a valid DocumentType enum.")
+
+    phase = DOC_PHASE_MAP[doc_enum]
+    contents = await file.read()
+    
+    try:
+        result = cloudinary.uploader.upload(
+            contents,
+            resource_type="auto",
+            folder=f"oncology_intakes/{patient.id}"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cloudinary upload failed: {str(e)}")
+
+    doc_metadata = {
+        "originalName": file.filename,
+        "fileUrl": result.get("secure_url"),
+        "fileType": file.content_type,
+        "uploadedAt": datetime.utcnow().isoformat(),
+        "public_id": result.get("public_id")
+    }
+
+    # Always create an UploadedDocument record
+    new_doc = UploadedDocument(
+        patient_id=patient.id,
+        intake_id=intake.id,
+        document_type=doc_enum,
+        phase=phase,
+        file_url=result.get("secure_url"),
+        original_name=file.filename,
+        uploaded_by=current_user.id
+    )
+    db.add(new_doc)
+
+    # If Phase 1, also update OncologyIntake JSON for fast checklist reading
+    if phase == IntakePhase.PHASE_1:
+        setattr(intake, doc_enum.lower(), doc_metadata)
+        recalculate_status(intake)
+        
+    db.commit()
+    db.refresh(intake)
+
+    return {"message": f"{document_type} uploaded successfully", "intake": intake}
 
 @router.get("/{patient_id}", response_model=OncologyIntakeSchema)
 def get_intake_by_patient(patient_id: int, db: Session = Depends(get_db)):
@@ -33,21 +158,22 @@ async def upload_document(
     patient_id: int,
     document_type: str = Form(...),
     file: UploadFile = File(...),
+    current_user: User = Depends(require_role([Role.ADMIN, Role.RECEPTIONIST, Role.NURSE, Role.DOCTOR])),
     db: Session = Depends(get_db)
 ):
     intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
     if not intake:
         raise HTTPException(status_code=404, detail="Intake case not found")
 
-    valid_types = ["referral_letter", "pathology_report", "imaging_report", "insurance_authorization"]
-    if document_type not in valid_types:
-        raise HTTPException(status_code=400, detail=f"Invalid document_type. Must be one of {valid_types}")
+    try:
+        doc_enum = DocumentType(document_type.upper())
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid document_type.")
 
-    # Read file data
+    phase = DOC_PHASE_MAP[doc_enum]
     contents = await file.read()
     
     try:
-        # Stream buffer directly to Cloudinary
         result = cloudinary.uploader.upload(
             contents,
             resource_type="auto",
@@ -64,15 +190,49 @@ async def upload_document(
         "public_id": result.get("public_id")
     }
 
-    # Dynamically assign metadata to the correct JSON column
-    setattr(intake, document_type, doc_metadata)
-    
-    # Auto-calculate completeness
-    recalculate_status(intake)
+    # Always create an UploadedDocument record
+    new_doc = UploadedDocument(
+        patient_id=patient_id,
+        intake_id=intake.id,
+        document_type=doc_enum,
+        phase=phase,
+        file_url=result.get("secure_url"),
+        original_name=file.filename,
+        uploaded_by=current_user.id
+    )
+    db.add(new_doc)
+
+    # If Phase 1, also update OncologyIntake JSON
+    if phase == IntakePhase.PHASE_1:
+        setattr(intake, doc_enum.lower(), doc_metadata)
+        recalculate_status(intake)
+        
     db.commit()
     db.refresh(intake)
 
     return {"message": f"{document_type} uploaded successfully", "intake": intake}
+
+@router.get("/{patient_id}/documents")
+def get_documents_by_patient(patient_id: int, db: Session = Depends(get_db)):
+    documents = db.query(UploadedDocument).filter(UploadedDocument.patient_id == patient_id).order_by(UploadedDocument.created_at.desc()).all()
+    
+    grouped = {
+        IntakePhase.PHASE_1.value: [],
+        IntakePhase.PHASE_2.value: [],
+        IntakePhase.PHASE_3.value: []
+    }
+    
+    for doc in documents:
+        grouped[doc.phase.value].append({
+            "id": doc.id,
+            "document_type": doc.document_type.value,
+            "original_name": doc.original_name,
+            "file_url": doc.file_url,
+            "uploaded_at": doc.created_at.isoformat() if doc.created_at else None,
+            "status": doc.status
+        })
+        
+    return grouped
 
 @router.patch("/{patient_id}/status")
 def update_intake_status(
