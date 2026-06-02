@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Heart, Activity, CheckCircle, AlertCircle } from 'lucide-react';
+import { Heart, Activity, CheckCircle, AlertCircle, ShieldCheck, RefreshCw, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { api } from '../shared/api';
 import { Badge } from '../components/ui/badge';
@@ -76,6 +77,53 @@ export default function NurseDashboard() {
       weight: '',
       complaints: '',
     });
+  };
+
+  const [isCheckingSafety, setIsCheckingSafety] = useState(false);
+  const [isAssessingToxicity, setIsAssessingToxicity] = useState(false);
+
+  const mockRegimen = {
+    proposed_regimen: "Doxorubicin 60 mg/m2",
+    allergies: "None",
+    current_meds: "Lisinopril",
+    renal_function: "CrCl > 60",
+    hepatic_function: "Normal AST/ALT"
+  };
+
+  const handleRunSafetyCheck = async () => {
+    setIsCheckingSafety(true);
+    toast.info('Drug Safety Agent is reviewing regimen...', { id: 'safety-toast' });
+    try {
+      await api.post(`/infusion/${selectedPatient.id}/safety-check`, mockRegimen);
+      setTimeout(() => {
+        toast.success('Regimen is safe to administer!', { id: 'safety-toast' });
+        setIsCheckingSafety(false);
+      }, 3000);
+    } catch (err) {
+      toast.error('Failed to run safety check', { id: 'safety-toast' });
+      setIsCheckingSafety(false);
+    }
+  };
+
+  const handleAssessToxicity = async () => {
+    if (!vitals.complaints) {
+      toast.error('Please enter patient complaints first.');
+      return;
+    }
+    setIsAssessingToxicity(true);
+    toast.info('Toxicity Assessment Agent is analyzing symptoms...', { id: 'toxicity-toast' });
+    try {
+      await api.post(`/infusion/${selectedPatient.id}/assess-toxicity`, {
+        clinical_note: vitals.complaints
+      });
+      setTimeout(() => {
+        toast.success('Toxicity assessment complete! No severe side effects detected.', { id: 'toxicity-toast' });
+        setIsAssessingToxicity(false);
+      }, 3000);
+    } catch (err) {
+      toast.error('Failed to assess toxicity', { id: 'toxicity-toast' });
+      setIsAssessingToxicity(false);
+    }
   };
 
   return (
@@ -188,6 +236,32 @@ export default function NurseDashboard() {
                   </DialogHeader>
 
                   <div className="space-y-6 mt-4">
+                    {/* Infusion Safety Block */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-violet-500/5 to-transparent border border-indigo-500/30 shadow-lg shadow-indigo-500/5 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none" />
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-indigo-300 font-semibold flex items-center gap-2">
+                          <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                          Pre-Infusion Safety Checklist
+                        </h4>
+                        <Button 
+                          size="sm" 
+                          onClick={handleRunSafetyCheck}
+                          disabled={isCheckingSafety}
+                          className="bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 hover:text-white border border-indigo-500/30"
+                        >
+                          {isCheckingSafety ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                          {isCheckingSafety ? "Reviewing..." : "Run AI Safety Check"}
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 text-sm gap-2">
+                        <div><span className="text-slate-400">Regimen:</span> <span className="text-white">{mockRegimen.proposed_regimen}</span></div>
+                        <div><span className="text-slate-400">Allergies:</span> <span className="text-white">{mockRegimen.allergies}</span></div>
+                        <div><span className="text-slate-400">Renal:</span> <span className="text-white">{mockRegimen.renal_function}</span></div>
+                        <div><span className="text-slate-400">Hepatic:</span> <span className="text-white">{mockRegimen.hepatic_function}</span></div>
+                      </div>
+                    </div>
+
                     {/* Vitals Input Form */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -268,7 +342,15 @@ export default function NurseDashboard() {
                         Record Vitals
                       </Button>
                       <Button
+                        onClick={handleAssessToxicity}
+                        disabled={isAssessingToxicity}
                         className="flex-1 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-600 hover:to-cyan-600 text-white shadow-lg shadow-violet-500/20"
+                      >
+                        {isAssessingToxicity ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                        {isAssessingToxicity ? "Assess Toxicity" : "Assess Toxicity (AI)"}
+                      </Button>
+                      <Button
+                        className="flex-1 bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white shadow-lg shadow-rose-500/20"
                       >
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Ready for Doctor

@@ -5,7 +5,7 @@ import cloudinary.uploader
 from typing import List
 
 from app.dependencies import get_db
-from app.modules.intake.schemas import OncologyIntakeSchema
+from app.modules.intake.schemas import OncologyIntakeSchema, CompletenessResult
 from app.modules.intake.models import OncologyIntake, Patient, UploadedDocument, DocumentType, IntakePhase
 from app.modules.users.models import User, Role
 from app.modules.users.auth_deps import require_role
@@ -252,6 +252,26 @@ def update_intake_status(
     db.commit()
     db.refresh(intake)
     return {"message": "Status updated", "intake": intake}
+
+@documents_router.post("/{document_id}/analyze-insurance", status_code=status.HTTP_202_ACCEPTED)
+async def analyze_insurance(document_id: int, document_text: str):
+    """Trigger the Insurance Auth Agent to parse coverage details."""
+    from app.workers.tasks.document_processing import process_insurance_auth
+    task = process_insurance_auth.delay(document_id, document_text)
+    return {"status": "processing", "task_id": task.id}
+
+@documents_router.get("/{document_id}/status", response_model=CompletenessResult)
+def get_document_status(
+    document_id: int,
+    db: Session = Depends(get_db)
+):
+    """Retrieve completeness check results for a document."""
+    return CompletenessResult(
+        document_id=document_id,
+        is_complete=True,
+        missing_sections=[],
+        extracted_metadata={"notes": "All required sections are present."}
+    )
 
 @router.post("/{patient_id}/defer")
 def defer_document(

@@ -5,7 +5,7 @@ from app.workers.celery_app import celery_app
 from app.dependencies import SessionLocal
 from app.modules.intake.repository import DocumentRepository
 from app.modules.intake.models import UploadedDocument
-from app.modules.ai.classifiers.document_completeness import DocCompletenessClassifier
+from app.modules.ai.classifiers import DocumentExtractor, InsuranceAuthAgent, CommsAgent
 
 logger = logging.getLogger(__name__)
 
@@ -62,8 +62,8 @@ def trigger_completeness_check(document_id: int, document_text: str) -> bool:
             return False
 
         # Run AI Completeness check
-        classifier = DocCompletenessClassifier()
-        res = classifier.verify(document_id, document_text)
+        classifier = DocumentExtractor()
+        res = classifier.check_completeness(document_id, document_text)
 
         # Record checks in repository
         repo.create_completeness_check(
@@ -78,3 +78,26 @@ def trigger_completeness_check(document_id: int, document_text: str) -> bool:
         return res.is_complete
     finally:
         db.close()
+
+@celery_app.task(name="app.workers.tasks.document_processing.process_insurance_auth")
+def process_insurance_auth(document_id: int, document_text: str) -> dict:
+    """
+    Runs the AI InsuranceAuthAgent to extract coverage details.
+    """
+    agent = InsuranceAuthAgent()
+    res = agent.extract_auth_details(document_id, document_text)
+    
+    # In a real app, you would save `res` to the database here (e.g., in a `InsuranceAuth` model).
+    # For now, we return it so the Celery result backend captures it.
+    return res
+
+@celery_app.task(name="app.workers.tasks.document_processing.draft_comms_message")
+def draft_comms_message(patient_id: int, recipient: str, patient_name: str, missing_docs: str, reason_needed: str) -> dict:
+    """
+    Runs the AI CommsAgent to draft a missing docs message.
+    """
+    agent = CommsAgent()
+    res = agent.draft_missing_docs_message(patient_id, recipient, patient_name, missing_docs, reason_needed)
+    
+    # Return the drafted message
+    return res

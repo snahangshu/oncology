@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Clock, AlertCircle, FileText, Pill, CheckCircle, Sparkles, FlaskConical, Timer, CalendarDays, FilePlus, Activity } from 'lucide-react';
+import { Clock, AlertCircle, FileText, Pill, CheckCircle, Sparkles, FlaskConical, Timer, CalendarDays, FilePlus, Activity, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { api } from '../shared/api';
 import { Badge } from '../components/ui/badge';
@@ -115,11 +116,48 @@ export default function DoctorDashboard() {
     fetchDashboard();
   }, []);
 
-  const handleCompleteConsultation = () => {
-    console.log('Completing consultation:', { diagnosis, prescription, notes });
-    setDiagnosis('');
-    setPrescription('');
-    setNotes('');
+  const [isGeneratingBrief, setIsGeneratingBrief] = useState(false);
+  const [isStructuringPlan, setIsStructuringPlan] = useState(false);
+
+  const handleGenerateBrief = async () => {
+    setIsGeneratingBrief(true);
+    toast.info('AI is generating pre-consultation brief...', { id: 'brief-toast' });
+    try {
+      await api.post(`/doctors/${selectedPatient.id}/generate-brief`, {
+        patient_name: selectedPatient.patientName,
+        diagnosis: "Oncology Diagnosis",
+        clinical_history: selectedPatient.history,
+        recent_labs: "Standard CBC & CMP",
+        imaging_reports: "Standard Imaging"
+      });
+      setTimeout(() => {
+        toast.success('AI Pre-Consult Brief generated successfully!', { id: 'brief-toast' });
+        setIsGeneratingBrief(false);
+      }, 3000);
+    } catch (err) {
+      toast.error('Failed to generate brief', { id: 'brief-toast' });
+      setIsGeneratingBrief(false);
+    }
+  };
+
+  const handleCompleteConsultation = async () => {
+    setIsStructuringPlan(true);
+    toast.info('AI is structuring your treatment plan...', { id: 'plan-toast' });
+    try {
+      await api.post(`/doctors/${selectedPatient.id}/structure-plan`, {
+        clinical_note: `Diagnosis: ${diagnosis}. Prescription: ${prescription}. Notes: ${notes}`
+      });
+      setTimeout(() => {
+        toast.success('Consultation complete! AI structured the treatment plan.', { id: 'plan-toast' });
+        setIsStructuringPlan(false);
+        setDiagnosis('');
+        setPrescription('');
+        setNotes('');
+      }, 3000);
+    } catch (err) {
+      toast.error('Failed to structure treatment plan', { id: 'plan-toast' });
+      setIsStructuringPlan(false);
+    }
   };
 
   return (
@@ -247,10 +285,22 @@ export default function DoctorDashboard() {
                         {/* AI Summary Highlight Card */}
                         <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-violet-500/5 to-transparent border border-indigo-500/30 shadow-lg shadow-indigo-500/5 relative overflow-hidden">
                           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none" />
-                          <h4 className="text-indigo-300 font-semibold mb-2 flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-indigo-400" />
-                            AI Patient Summary
-                          </h4>
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-indigo-300 font-semibold flex items-center gap-2">
+                              <Sparkles className="w-4 h-4 text-indigo-400" />
+                              AI Patient Summary
+                            </h4>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 h-7 text-xs"
+                              onClick={handleGenerateBrief}
+                              disabled={isGeneratingBrief}
+                            >
+                              <RefreshCw className={`w-3 h-3 mr-1 ${isGeneratingBrief ? 'animate-spin' : ''}`} />
+                              Regenerate Brief
+                            </Button>
+                          </div>
                           <p className="text-slate-200 leading-relaxed text-sm">
                             {selectedPatient.aiSummary}
                           </p>
@@ -357,10 +407,15 @@ export default function DoctorDashboard() {
 
                           <Button
                             onClick={handleCompleteConsultation}
+                            disabled={isStructuringPlan || (!diagnosis && !prescription && !notes)}
                             className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/20"
                           >
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Complete Consultation
+                            {isStructuringPlan ? (
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                            )}
+                            {isStructuringPlan ? 'AI Structuring Plan...' : 'Complete Consultation'}
                           </Button>
                         </div>
                       </div>

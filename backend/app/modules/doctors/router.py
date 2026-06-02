@@ -11,6 +11,34 @@ from app.modules.doctors.schemas import (
 from app.modules.doctors.service import DoctorService
 
 router = APIRouter()
+from pydantic import BaseModel
+
+class BriefRequest(BaseModel):
+    patient_name: str
+    diagnosis: str
+    clinical_history: str
+    recent_labs: str
+    imaging_reports: str
+
+class PlanRequest(BaseModel):
+    clinical_note: str
+
+@router.post("/{patient_id}/generate-brief", status_code=status.HTTP_202_ACCEPTED)
+def generate_brief(patient_id: int, request: BriefRequest):
+    """Trigger the PreConsultBriefAgent to synthesize patient data."""
+    from app.workers.tasks.clinical_analysis import generate_pre_consult_brief
+    task = generate_pre_consult_brief.delay(
+        patient_id, request.patient_name, request.diagnosis,
+        request.clinical_history, request.recent_labs, request.imaging_reports
+    )
+    return {"status": "processing", "task_id": task.id}
+
+@router.post("/{patient_id}/structure-plan", status_code=status.HTTP_202_ACCEPTED)
+def structure_plan(patient_id: int, request: PlanRequest):
+    """Trigger the TreatmentPlanStructurer to structure an oncologist's decision."""
+    from app.workers.tasks.clinical_analysis import structure_treatment_plan
+    task = structure_treatment_plan.delay(patient_id, request.clinical_note)
+    return {"status": "processing", "task_id": task.id}
 
 
 # ── Doctor CRUD ──────────────────────────────────────────────────
