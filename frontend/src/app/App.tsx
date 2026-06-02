@@ -11,8 +11,11 @@ import RoleSelector from './pages/RoleSelector';
 import AdminDashboard from './pages/AdminDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import ReceptionistDashboard from './pages/ReceptionistDashboard';
+import NewPatient from './pages/receptionist/NewPatient';
+import IntakeDashboard from './pages/receptionist/IntakeDashboard';
 import NurseDashboard from './pages/NurseDashboard';
 import PatientDashboard from './pages/PatientDashboard';
+import PatientDetails from './pages/PatientDetails';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isInitialized } = useAppSelector((state) => state.auth);
@@ -128,6 +131,24 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          
+          <Route
+            path="/receptionist/patients/new"
+            element={
+              <ProtectedRoute>
+                <NewPatient />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/receptionist/intake/:patientId"
+            element={
+              <ProtectedRoute>
+                <IntakeDashboard />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/nurse"
@@ -143,6 +164,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <PatientDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/patients/:patientId"
+            element={
+              <ProtectedRoute>
+                <PatientDetails />
               </ProtectedRoute>
             }
           />

@@ -16,6 +16,33 @@ class IntakeFormRequest(BaseModel):
     patient_comments: Optional[str] = Field(None, description="Patient's condition description/comments")
     insurance_details: InsuranceDetailsSchema
 
+class PatientRegistrationRequest(BaseModel):
+    first_name: str = Field(..., min_length=1)
+    last_name: str = Field(..., min_length=1)
+    date_of_birth: str = Field(..., description="Format: YYYY-MM-DD")
+    gender: Optional[str] = Field(None, description="Patient gender")
+    email: EmailStr
+    phone: str
+    address: Optional[str] = Field(None, description="Patient address")
+    insurance_details: InsuranceDetailsSchema
+
+class PatientRegistrationResponse(BaseModel):
+    patient_id: int
+    message: str
+
+class OncologyIntakeSchema(BaseModel):
+    id: int
+    patient_id: int
+    referral_letter: Optional[Dict[str, Any]] = None
+    pathology_report: Optional[Dict[str, Any]] = None
+    imaging_report: Optional[Dict[str, Any]] = None
+    insurance_authorization: Optional[Dict[str, Any]] = None
+    intake_status: str
+    completion_percentage: int
+
+    class Config:
+        from_attributes = True
+
 class IntakeFormResponse(BaseModel):
     patient_id: int
     status: str = Field("received", description="Status of the intake form processing")

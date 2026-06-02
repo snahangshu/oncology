@@ -33,4 +33,9 @@ class Settings(BaseSettings):
     # WebSocket Configuration
     WS_HEARTBEAT_INTERVAL_SEC: int = Field(default=30)
 
+    # Cloudinary Integration
+    CLOUDINARY_CLOUD_NAME: str = Field(default="")
+    CLOUDINARY_API_KEY: str = Field(default="")
+    CLOUDINARY_API_SECRET: str = Field(default="")
+
 settings = Settings()

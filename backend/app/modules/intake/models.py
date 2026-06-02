@@ -1,8 +1,29 @@
-from sqlalchemy import String, Integer, Date, ForeignKey, Boolean, JSON
+from sqlalchemy import String, Integer, Date, ForeignKey, Boolean, JSON, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, Optional, Dict, Any
 from datetime import date
 from app.shared.base_model import Base, TimestampMixin
+import enum
+
+class IntakePhase(str, enum.Enum):
+    PHASE_1 = "PHASE_1"
+    PHASE_2 = "PHASE_2"
+    PHASE_3 = "PHASE_3"
+
+class DocumentType(str, enum.Enum):
+    REFERRAL_LETTER = "REFERRAL_LETTER"
+    PATHOLOGY_REPORT = "PATHOLOGY_REPORT"
+    IMAGING_REPORT = "IMAGING_REPORT"
+    INSURANCE_AUTHORIZATION = "INSURANCE_AUTHORIZATION"
+    CBC_REPORT = "CBC_REPORT"
+    CMP_REPORT = "CMP_REPORT"
+    MEDICATION_LIST = "MEDICATION_LIST"
+    ALLERGY_RECORD = "ALLERGY_RECORD"
+    CONSULTATION_NOTE = "CONSULTATION_NOTE"
+    NURSING_NOTE = "NURSING_NOTE"
+    SURGERY_REPORT = "SURGERY_REPORT"
+    DISCHARGE_SUMMARY = "DISCHARGE_SUMMARY"
+    RADIATION_REPORT = "RADIATION_REPORT"
 
 class Patient(Base, TimestampMixin):
     __tablename__ = "patients"
@@ -13,6 +34,8 @@ class Patient(Base, TimestampMixin):
     date_of_birth: Mapped[date] = mapped_column(Date, nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     phone: Mapped[str] = mapped_column(String(50), nullable=False)
+    gender: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    address: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     primary_diagnosis: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     urgency_level: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     patient_comments: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
@@ -26,6 +49,9 @@ class Patient(Base, TimestampMixin):
     )
     appointments: Mapped[List["Appointment"]] = relationship(
         "Appointment", back_populates="patient", cascade="all, delete-orphan"
+    )
+    oncology_intake: Mapped[Optional["OncologyIntake"]] = relationship(
+        "OncologyIntake", back_populates="patient", cascade="all, delete-orphan", uselist=False
     )
 
 class InsuranceRecord(Base, TimestampMixin):
@@ -45,12 +71,19 @@ class UploadedDocument(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
-    document_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    intake_id: Mapped[Optional[int]] = mapped_column(ForeignKey("oncology_intakes.id", ondelete="CASCADE"), nullable=True)
+    document_type: Mapped[DocumentType] = mapped_column(SAEnum(DocumentType), nullable=False)
+    phase: Mapped[IntakePhase] = mapped_column(SAEnum(IntakePhase), nullable=False)
+    
+    file_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    original_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    uploaded_by: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # User ID
+
     status: Mapped[str] = mapped_column(String(50), default="uploaded", nullable=False)
 
     # Relationships
     patient: Mapped["Patient"] = relationship("Patient", back_populates="documents")
+    oncology_intake: Mapped[Optional["OncologyIntake"]] = relationship("OncologyIntake", back_populates="documents")
     completeness_checks: Mapped[List["CompletenessCheck"]] = relationship(
         "CompletenessCheck", back_populates="document", cascade="all, delete-orphan"
     )
@@ -66,3 +99,22 @@ class CompletenessCheck(Base, TimestampMixin):
 
     # Relationships
     document: Mapped["UploadedDocument"] = relationship("UploadedDocument", back_populates="completeness_checks")
+
+class OncologyIntake(Base, TimestampMixin):
+    __tablename__ = "oncology_intakes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"), nullable=False, unique=True)
+    
+    # Document Metadata stored as JSON (e.g. { originalName: "file.pdf", fileUrl: "cloudinary_url", fileType: "pdf", uploadedAt: "..." })
+    referral_letter: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    pathology_report: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    imaging_report: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    insurance_authorization: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    
+    intake_status: Mapped[str] = mapped_column(String(50), default="INCOMPLETE", nullable=False)
+    completion_percentage: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    # Relationships
+    patient: Mapped["Patient"] = relationship("Patient", back_populates="oncology_intake")
+    documents: Mapped[List["UploadedDocument"]] = relationship("UploadedDocument", back_populates="oncology_intake", cascade="all, delete-orphan")

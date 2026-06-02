@@ -73,19 +73,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-[#070a13]">
+      {/* Mobile Backdrop Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-30 bg-slate-950/80 backdrop-blur-sm lg:hidden animate-in fade-in"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-40 h-screen transition-transform ${
+        className={`fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } w-64`}
+        }`}
       >
-        <div className="h-full px-3 py-4 overflow-y-auto bg-gradient-to-b from-slate-900/80 to-slate-950/80 backdrop-blur-xl border-r border-slate-700/30">
+        <div className="h-full px-3 py-4 overflow-y-auto bg-gradient-to-b from-slate-900/90 to-slate-950/90 backdrop-blur-xl border-r border-slate-700/30">
           {/* Logo */}
-          <div className="mb-8 px-4">
-            <h1 className="bg-gradient-to-r from-cyan-400 via-violet-400 to-emerald-400 bg-clip-text text-transparent">
+          <div className="mb-8 px-4 mt-2">
+            <h1 className="bg-gradient-to-r from-cyan-400 via-violet-400 to-emerald-400 bg-clip-text text-transparent text-xl font-bold">
               Oncology AI
             </h1>
-            <p className="text-sm text-slate-400 mt-1">Clinical Optimizer</p>
+            <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider">Clinical Optimizer</p>
           </div>
 
           {/* Navigation */}
@@ -96,6 +104,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Link
                   key={item.href}
                   to={item.href}
+                  onClick={() => setSidebarOpen(false)} // Auto-close sidebar on mobile nav
                   className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
                     isActive
                       ? 'bg-gradient-to-r from-cyan-500/20 to-violet-500/20 border border-cyan-400/50 shadow-lg shadow-cyan-500/20'
@@ -105,7 +114,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <item.icon
                     className={`w-5 h-5 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`}
                   />
-                  <span className={isActive ? 'text-cyan-100' : 'text-slate-300'}>
+                  <span className={isActive ? 'text-cyan-100 font-medium' : 'text-slate-300'}>
                     {item.name}
                   </span>
                 </Link>
@@ -115,24 +124,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* User Profile */}
           <div className="absolute bottom-4 left-3 right-3">
-            <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/30 rounded-2xl p-4">
+            <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-700/30 rounded-2xl p-4 shadow-xl">
               <div className="flex items-center gap-3 mb-3">
-                <Avatar className="h-10 w-10 border-2 border-cyan-400/50">
+                <Avatar className="h-10 w-10 border-2 border-cyan-400/50 shadow-lg shadow-cyan-500/20">
                   <AvatarImage src={user?.avatar} />
-                  <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-violet-500">
+                  <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-violet-500 text-white font-medium">
                     {user?.name && typeof user.name === 'string' ? user.name.split(' ').filter(Boolean).map(n => n[0]).join('') : 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white truncate">{user?.name}</p>
-                  <p className="text-xs text-cyan-400">{user?.role}</p>
+                  <p className="text-sm text-white font-medium truncate">{user?.name}</p>
+                  <p className="text-xs text-cyan-400 truncate">{user?.role}</p>
                 </div>
               </div>
               <Button
                 onClick={handleLogout}
                 variant="outline"
                 size="sm"
-                className="w-full border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:border-rose-400/50"
+                className="w-full border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:border-rose-400/50 transition-colors"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
@@ -148,15 +157,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           onClick={() => setSidebarOpen(!sidebarOpen)}
           variant="outline"
           size="icon"
-          className="bg-slate-900/80 backdrop-blur-xl border-slate-700/30"
+          className="bg-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-lg text-slate-200 hover:text-white"
         >
           <Menu className="w-5 h-5" />
         </Button>
       </div>
 
       {/* Main Content */}
-      <main className={`transition-all ${sidebarOpen ? 'lg:pl-64' : ''}`}>
-        <div className="p-4 lg:p-8">
+      <main className="transition-all duration-300 ease-in-out lg:pl-64">
+        {/* pt-20 on mobile to push content below the floating hamburger menu. pt-4/8 on desktop. */}
+        <div className="p-4 pt-20 lg:p-8 lg:pt-8">
           {children}
         </div>
       </main>

@@ -4,9 +4,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api.v1.router import api_router
 
+import cloudinary
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup tasks (e.g. establish connections, pre-load models)
+    # Configure Cloudinary
+    cloudinary.config(
+        cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+        api_key=settings.CLOUDINARY_API_KEY,
+        api_secret=settings.CLOUDINARY_API_SECRET,
+        secure=True
+    )
     yield
     # Shutdown tasks (e.g. close connections)
 
