@@ -93,15 +93,16 @@ export default function DoctorDashboard() {
           const merged = backendAppointments.map((apt: any, index: number) => {
             const richMock = richAppointments[index % richAppointments.length];
             return {
-              id: index + 1,
+              id: apt.appointment_id,
               patientName: apt.patient_name,
-              time: apt.time + ' AM',
-              urgency: index === 0 ? 'Urgent' : 'Routine',
-              chiefComplaint: richMock.chiefComplaint,
+              time: apt.time,
+              urgency: apt.urgency_level || (index === 0 ? 'Urgent' : 'Routine'),
+              chiefComplaint: apt.primary_diagnosis || richMock.chiefComplaint,
               predictedDuration: richMock.predictedDuration,
-              aiSummary: richMock.aiSummary,
+              aiSummary: `AI Summary based on Intake: Patient presents with ${apt.primary_diagnosis || 'Unknown'}. Intake documents include: ${Object.keys(apt.intake_summary || {}).join(', ') || 'None'}. ` + richMock.aiSummary,
               vitals: richMock.vitals,
-              history: richMock.history,
+              history: apt.primary_diagnosis || richMock.history,
+              intake_summary: apt.intake_summary,
             };
           });
           setAppointmentsList(merged);
@@ -355,12 +356,35 @@ export default function DoctorDashboard() {
 
                         <Separator className="bg-slate-700/30" />
 
-                        {/* Medical History */}
+                        {/* Medical History & Intake Documents */}
                         <div>
-                          <h4 className="text-white mb-2 font-medium">Medical History</h4>
-                          <p className="text-slate-300 p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 text-sm">
-                            {selectedPatient.history}
-                          </p>
+                          <h4 className="text-white mb-2 font-medium">Medical History & Intake Summary</h4>
+                          <div className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 text-sm space-y-3">
+                            <p className="text-slate-300">
+                              <strong className="text-white">Primary Diagnosis: </strong> {selectedPatient.history}
+                            </p>
+                            {selectedPatient.intake_summary && Object.keys(selectedPatient.intake_summary).length > 0 ? (
+                              <div className="space-y-2 mt-2">
+                                <p className="text-slate-400 font-medium">Uploaded Documents:</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {Object.entries(selectedPatient.intake_summary).map(([key, val]: any) => (
+                                    <a 
+                                      key={key} 
+                                      href={val.fileUrl} 
+                                      target="_blank" 
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                                    >
+                                      <FileText className="w-3.5 h-3.5" />
+                                      <span className="capitalize">{key.replace('_', ' ')}</span>
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-slate-500 italic mt-2">No intake documents uploaded yet.</p>
+                            )}
+                          </div>
                         </div>
 
                         <Separator className="bg-slate-700/30" />
