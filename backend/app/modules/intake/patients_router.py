@@ -6,7 +6,7 @@ from app.dependencies import get_db
 from app.modules.intake.schemas import PatientRegistrationRequest, PatientRegistrationResponse
 from app.modules.intake.models import Patient, InsuranceRecord, OncologyIntake
 from app.modules.users.models import User, Role
-from app.modules.users.auth_utils import pwd_context
+from app.modules.users.security import pwd_context
 
 router = APIRouter()
 
