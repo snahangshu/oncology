@@ -38,56 +38,9 @@ const PHASE_3_DOCS = [
   { id: 'radiation_report', label: 'Radiation Report' }
 ];
 
-const upcomingAppointments = [
-  {
-    id: 1,
-    date: 'June 15, 2026',
-    time: '10:00 AM',
-    doctor: 'Dr. Sarah Chen',
-    type: 'Follow-up Consultation',
-    status: 'Confirmed',
-  },
-  {
-    id: 2,
-    date: 'July 3, 2026',
-    time: '2:30 PM',
-    doctor: 'Dr. Michael Rodriguez',
-    type: 'Annual Physical',
-    status: 'Confirmed',
-  },
-];
-
-const medicalHistory = [
-  {
-    id: 1,
-    date: 'May 28, 2026',
-    doctor: 'Dr. Sarah Chen',
-    diagnosis: 'Seasonal Allergies',
-    notes: 'Prescribed antihistamines. Patient responded well to treatment.',
-    prescriptions: ['Cetirizine 10mg - Once daily'],
-  },
-  {
-    id: 2,
-    date: 'March 15, 2026',
-    doctor: 'Dr. Michael Rodriguez',
-    diagnosis: 'Annual Physical - Routine Checkup',
-    notes: 'All vitals normal. Continue current exercise routine.',
-    prescriptions: ['Multivitamin - Once daily'],
-  },
-  {
-    id: 3,
-    date: 'January 10, 2026',
-    doctor: 'Dr. Sarah Chen',
-    diagnosis: 'Upper Respiratory Infection',
-    notes: 'Rest recommended. Follow-up if symptoms persist beyond 7 days.',
-    prescriptions: ['Amoxicillin 500mg - Three times daily for 7 days'],
-  },
-];
-
-const activePrescriptions = [
-  { name: 'Cetirizine', dosage: '10mg', frequency: 'Once daily', refillsLeft: 3 },
-  { name: 'Multivitamin', dosage: 'Standard', frequency: 'Once daily', refillsLeft: 5 },
-];
+const upcomingAppointments: any[] = [];
+const medicalHistory: any[] = [];
+const activePrescriptions: any[] = [];
 
 export default function PatientDashboard() {
   const queryClient = useQueryClient();
@@ -297,6 +250,10 @@ export default function PatientDashboard() {
                 <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-2" />
                 Loading appointments...
               </div>
+            ) : appointmentsList.length === 0 ? (
+              <div className="text-slate-400 text-center py-8">
+                No upcoming appointments found.
+              </div>
             ) : appointmentsList.map((apt, index) => (
               <div
                 key={apt.id}
@@ -339,6 +296,10 @@ export default function PatientDashboard() {
                 <div className="w-6 h-6 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin mx-auto mb-2" />
                 Loading prescriptions...
               </div>
+            ) : prescriptionsList.length === 0 ? (
+              <div className="text-slate-400 text-center py-8 col-span-2">
+                No active prescriptions found.
+              </div>
             ) : prescriptionsList.map((rx, index) => (
               <div
                 key={index}
@@ -372,7 +333,11 @@ export default function PatientDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {medicalHistory.map((record, index) => (
+            {medicalHistory.length === 0 ? (
+              <div className="text-slate-400 text-center py-8">
+                No medical records found.
+              </div>
+            ) : medicalHistory.map((record, index) => (
               <Dialog key={record.id}>
                 <DialogTrigger asChild>
                   <div
