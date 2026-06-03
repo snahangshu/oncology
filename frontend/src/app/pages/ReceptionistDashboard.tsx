@@ -1,46 +1,30 @@
 import { useState, useEffect } from 'react';
-import { Users, Calendar, Clock, Plus, UserPlus, UploadCloud } from 'lucide-react';
-import { toast } from 'sonner';
+import { Users, Calendar, Clock, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { api } from '../shared/api';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '../components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/select';
 import { Calendar as CalendarComponent } from '../components/ui/calendar';
 
-const waitingPatients = [
-  { id: 1, name: 'Alice Johnson', type: 'Walk-in', waitTime: '12 min', status: 'Waiting' },
-  { id: 2, name: 'Bob Williams', type: 'Scheduled', waitTime: '5 min', status: 'Waiting' },
-  { id: 3, name: 'Carol Davis', type: 'Walk-in', waitTime: '28 min', status: 'In Prep' },
-  { id: 4, name: 'David Brown', type: 'Scheduled', waitTime: '2 min', status: 'Waiting' },
-];
+interface WaitingPatient {
+  id: number;
+  name: string;
+  type: string;
+  waitTime: string;
+  status: string;
+}
 
-const todayAppointments = [
-  { id: 1, time: '09:00 AM', patient: 'Maria Garcia', doctor: 'Dr. Chen', status: 'Completed' },
-  { id: 2, time: '09:30 AM', patient: 'John Smith', doctor: 'Dr. Rodriguez', status: 'In Progress' },
-  { id: 3, time: '10:00 AM', patient: 'Emma Wilson', doctor: 'Dr. Chen', status: 'Scheduled' },
-  { id: 4, time: '10:30 AM', patient: 'Michael Brown', doctor: 'Dr. Park', status: 'Scheduled' },
-  { id: 5, time: '11:00 AM', patient: 'Sarah Lee', doctor: 'Dr. Chen', status: 'Scheduled' },
-];
+interface Appointment {
+  id: number;
+  time: string;
+  patient: string;
+  doctor: string;
+  status: string;
+}
 
 export default function ReceptionistDashboard() {
-  const [waitingRoomList, setWaitingRoomList] = useState<any[]>([]);
-  const [todayAppointmentsList, setTodayAppointmentsList] = useState<any[]>([]);
+  const [waitingRoomList, setWaitingRoomList] = useState<WaitingPatient[]>([]);
+  const [todayAppointmentsList, setTodayAppointmentsList] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [newPatient, setNewPatient] = useState({
@@ -130,6 +114,7 @@ export default function ReceptionistDashboard() {
     };
     fetchDashboard();
   }, []);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
@@ -258,6 +243,10 @@ export default function ReceptionistDashboard() {
                   <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-2" />
                   Loading waiting queue...
                 </div>
+              ) : waitingRoomList.length === 0 ? (
+                <div className="text-slate-400 text-center py-8">
+                  No patients waiting.
+                </div>
               ) : waitingRoomList.map((patient, index) => (
                 <div
                   key={patient.id}
@@ -328,7 +317,12 @@ export default function ReceptionistDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {todayAppointmentsList.length === 0 && !isLoading ? (
+            {isLoading ? (
+               <div className="text-slate-400 text-center py-8">
+                 <div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-2" />
+                 Loading today's schedule...
+               </div>
+            ) : todayAppointmentsList.length === 0 ? (
                <div className="text-slate-400 text-center py-8">
                  No appointments scheduled for today.
                </div>

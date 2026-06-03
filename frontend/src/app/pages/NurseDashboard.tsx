@@ -16,17 +16,18 @@ import {
   DialogTrigger,
 } from '../components/ui/dialog';
 
-const vitalsQueue = [
-  { id: 1, name: 'Robert Kim', appointmentTime: '10:00 AM', status: 'Waiting', arrived: '9:45 AM' },
-  { id: 2, name: 'Lisa Thompson', appointmentTime: '10:30 AM', status: 'Waiting', arrived: '10:15 AM' },
-  { id: 3, name: 'James Wilson', appointmentTime: '11:00 AM', status: 'Waiting', arrived: '10:50 AM' },
-  { id: 4, name: 'Patricia Martinez', appointmentTime: '11:30 AM', status: 'Waiting', arrived: '11:20 AM' },
-];
+interface PatientInQueue {
+  id: number;
+  name: string;
+  appointmentTime: string;
+  status: string;
+  arrived: string;
+}
 
 export default function NurseDashboard() {
-  const [patientList, setPatientList] = useState(vitalsQueue);
-  const [selectedPatient, setSelectedPatient] = useState(vitalsQueue[0]);
-  const [pendingVitalsCount, setPendingVitalsCount] = useState(3);
+  const [patientList, setPatientList] = useState<PatientInQueue[]>([]);
+  const [selectedPatient, setSelectedPatient] = useState<PatientInQueue | null>(null);
+  const [pendingVitalsCount, setPendingVitalsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [vitals, setVitals] = useState({
     bloodPressure: '',
@@ -46,18 +47,17 @@ export default function NurseDashboard() {
         if (count !== undefined) setPendingVitalsCount(count);
         
         if (queue.length > 0) {
-          const merged = queue.map((p: any, index: number) => {
-            const richMock = vitalsQueue[index % vitalsQueue.length];
+          const mapped = queue.map((p: any, index: number) => {
             return {
               id: index + 1,
               name: p.patient_name,
-              appointmentTime: richMock.appointmentTime,
+              appointmentTime: '--',
               status: p.status,
-              arrived: richMock.arrived,
+              arrived: '--',
             };
           });
-          setPatientList(merged);
-          setSelectedPatient(merged[0]);
+          setPatientList(mapped);
+          setSelectedPatient(mapped[0]);
         }
       } catch (err) {
         console.error('Error fetching nurse dashboard:', err);
@@ -157,7 +157,7 @@ export default function NurseDashboard() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-slate-400 text-sm">Vitals Recorded</p>
-                <h3 className="text-white mt-2">12</h3>
+                <h3 className="text-white mt-2">0</h3>
               </div>
               <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 shadow-lg">
                 <Activity className="w-5 h-5 text-white" />
@@ -171,7 +171,7 @@ export default function NurseDashboard() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-slate-400 text-sm">Ready for Doctor</p>
-                <h3 className="text-white mt-2">8</h3>
+                <h3 className="text-white mt-2">0</h3>
               </div>
               <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-rose-500 shadow-lg">
                 <CheckCircle className="w-5 h-5 text-white" />
@@ -195,6 +195,14 @@ export default function NurseDashboard() {
               <div className="text-slate-400 text-center py-8">
                 <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-2" />
                 Loading vitals queue...
+              </div>
+            ) : patientList.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center text-slate-500">
+                <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-4">
+                  <Activity className="w-8 h-8 text-slate-500" />
+                </div>
+                <p className="text-lg font-medium text-slate-300">Queue is empty</p>
+                <p className="mt-1">No patients currently waiting for vitals.</p>
               </div>
             ) : patientList.map((patient, index) => (
               <Dialog key={patient.id}>
@@ -231,10 +239,11 @@ export default function NurseDashboard() {
                   <DialogHeader>
                     <DialogTitle className="text-white flex items-center gap-2">
                       <Activity className="w-5 h-5 text-emerald-400" />
-                      Record Vitals - {selectedPatient.name}
+                      Record Vitals - {selectedPatient?.name}
                     </DialogTitle>
                   </DialogHeader>
 
+                  {selectedPatient && (
                   <div className="space-y-6 mt-4">
                     {/* Infusion Safety Block */}
                     <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-violet-500/5 to-transparent border border-indigo-500/30 shadow-lg shadow-indigo-500/5 relative overflow-hidden">
@@ -357,6 +366,7 @@ export default function NurseDashboard() {
                       </Button>
                     </div>
                   </div>
+                  )}
                 </DialogContent>
               </Dialog>
             ))}

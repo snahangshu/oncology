@@ -7,23 +7,28 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 
-// Mock Patient Data
-const mockPatients = [
-  { id: 1, name: 'John Anderson', age: 58, type: 'Lung Cancer', stage: 'Stage 3A', status: 'Active Treatment', urgency: 'High', doctor: 'Dr. Sarah Jenkins', lastVisit: '2 days ago', avatar: 'JA' },
-  { id: 2, name: 'Maria Garcia', age: 45, type: 'Breast Cancer', stage: 'Stage 2B', status: 'Active Treatment', urgency: 'Routine', doctor: 'Dr. Sarah Jenkins', lastVisit: '1 week ago', avatar: 'MG' },
-  { id: 3, name: 'Robert Kim', age: 62, type: 'Non-Hodgkin Lymphoma', stage: 'Stage 4', status: 'High-Risk', urgency: 'Critical', doctor: 'Dr. James Wilson', lastVisit: 'Today', avatar: 'RK' },
-  { id: 4, name: 'Lisa Thompson', age: 39, type: 'Meningioma', stage: 'Benign', status: 'Follow-up', urgency: 'Routine', doctor: 'Dr. Sarah Jenkins', lastVisit: '3 months ago', avatar: 'LT' },
-  { id: 5, name: 'David Miller', age: 71, type: 'Prostate Cancer', stage: 'Stage 2', status: 'New Referral', urgency: 'Medium', doctor: 'Unassigned', lastVisit: 'Never', avatar: 'DM' },
-  { id: 6, name: 'Emily Chen', age: 52, type: 'Ovarian Cancer', stage: 'Remission', status: 'Discharged', urgency: 'Low', doctor: 'Dr. Sarah Jenkins', lastVisit: '6 months ago', avatar: 'EC' },
-];
+// State interface
+interface Patient {
+  id: number;
+  name: string;
+  age: number;
+  type: string;
+  stage: string;
+  status: string;
+  urgency: string;
+  doctor: string;
+  lastVisit: string;
+  avatar: string;
+}
 
 export default function DoctorPatients() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('active');
+  const [patients, setPatients] = useState<Patient[]>([]);
 
-  // Filter mocked patients
-  const filteredPatients = mockPatients.filter(p => {
+  // Filter patients
+  const filteredPatients = patients.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           p.type.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -164,8 +169,16 @@ export default function DoctorPatients() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-12 text-center text-slate-500">
-                      No patients found matching your filters.
+                    <td colSpan={6} className="p-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-4">
+                        <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500">
+                           <UserCircle2 className="w-8 h-8" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-lg font-medium text-slate-300">No patients found</p>
+                          <p className="text-sm text-slate-500 max-w-sm mx-auto">There are currently no patients matching your criteria or assigned to your panel.</p>
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 )}
