@@ -19,6 +19,12 @@ import LabReviewCenter from './pages/doctor/LabReviewCenter';
 import ReceptionistDashboard from './pages/ReceptionistDashboard';
 import NewPatient from './pages/receptionist/NewPatient';
 import IntakeDashboard from './pages/receptionist/IntakeDashboard';
+import PatientRegistry from './pages/receptionist/PatientRegistry';
+import ReferralsQueue from './pages/receptionist/ReferralsQueue';
+import IntakeManagement from './pages/receptionist/IntakeManagement';
+import AppointmentScheduling from './pages/receptionist/AppointmentScheduling';
+import CheckInWaitingRoom from './pages/receptionist/CheckInWaitingRoom';
+import InsuranceAuth from './pages/receptionist/InsuranceAuth';
 import NurseDashboard from './pages/NurseDashboard';
 import PatientDashboard from './pages/PatientDashboard';
 import PatientDetails from './pages/PatientDetails';
@@ -188,6 +194,60 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ReceptionistDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/receptionist/registry"
+            element={
+              <ProtectedRoute>
+                <PatientRegistry />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/receptionist/referrals"
+            element={
+              <ProtectedRoute>
+                <ReferralsQueue />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/receptionist/intakes"
+            element={
+              <ProtectedRoute>
+                <IntakeManagement />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/receptionist/scheduling"
+            element={
+              <ProtectedRoute>
+                <AppointmentScheduling />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/receptionist/check-in"
+            element={
+              <ProtectedRoute>
+                <CheckInWaitingRoom />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/receptionist/insurance"
+            element={
+              <ProtectedRoute>
+                <InsuranceAuth />
               </ProtectedRoute>
             }
           />

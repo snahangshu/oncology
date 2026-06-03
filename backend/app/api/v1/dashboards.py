@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db
 from app.modules.users.models import User, Role
 from app.modules.users.auth_deps import require_role
-from app.modules.intake.models import Patient, OncologyIntake
+from app.modules.intake.models import Patient, OncologyIntake, InsuranceRecord
 from app.modules.doctors.models import Doctor
 from app.modules.scheduling.models import Appointment
 from datetime import datetime, date, time
@@ -153,4 +153,146 @@ def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIEN
     return {
         "upcoming_appointments": result,
         "recent_prescriptions": []
+    }
+
+@router.get("/receptionist/registry", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
+def get_patient_registry(db: Session = Depends(get_db)):
+    patients = db.query(Patient).all()
+    result = []
+    for p in patients:
+        intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == p.id).first()
+        intake_prog = f"{intake.completion_percentage // 25}/4" if intake else "0/4"
+        
+        # Get next appt
+        next_appt = db.query(Appointment).filter(
+            Appointment.patient_id == p.id,
+            Appointment.start_time > datetime.now()
+        ).order_by(Appointment.start_time.asc()).first()
+        
+        if next_appt:
+            appt_str = next_appt.start_time.strftime("%b %d, %Y")
+        else:
+            appt_str = "Unscheduled"
+            
+        status = "Active Treatment"
+        if not intake or intake.intake_status == "INCOMPLETE":
+            status = "Pending Intake"
+        elif not next_appt:
+            status = "Awaiting Scheduling"
+            
+        result.append({
+            "id": p.id,
+            "name": f"{p.first_name} {p.last_name}",
+            "mrn": f"MRN-{p.id:04d}",
+            "diagnosis": p.primary_diagnosis or "Pending Diagnosis",
+            "intake": intake_prog,
+            "nextAppointment": appt_str,
+            "status": status
+        })
+    return result
+
+@router.get("/receptionist/intakes", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
+def get_intake_management(db: Session = Depends(get_db)):
+    patients = db.query(Patient).all()
+    result = []
+    for p in patients:
+        intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == p.id).first()
+        if not intake:
+            continue
+            
+        result.append({
+            "id": p.id,
+            "name": f"{p.first_name} {p.last_name}",
+            "referral": bool(intake.referral_letter),
+            "pathology": bool(intake.pathology_report),
+            "imaging": bool(intake.imaging_report),
+            "insurance": bool(intake.insurance_authorization),
+            "status": "Completed" if intake.completion_percentage == 100 else ("Urgent Case" if p.urgency_level == "High" else "Incomplete")
+        })
+    return result
+
+@router.get("/receptionist/referrals", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
+def get_referrals_queue(db: Session = Depends(get_db)):
+    patients = db.query(Patient).all()
+    result = []
+    for p in patients:
+        intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == p.id).first()
+        if not intake:
+            continue
+            
+        ref_doc = "External Provider"
+        if intake.referral_letter and isinstance(intake.referral_letter, dict):
+            ref_doc = intake.referral_letter.get("provider", "Dr. Sharma (External)")
+            
+        status = "Ready For Intake"
+        if not intake.pathology_report:
+            status = "Awaiting Pathology"
+        elif not intake.imaging_report:
+            status = "Awaiting Imaging"
+        elif intake.completion_percentage == 100:
+            status = "Ready For Scheduling"
+            
+        result.append({
+            "id": p.id,
+            "name": f"{p.first_name} {p.last_name}",
+            "referringDoctor": ref_doc,
+            "referralDate": p.created_at.strftime("%b %d, %Y") if p.created_at else date.today().strftime("%b %d, %Y"),
+            "status": status
+        })
+    return result
+
+@router.get("/receptionist/waiting-room", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
+def get_waiting_room(db: Session = Depends(get_db)):
+    today_start = datetime.combine(date.today(), time.min)
+    today_end = datetime.combine(date.today(), time.max)
+    
+    appts = db.query(Appointment).filter(
+        Appointment.start_time >= today_start,
+        Appointment.start_time <= today_end
+    ).order_by(Appointment.start_time.asc()).all()
+    
+    result = []
+    for a in appts:
+        p = db.query(Patient).filter(Patient.id == a.patient_id).first()
+        doc = db.query(Doctor).filter(Doctor.id == a.doctor_id).first()
+        
+        wait_mins = 0
+        if a.status == "waiting":
+            wait_mins = int((datetime.now() - a.start_time).total_seconds() / 60)
+            if wait_mins < 0: wait_mins = 0
+            
+        result.append({
+            "id": a.id,
+            "name": f"{p.first_name} {p.last_name}" if p else "Unknown",
+            "doctor": f"Dr. {doc.last_name}" if doc else "Unassigned",
+            "time": a.start_time.strftime("%I:%M %p"),
+            "status": a.status.title() if a.status else "Scheduled",
+            "waitMinutes": wait_mins
+        })
+    return result
+
+@router.get("/receptionist/insurance", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
+def get_insurance_auth(db: Session = Depends(get_db)):
+    records = db.query(InsuranceRecord).all()
+    result = []
+    for r in records:
+        p = db.query(Patient).filter(Patient.id == r.patient_id).first()
+        result.append({
+            "id": r.id,
+            "name": f"{p.first_name} {p.last_name}" if p else "Unknown",
+            "provider": r.provider_name,
+            "type": r.request_type or "Prior Auth (General)",
+            "status": r.auth_status or "Pending",
+            "expiry": r.expiry_date.strftime("%b %d, %Y") if r.expiry_date else "N/A"
+        })
+    return result
+
+@router.get("/receptionist/scheduling-options", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
+def get_scheduling_options(db: Session = Depends(get_db)):
+    patients = db.query(Patient).all()
+    doctors = db.query(Doctor).all()
+    
+    return {
+        "patients": [{"id": str(p.id), "name": f"{p.first_name} {p.last_name}", "mrn": f"MRN-{p.id:04d}"} for p in patients],
+        "doctors": [{"id": str(d.id), "name": f"Dr. {d.first_name} {d.last_name}", "specialty": d.specialties[0] if d.specialties else "Oncology"} for d in doctors]
     }
