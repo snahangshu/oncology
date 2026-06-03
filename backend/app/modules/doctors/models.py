@@ -76,7 +76,6 @@ class DoctorSchedule(Base, TimestampMixin):
     doctor: Mapped["Doctor"] = relationship("Doctor", back_populates="schedules")
 
 
-<<<<<<< HEAD
 class DoctorScheduleException(Base, TimestampMixin):
     __tablename__ = "doctor_schedule_exceptions"
 
@@ -155,7 +154,8 @@ class DoctorRoutingProfile(Base, TimestampMixin):
     avg_consult_duration: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     urgent_case_capacity_remaining: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     accepting_new_patients: Mapped[bool] = mapped_column(Boolean, default=True)
-=======
+
+
 class DoctorTimeOff(Base, TimestampMixin):
     """
     Represents blocked out time for a doctor (PTO, emergency, etc.)
@@ -173,9 +173,6 @@ class DoctorTimeOff(Base, TimestampMixin):
 
     # Relationships
     doctor: Mapped["Doctor"] = relationship("Doctor")
-<<<<<<< Updated upstream
->>>>>>> origin/main
-=======
 
 
 class DoctorCapacityProfile(Base, TimestampMixin):
@@ -194,4 +191,3 @@ class DoctorCapacityProfile(Base, TimestampMixin):
 
     # Relationships
     doctor: Mapped["Doctor"] = relationship("Doctor")
->>>>>>> Stashed changes
