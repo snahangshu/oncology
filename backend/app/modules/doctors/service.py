@@ -116,11 +116,19 @@ class DoctorService:
 
         # Get all appointments for this date to check for conflicts
         from app.modules.scheduling.models import Appointment
+        from app.modules.doctors.models import DoctorTimeOff
         day_start = datetime.combine(target_date, time(0, 0))
         day_end = datetime.combine(target_date, time(23, 59))
+        
         appointments = (
             self.db.query(Appointment)
             .filter(Appointment.start_time >= day_start, Appointment.start_time <= day_end)
+            .all()
+        )
+        
+        time_offs = (
+            self.db.query(DoctorTimeOff)
+            .filter(DoctorTimeOff.start_time >= day_start, DoctorTimeOff.start_time <= day_end)
             .all()
         )
 
@@ -130,21 +138,39 @@ class DoctorService:
             if not doctor or doctor.status != "active":
                 continue
 
-            # Check if this doctor has an appointment during this time block
-            is_booked = any(
-                apt.start_time.time() < sched.end_time and apt.end_time.time() > sched.start_time
-                for apt in appointments
-                if getattr(apt, 'doctor_id', None) == doctor.id
-            )
+            current_time = datetime.combine(target_date, sched.start_time)
+            end_datetime = datetime.combine(target_date, sched.end_time)
+            
+            while current_time < end_datetime:
+                chunk_end = current_time + timedelta(minutes=15)
+                if chunk_end > end_datetime:
+                    break
+                    
+                # Check if this 15 min chunk overlaps with an appointment
+                is_booked = any(
+                    apt.start_time < chunk_end and apt.end_time > current_time
+                    for apt in appointments
+                    if getattr(apt, 'doctor_id', None) == doctor.id
+                )
+                
+                # Check if it overlaps with a time-off block
+                if not is_booked:
+                    is_booked = any(
+                        toff.start_time < chunk_end and toff.end_time > current_time
+                        for toff in time_offs
+                        if getattr(toff, 'doctor_id', None) == doctor.id
+                    )
 
-            slots.append(DoctorAvailabilitySlot(
-                doctor_id=doctor.id,
-                doctor_name=f"{doctor.first_name} {doctor.last_name}",
-                specialty=doctor.specialty,
-                start_time=sched.start_time.strftime("%H:%M"),
-                end_time=sched.end_time.strftime("%H:%M"),
-                is_booked=is_booked,
-            ))
+                slots.append(DoctorAvailabilitySlot(
+                    doctor_id=doctor.id,
+                    doctor_name=f"{doctor.first_name} {doctor.last_name}",
+                    specialty=doctor.specialty,
+                    start_time=current_time.strftime("%H:%M"),
+                    end_time=chunk_end.strftime("%H:%M"),
+                    is_booked=is_booked,
+                ))
+                
+                current_time = chunk_end
 
         return DailyAvailabilityResponse(
             date=target_date.isoformat(),

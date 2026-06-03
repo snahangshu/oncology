@@ -17,6 +17,7 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
   const [open, setOpen] = useState(false);
   const [bookingType, setBookingType] = useState<"consultation" | "infusion">("consultation");
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  const [forceOverbook, setForceOverbook] = useState(false);
   const queryClient = useQueryClient();
 
   const specialty = bookingType === "consultation" ? "Medical Oncology" : "Infusion Center";
@@ -25,7 +26,7 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
     queryKey: ['available_slots', patientId, specialty],
     queryFn: async () => {
       const res = await api.get(`/slots`, {
-        params: { patient_id: patientId, specialty }
+        params: { patient_id: patientId, specialty, appointment_type: bookingType === "consultation" ? "initial-consult" : "infusion" }
       });
       return res.data;
     },
@@ -39,13 +40,15 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
         patient_id: patientId,
         doctor_id: slot.doctor_id,
         start_time: slot.start_time,
-        end_time: slot.end_time
+        end_time: slot.end_time,
+        force_overbook: forceOverbook
       });
       return res.data;
     },
     onSuccess: () => {
       toast.success('Appointment scheduled successfully!');
       setOpen(false);
+      setForceOverbook(false);
       queryClient.invalidateQueries({ queryKey: ['patient_dashboard'] });
     },
     onError: (err: any) => {
@@ -176,10 +179,23 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
             </div>
           </Tabs>
 
-          <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-800">
-            <Button variant="ghost" onClick={() => setOpen(false)} className="text-slate-400 hover:text-white">
-              Cancel
-            </Button>
+          <div className="mt-6 flex flex-col gap-4 pt-4 border-t border-slate-800">
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="force-overbook"
+                checked={forceOverbook}
+                onChange={(e) => setForceOverbook(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-rose-500 focus:ring-rose-500/50"
+              />
+              <label htmlFor="force-overbook" className="text-sm text-slate-400">
+                <span className="text-rose-400 font-medium">Admin Override:</span> Force Overbook this slot (Bypass overlap checks)
+              </label>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setOpen(false)} className="text-slate-400 hover:text-white">
+                Cancel
+              </Button>
             <Button 
               disabled={!selectedSlot || confirmMutation.isPending}
               onClick={handleConfirm}
@@ -190,6 +206,7 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
             </Button>
           </div>
         </div>
+      </div>
       </DialogContent>
     </Dialog>
   );

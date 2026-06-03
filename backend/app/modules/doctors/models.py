@@ -1,7 +1,7 @@
-from sqlalchemy import String, Integer, ForeignKey, Boolean, Time, Date
+from sqlalchemy import String, Integer, ForeignKey, Boolean, Time, Date, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, Optional
-from datetime import time, date
+from datetime import time, date, datetime
 from app.shared.base_model import Base, TimestampMixin
 
 
@@ -53,3 +53,22 @@ class DoctorSchedule(Base, TimestampMixin):
 
     # Relationships
     doctor: Mapped["Doctor"] = relationship("Doctor", back_populates="schedules")
+
+
+class DoctorTimeOff(Base, TimestampMixin):
+    """
+    Represents blocked out time for a doctor (PTO, emergency, etc.)
+    The scheduling engine will not return availability slots during this window.
+    """
+    __tablename__ = "doctor_time_off"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    doctor_id: Mapped[int] = mapped_column(
+        ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    start_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    end_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    reason: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    # Relationships
+    doctor: Mapped["Doctor"] = relationship("Doctor")
