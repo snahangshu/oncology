@@ -68,7 +68,7 @@ export default function InsuranceAuth() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Pending Auth</p>
-              <h3 className="text-white text-2xl font-bold">12</h3>
+              <h3 className="text-white text-2xl font-bold">{insuranceRecords.filter(i => i.status === 'Pending').length}</h3>
             </div>
           </CardContent>
         </Card>
@@ -80,7 +80,7 @@ export default function InsuranceAuth() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Expiring {'<'} 7 Days</p>
-              <h3 className="text-orange-400 text-2xl font-bold">3</h3>
+              <h3 className="text-orange-400 text-2xl font-bold">{insuranceRecords.filter(i => i.status === 'Expiring Soon').length}</h3>
             </div>
           </CardContent>
         </Card>
@@ -92,7 +92,7 @@ export default function InsuranceAuth() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Rejected Claims</p>
-              <h3 className="text-white text-2xl font-bold">4</h3>
+              <h3 className="text-white text-2xl font-bold">{insuranceRecords.filter(i => i.status === 'Denied').length}</h3>
             </div>
           </CardContent>
         </Card>
@@ -104,7 +104,7 @@ export default function InsuranceAuth() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Approved Today</p>
-              <h3 className="text-white text-2xl font-bold">8</h3>
+              <h3 className="text-white text-2xl font-bold">{insuranceRecords.filter(i => i.status === 'Approved').length}</h3>
             </div>
           </CardContent>
         </Card>

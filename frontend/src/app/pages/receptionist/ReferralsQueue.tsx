@@ -71,7 +71,7 @@ export default function ReferralsQueue() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">New Referrals (24h)</p>
-              <h3 className="text-white text-2xl font-bold">12</h3>
+              <h3 className="text-white text-2xl font-bold">{referrals.length}</h3>
             </div>
           </CardContent>
         </Card>
@@ -83,7 +83,7 @@ export default function ReferralsQueue() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Pending Review</p>
-              <h3 className="text-white text-2xl font-bold">3</h3>
+              <h3 className="text-white text-2xl font-bold">{referrals.filter(r => r.status === 'Pending Review').length}</h3>
             </div>
           </CardContent>
         </Card>
@@ -95,7 +95,7 @@ export default function ReferralsQueue() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Awaiting Docs</p>
-              <h3 className="text-white text-2xl font-bold">8</h3>
+              <h3 className="text-white text-2xl font-bold">{referrals.filter(r => r.status === 'Awaiting Pathology' || r.status === 'Awaiting Imaging').length}</h3>
             </div>
           </CardContent>
         </Card>
@@ -107,7 +107,7 @@ export default function ReferralsQueue() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Ready For Intake</p>
-              <h3 className="text-white text-2xl font-bold">5</h3>
+              <h3 className="text-white text-2xl font-bold">{referrals.filter(r => r.status === 'Ready For Intake' || r.status === 'Ready For Scheduling').length}</h3>
             </div>
           </CardContent>
         </Card>
