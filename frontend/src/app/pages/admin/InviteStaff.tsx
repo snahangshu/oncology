@@ -6,7 +6,7 @@ import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
 import { api } from '../../shared/api';
 import { UserPlus, Mail } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 export default function InviteStaff() {
   const navigate = useNavigate();

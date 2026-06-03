@@ -4,7 +4,7 @@ from typing import List, Annotated
 import datetime
 
 from app.dependencies import get_db
-from app.modules.users.auth_deps import get_current_active_user, get_current_admin_user
+from app.modules.users.auth_deps import get_current_active_user, require_role
 from app.modules.users.models import User, Role, VerificationStatus
 from app.modules.users.credential_models import RoleDocumentRequirement, StaffDocument, DocumentStatus
 from app.modules.users.staff_schemas import (
@@ -22,7 +22,7 @@ router = APIRouter()
 @router.post("/invite", response_model=StaffInviteResponse)
 def invite_staff(
     request: StaffInviteRequest,
-    current_admin: Annotated[User, Depends(get_current_admin_user)],
+    current_admin: Annotated[User, Depends(require_role([Role.ADMIN]))],
     db: Session = Depends(get_db)
 ):
     # Check if email exists
@@ -95,7 +95,7 @@ def get_my_documents(
 def review_document(
     doc_id: int,
     request: DocumentReviewRequest,
-    current_admin: Annotated[User, Depends(get_current_admin_user)],
+    current_admin: Annotated[User, Depends(require_role([Role.ADMIN]))],
     db: Session = Depends(get_db)
 ):
     doc = db.query(StaffDocument).filter(StaffDocument.id == doc_id).first()
