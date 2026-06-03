@@ -41,6 +41,7 @@ interface Appointment {
 export default function ReceptionistDashboard() {
   const [waitingRoomList, setWaitingRoomList] = useState<WaitingPatient[]>([]);
   const [todayAppointmentsList, setTodayAppointmentsList] = useState<Appointment[]>([]);
+  const [upcomingAppointmentsList, setUpcomingAppointmentsList] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [newPatient, setNewPatient] = useState({
@@ -121,6 +122,7 @@ export default function ReceptionistDashboard() {
         if (response.data) {
           setWaitingRoomList(response.data.waiting_patients || []);
           setTodayAppointmentsList(response.data.today_appointments || []);
+          setUpcomingAppointmentsList(response.data.upcoming_appointments || []);
         }
       } catch (err) {
         console.error('Error fetching receptionist dashboard:', err);
@@ -309,6 +311,15 @@ export default function ReceptionistDashboard() {
               selected={date}
               onSelect={setDate}
               className="rounded-xl border-slate-700/30 bg-slate-800/20"
+              modifiers={{
+                booked: [
+                  ...todayAppointmentsList.map(() => new Date()),
+                  ...upcomingAppointmentsList.map((apt: any) => new Date(apt.date))
+                ]
+              }}
+              modifiersClassNames={{
+                booked: "bg-cyan-500/20 text-cyan-400 font-bold border border-cyan-500/50 relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-cyan-400 after:rounded-full"
+              }}
             />
           </CardContent>
         </Card>
@@ -367,6 +378,57 @@ export default function ReceptionistDashboard() {
                         ? 'border-violet-500/50 text-violet-400 bg-violet-500/10 animate-pulse'
                         : 'border-slate-500/30 text-slate-400 bg-slate-500/10'
                     }
+                  >
+                    {apt.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Upcoming Appointments */}
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden mt-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-cyan-400" />
+              Upcoming Appointments
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {isLoading ? (
+               <div className="text-slate-400 text-center py-8">
+                 <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-2" />
+                 Loading upcoming schedule...
+               </div>
+            ) : upcomingAppointmentsList.length === 0 ? (
+               <div className="text-slate-400 text-center py-8">
+                 No upcoming appointments scheduled.
+               </div>
+            ) : upcomingAppointmentsList.map((apt: any, index) => (
+              <div
+                key={apt.id}
+                className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-cyan-500/50 transition-all animate-in slide-in-from-bottom duration-500"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="text-center">
+                      <p className="text-cyan-400 font-semibold">{apt.date}</p>
+                      <p className="text-slate-400 text-sm">{apt.time}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-white">{apt.patient}</h4>
+                      <p className="text-slate-400 text-sm">{apt.doctor}</p>
+                    </div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="border-slate-500/30 text-slate-400 bg-slate-500/10"
                   >
                     {apt.status}
                   </Badge>

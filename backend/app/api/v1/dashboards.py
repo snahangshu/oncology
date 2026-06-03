@@ -43,7 +43,6 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
         pat_name = f"{patient.first_name} {patient.last_name}" if patient else "Unknown"
         primary_dx = patient.primary_diagnosis if patient else "Unknown"
         urgency = patient.urgency_level if patient else "ROUTINE"
-        
         intake_summary = {}
         if intake:
             if intake.referral_letter: intake_summary['referral_letter'] = intake.referral_letter
@@ -51,19 +50,52 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
             if intake.imaging_report: intake_summary['imaging_report'] = intake.imaging_report
             
         result.append({
-            "appointment_id": appt.id,
-            "time": appt.start_time.strftime("%H:%M"),
+            "appointment_id": str(appt.id),
+            "patient_id": str(appt.patient_id),
+            "patient_name": f"{patient.first_name} {patient.last_name}" if patient else "Unknown",
+            "time": appt.start_time.strftime("%I:%M %p"),
+            "date": appt.start_time.strftime("%b %d, %Y"),
             "full_time": appt.start_time.isoformat(),
-            "patient_name": pat_name,
-            "patient_id": appt.patient_id,
             "status": appt.status,
-            "primary_diagnosis": primary_dx,
-            "urgency_level": urgency,
-            "intake_summary": intake_summary
+            "urgency_level": getattr(patient, 'urgency_level', 'Routine') if patient else 'Routine',
+            "primary_diagnosis": getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown',
+            "intake_summary": intake_summary,
+            "ai_summary": intake.ai_summary if intake and intake.ai_summary else f"AI Summary based on Intake: Patient presents with {getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown'}. Intake documents include: {', '.join(intake_summary.keys()) or 'None'}."
         })
         
+    upcoming_appts = db.query(Appointment).filter(
+        Appointment.doctor_id == doctor.id,
+        Appointment.start_time > today_end
+    ).order_by(Appointment.start_time.asc()).limit(10).all()
+    
+    upcoming_result = []
+    for appt in upcoming_appts:
+        patient = db.query(Patient).filter(Patient.id == appt.patient_id).first()
+        intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == appt.patient_id).first()
+        
+        intake_summary = {}
+        if intake:
+            if intake.referral_letter: intake_summary['referral_letter'] = intake.referral_letter
+            if intake.pathology_report: intake_summary['pathology_report'] = intake.pathology_report
+            if intake.imaging_report: intake_summary['imaging_report'] = intake.imaging_report
+            
+        upcoming_result.append({
+            "appointment_id": str(appt.id),
+            "patient_id": str(appt.patient_id),
+            "patient_name": f"{patient.first_name} {patient.last_name}" if patient else "Unknown",
+            "date": appt.start_time.strftime("%b %d, %Y"),
+            "time": appt.start_time.strftime("%I:%M %p"),
+            "full_time": appt.start_time.isoformat(),
+            "status": appt.status,
+            "primary_diagnosis": getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown',
+            "urgency_level": getattr(patient, 'urgency_level', 'Routine') if patient else 'Routine',
+            "intake_summary": intake_summary,
+            "ai_summary": getattr(intake, 'ai_summary', None) if intake else None or f"AI Summary based on Intake: Patient presents with {getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown'}. Intake documents include: {', '.join(intake_summary.keys()) or 'None'}."
+        })
+
     return {
         "today_appointments": result,
+        "upcoming_appointments": upcoming_result,
         "queue_size": len([a for a in result if a['status'] in ['waiting', 'confirmed']])
     }
 
@@ -106,13 +138,31 @@ def get_receptionist_dashboard(db: Session = Depends(get_db)):
                 "status": "Waiting"
             })
     
+    upcoming_appts = db.query(Appointment).filter(
+        Appointment.start_time > today_end
+    ).order_by(Appointment.start_time.asc()).limit(10).all()
+    
+    upcoming_result = []
+    for appt in upcoming_appts:
+        patient = db.query(Patient).filter(Patient.id == appt.patient_id).first()
+        doctor = db.query(Doctor).filter(Doctor.id == appt.doctor_id).first()
+        upcoming_result.append({
+            "id": appt.id,
+            "date": appt.start_time.strftime("%b %d, %Y"),
+            "time": appt.start_time.strftime("%I:%M %p"),
+            "patient": f"{patient.first_name} {patient.last_name}" if patient else "Unknown",
+            "doctor": f"Dr. {doctor.last_name}" if doctor else "Unknown",
+            "status": appt.status.capitalize()
+        })
+
     doctors_available = db.query(Doctor).filter(Doctor.status == "active").count()
 
     return {
         "waiting_patients": waiting_list,
         "doctors_available": doctors_available,
         "today_appointments": result,
-        "total_upcoming": len(result)
+        "upcoming_appointments": upcoming_result,
+        "total_upcoming": len(result) + len(upcoming_result)
     }
 
 @router.get("/nurse", dependencies=[Depends(require_role([Role.NURSE]))])
@@ -294,5 +344,5 @@ def get_scheduling_options(db: Session = Depends(get_db)):
     
     return {
         "patients": [{"id": str(p.id), "name": f"{p.first_name} {p.last_name}", "mrn": f"MRN-{p.id:04d}"} for p in patients],
-        "doctors": [{"id": str(d.id), "name": f"Dr. {d.first_name} {d.last_name}", "specialty": d.specialties[0] if d.specialties else "Oncology"} for d in doctors]
+        "doctors": [{"id": str(d.id), "name": f"Dr. {d.first_name} {d.last_name}", "specialty": d.specialty if getattr(d, 'specialty', None) else "Oncology"} for d in doctors]
     }

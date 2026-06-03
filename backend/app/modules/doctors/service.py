@@ -138,37 +138,64 @@ class DoctorService:
 
     # ── Availability ─────────────────────────────────────────────
 
-    def get_availability_for_date(self, target_date: date) -> DailyAvailabilityResponse:
+    def get_availability_for_date(self, target_date: date, appointment_type: Optional[str] = None) -> DailyAvailabilityResponse:
         """
         Returns all doctors' availability for a given date.
-        Cross-references schedules against booked appointments.
+        Cross-references schedules against booked appointments and capacity constraints.
         """
         day_of_week = target_date.weekday()  # 0=Monday
         schedules = self.schedule_repo.get_schedules_for_day(day_of_week, target_date)
 
-        # Get all appointments for this date to check for conflicts
         from app.modules.scheduling.models import Appointment
-        from app.modules.doctors.models import DoctorTimeOff
+        from app.modules.doctors.models import DoctorTimeOff, DoctorCapacityProfile
+        
+        # --- Instance-level caching to fix N+1 queries during 14-day loop ---
+        if not hasattr(self, '_cache_initialized'):
+            self._cache_initialized = True
+            range_start = datetime.combine(target_date, time(0, 0))
+            range_end = datetime.combine(target_date + timedelta(days=30), time(23, 59))
+            
+            self._cached_appts = self.db.query(Appointment).filter(
+                Appointment.start_time >= range_start, Appointment.start_time <= range_end
+            ).all()
+            
+            self._cached_time_offs = self.db.query(DoctorTimeOff).filter(
+                DoctorTimeOff.start_time >= range_start, DoctorTimeOff.start_time <= range_end
+            ).all()
+            
+            self._cached_capacities = {cap.doctor_id: cap for cap in self.db.query(DoctorCapacityProfile).all()}
+            self._cached_doctors = {}
+
         day_start = datetime.combine(target_date, time(0, 0))
         day_end = datetime.combine(target_date, time(23, 59))
         
-        appointments = (
-            self.db.query(Appointment)
-            .filter(Appointment.start_time >= day_start, Appointment.start_time <= day_end)
-            .all()
-        )
-        
-        time_offs = (
-            self.db.query(DoctorTimeOff)
-            .filter(DoctorTimeOff.start_time >= day_start, DoctorTimeOff.start_time <= day_end)
-            .all()
-        )
+        appointments = [a for a in self._cached_appts if day_start <= a.start_time <= day_end]
+        time_offs = [t for t in self._cached_time_offs if day_start <= t.start_time <= day_end]
+        capacities = self._cached_capacities
 
         slots: List[DoctorAvailabilitySlot] = []
         for sched in schedules:
-            doctor = self.doctor_repo.get(sched.doctor_id)
+            if sched.doctor_id not in self._cached_doctors:
+                self._cached_doctors[sched.doctor_id] = self.doctor_repo.get(sched.doctor_id)
+            
+            doctor = self._cached_doctors[sched.doctor_id]
             if not doctor or doctor.status != "active":
                 continue
+                
+            # --- Capacity Check ---
+            capacity = capacities.get(doctor.id)
+            if capacity:
+                doc_appointments = [a for a in appointments if a.doctor_id == doctor.id]
+                
+                if appointment_type == "initial-consult":
+                    new_consults = len([a for a in doc_appointments if getattr(a, 'appointment_type', None) == "initial-consult" or a.specialty == "oncology"]) 
+                    if new_consults >= capacity.max_new_consults_per_day:
+                        continue  # Skip this schedule block entirely for this doctor
+                        
+                elif appointment_type == "follow-up":
+                    follow_ups = len([a for a in doc_appointments if getattr(a, 'appointment_type', None) == "follow-up"])
+                    if follow_ups >= capacity.max_follow_ups_per_day:
+                        continue
 
             current_time = datetime.combine(target_date, sched.start_time)
             end_datetime = datetime.combine(target_date, sched.end_time)

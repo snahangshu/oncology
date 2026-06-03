@@ -137,7 +137,12 @@ export function PatientIntakeWizard({ intake, allDocs, onUploadSuccess }: any) {
                     : 'bg-slate-900/50 border-slate-700/50 hover:border-cyan-500/50'
             }`}>
               <CardContent className="p-6 relative">
-                {isCompleted ? (
+                {isUploading ? (
+                  <div className="flex flex-col items-center justify-center text-center space-y-3 py-8">
+                    <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
+                    <p className="text-cyan-400 animate-pulse">Uploading...</p>
+                  </div>
+                ) : isCompleted ? (
                   <div className="flex flex-col items-center justify-center text-center space-y-4 py-4 animate-in zoom-in duration-500">
                     <div className="p-4 bg-emerald-500/20 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                       <CheckCircle2 className="w-10 h-10 text-emerald-400" />
@@ -148,33 +153,32 @@ export function PatientIntakeWizard({ intake, allDocs, onUploadSuccess }: any) {
                         {existingData.originalName}
                       </p>
                     </div>
-                    <a href={existingData.fileUrl} target="_blank" rel="noreferrer" className="text-sm text-cyan-400 hover:underline">
-                      Preview Document
-                    </a>
+                    <div className="flex items-center justify-center gap-4 mt-2 w-full">
+                      <a href={existingData.fileUrl} target="_blank" rel="noreferrer" className="text-sm text-cyan-400 hover:underline px-3 py-1.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors border border-slate-700/50">
+                        Preview
+                      </a>
+                      <div {...getRootProps()} className="cursor-pointer">
+                        <input {...getInputProps()} />
+                        <div className="text-sm text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors border border-slate-700/50">
+                          Replace
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div {...getRootProps()} className="cursor-pointer flex flex-col items-center justify-center text-center space-y-4 py-8">
                     <input {...getInputProps()} />
-                    {isUploading ? (
-                      <div className="flex flex-col items-center space-y-3">
-                        <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
-                        <p className="text-cyan-400 animate-pulse">Uploading...</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className={`p-4 rounded-full transition-colors ${isDeferred ? 'bg-amber-900/50' : 'bg-slate-800/80 group-hover:bg-cyan-950/50'}`}>
-                          <FileUp className={`w-10 h-10 ${isDragActive ? 'text-cyan-400' : isDeferred ? 'text-amber-400' : 'text-slate-400'}`} />
-                        </div>
-                        <div>
-                          <p className="text-base font-bold text-slate-200">
-                            {isDragActive ? "Drop it here!" : "Drag & Drop your file"}
-                          </p>
-                          <p className="text-sm mt-1 text-slate-500">
-                            or click to browse from your device
-                          </p>
-                        </div>
-                      </>
-                    )}
+                    <div className={`p-4 rounded-full transition-colors ${isDeferred ? 'bg-amber-900/50' : 'bg-slate-800/80 group-hover:bg-cyan-950/50'}`}>
+                      <FileUp className={`w-10 h-10 ${isDragActive ? 'text-cyan-400' : isDeferred ? 'text-amber-400' : 'text-slate-400'}`} />
+                    </div>
+                    <div>
+                      <p className="text-base font-bold text-slate-200">
+                        {isDragActive ? "Drop it here!" : "Drag & Drop your file"}
+                      </p>
+                      <p className="text-sm mt-1 text-slate-500">
+                        or click to browse from your device
+                      </p>
+                    </div>
                   </div>
                 )}
               </CardContent>

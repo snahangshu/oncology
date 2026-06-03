@@ -25,9 +25,13 @@ class FHIRClient:
 
     async def get_resource(self, resource_type: str, resource_id: str) -> Dict[str, Any]:
         """Fetch resource by type and ID."""
+        # For local MVP development, mock the FHIR response
+        if "hospital-system.org" in self.base_url or settings.ENVIRONMENT == "development":
+            logger.info(f"[MOCK FHIR] GET {resource_type}/{resource_id}")
+            return {"id": resource_id, "resourceType": resource_type, "status": "active"}
+
         headers = await self._get_auth_headers()
         url = f"{self.base_url}/{resource_type}/{resource_id}"
-
         async with httpx.AsyncClient(timeout=10.0) as client:
             try:
                 response = await client.get(url, headers=headers)
@@ -39,9 +43,13 @@ class FHIRClient:
 
     async def post_resource(self, resource_type: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Post a new FHIR resource."""
+        # For local MVP development, mock the FHIR response
+        if "hospital-system.org" in self.base_url or settings.ENVIRONMENT == "development":
+            logger.info(f"[MOCK FHIR] POST {resource_type}")
+            return {"id": "mock-fhir-12345", "resourceType": resource_type, "status": "created"}
+
         headers = await self._get_auth_headers()
         url = f"{self.base_url}/{resource_type}"
-
         async with httpx.AsyncClient(timeout=10.0) as client:
             try:
                 response = await client.post(url, headers=headers, json=payload)
@@ -53,9 +61,13 @@ class FHIRClient:
         
     async def put_resource(self, resource_type: str, resource_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Update an existing FHIR resource."""
+        # For local MVP development, mock the FHIR response
+        if "hospital-system.org" in self.base_url or settings.ENVIRONMENT == "development":
+            logger.info(f"[MOCK FHIR] PUT {resource_type}/{resource_id}")
+            return {"id": resource_id, "resourceType": resource_type, "status": "updated"}
+
         headers = await self._get_auth_headers()
         url = f"{self.base_url}/{resource_type}/{resource_id}"
-
         async with httpx.AsyncClient(timeout=10.0) as client:
             try:
                 response = await client.put(url, headers=headers, json=payload)

@@ -23,15 +23,48 @@ class BriefRequest(BaseModel):
 class PlanRequest(BaseModel):
     clinical_note: str
 
-@router.post("/{patient_id}/generate-brief", status_code=status.HTTP_202_ACCEPTED)
-def generate_brief(patient_id: int, request: BriefRequest):
+@router.post("/{patient_id}/generate-brief", status_code=status.HTTP_200_OK)
+def generate_brief(patient_id: int, request: BriefRequest, db: Session = Depends(get_db)):
     """Trigger the PreConsultBriefAgent to synthesize patient data."""
+    from app.modules.intake.models import OncologyIntake, Patient
     from app.workers.tasks.clinical_analysis import generate_pre_consult_brief
+    import json
+    
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
+    
+    diagnosis = patient.primary_diagnosis if patient and patient.primary_diagnosis else request.diagnosis
+    clinical_history = request.clinical_history
+    imaging_reports = request.imaging_reports
+    
+    if intake:
+        docs = []
+        if intake.pathology_report:
+            docs.append("PATHOLOGY REPORT:\n" + (json.dumps(intake.pathology_report, indent=2) if isinstance(intake.pathology_report, dict) else str(intake.pathology_report)))
+        if intake.referral_letter:
+            docs.append("REFERRAL LETTER:\n" + (json.dumps(intake.referral_letter, indent=2) if isinstance(intake.referral_letter, dict) else str(intake.referral_letter)))
+        if docs:
+            clinical_history = clinical_history + "\n\n--- UPLOADED DOCUMENTS ---\n" + "\n\n".join(docs)
+            
+        if intake.imaging_report:
+            imaging_reports = json.dumps(intake.imaging_report, indent=2) if isinstance(intake.imaging_report, dict) else str(intake.imaging_report)
+
     task = generate_pre_consult_brief.delay(
-        patient_id, request.patient_name, request.diagnosis,
-        request.clinical_history, request.recent_labs, request.imaging_reports
+        patient_id, request.patient_name, diagnosis,
+        clinical_history, request.recent_labs, imaging_reports
     )
-    return {"status": "processing", "task_id": task.id}
+    
+    # In eager mode, we can get the result immediately
+    summary = ""
+    if hasattr(task, 'result') and isinstance(task.result, dict) and 'brief' in task.result:
+        summary = task.result['brief']
+        from app.modules.intake.models import OncologyIntake
+        intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
+        if intake:
+            intake.ai_summary = summary
+            db.commit()
+            
+    return {"status": "success", "task_id": task.id, "summary": summary}
 
 @router.post("/{patient_id}/structure-plan", status_code=status.HTTP_202_ACCEPTED)
 def structure_plan(patient_id: int, request: PlanRequest):

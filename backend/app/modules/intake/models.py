@@ -116,6 +116,7 @@ class OncologyIntake(Base, TimestampMixin):
     
     intake_status: Mapped[str] = mapped_column(String(50), default="INCOMPLETE", nullable=False)
     completion_percentage: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    ai_summary: Mapped[Optional[str]] = mapped_column(String(5000), nullable=True)
 
     # Relationships
     patient: Mapped["Patient"] = relationship("Patient", back_populates="oncology_intake")
