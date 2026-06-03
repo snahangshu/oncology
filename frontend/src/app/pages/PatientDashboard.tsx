@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDropzone } from 'react-dropzone';
 import { Calendar, FileText, Clock, Upload, Plus, Heart, CheckCircle2, Loader2, FileUp } from 'lucide-react';
@@ -108,6 +108,7 @@ export default function PatientDashboard() {
     };
     fetchDashboard();
   }, []);
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

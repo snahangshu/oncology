@@ -5,6 +5,7 @@ from datetime import datetime
 class SlotQuery(BaseModel):
     patient_id: int
     specialty: str
+    appointment_type: str = Field(default="initial-consult", description="initial-consult, follow-up, infusion, etc.")
     preferred_start_date: Optional[datetime] = None
     preferred_end_date: Optional[datetime] = None
 
@@ -23,6 +24,7 @@ class SlotConfirmRequest(BaseModel):
     doctor_id: int
     start_time: datetime
     end_time: datetime
+    force_overbook: bool = Field(default=False, description="Bypass slot checks for emergency overrides")
 
 class SlotConfirmResponse(BaseModel):
     appointment_id: int
