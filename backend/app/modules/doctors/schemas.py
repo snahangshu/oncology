@@ -1,9 +1,11 @@
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import time, date
 
-
-# ── Doctor Schemas ───────────────────────────────────────────────
+# ── Nested Expertise Schemas ─────────────────────────────────────
+class DiseaseExpertiseItem(BaseModel):
+    disease: str
+    category: str
 
 class DoctorCreateRequest(BaseModel):
     first_name: str = Field(..., min_length=1)
@@ -12,6 +14,35 @@ class DoctorCreateRequest(BaseModel):
     phone: str
     specialty: str = Field(..., description="E.g., Medical Oncology, Radiation Oncology")
     status: str = Field(default="active", description="active or inactive")
+    
+    # Core Enterprise Info
+    gender: Optional[str] = None
+    profile_photo: Optional[str] = None
+    qualifications: Optional[str] = None
+    experience_years: Optional[int] = 0
+    license_number: Optional[str] = None
+    doctor_role: Optional[str] = None
+    
+    # Capacity Limits
+    max_new_consults_per_day: Optional[int] = 5
+    max_follow_ups_per_day: Optional[int] = 15
+    max_working_hours: Optional[int] = 8
+    max_urgent_cases_per_day: Optional[int] = 2
+    
+    # Preferences & Referral Rules
+    accepts_new_patients: bool = True
+    accepts_emergency: bool = True
+    accepts_second_opinions: bool = True
+    accepts_rare_cancers: bool = True
+    accepts_pediatric: bool = False
+    accepts_clinical_trial_referrals: bool = True
+    telemedicine_available: bool = True
+    
+    appointment_durations: Optional[Dict[str, Any]] = None
+    
+    # Expertise
+    disease_expertise: List[DiseaseExpertiseItem] = []
+    treatment_expertise: List[str] = []
 
 
 class DoctorUpdateRequest(BaseModel):
@@ -20,6 +51,8 @@ class DoctorUpdateRequest(BaseModel):
     phone: Optional[str] = None
     specialty: Optional[str] = None
     status: Optional[str] = None
+    max_new_consults_per_day: Optional[int] = None
+    max_follow_ups_per_day: Optional[int] = None
 
 
 class DoctorResponse(BaseModel):
@@ -30,6 +63,8 @@ class DoctorResponse(BaseModel):
     phone: str
     specialty: str
     status: str
+    doctor_role: Optional[str] = None
+    experience_years: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -38,16 +73,12 @@ class DoctorResponse(BaseModel):
 # ── Schedule Schemas ─────────────────────────────────────────────
 
 class ScheduleCreateRequest(BaseModel):
-    day_of_week: Optional[int] = Field(
-        None, ge=0, le=6,
-        description="0=Monday .. 6=Sunday. Required for recurring schedules."
-    )
-    start_time: str = Field(..., description="HH:MM format, e.g., '09:00'")
-    end_time: str = Field(..., description="HH:MM format, e.g., '17:00'")
+    day_of_week: Optional[int] = Field(None, ge=0, le=6)
+    start_time: str = Field(..., description="HH:MM format")
+    end_time: str = Field(..., description="HH:MM format")
     is_recurring: bool = Field(default=True)
-    specific_date: Optional[str] = Field(
-        None, description="YYYY-MM-DD format. For one-off overrides."
-    )
+    specific_date: Optional[str] = Field(None, description="YYYY-MM-DD format")
+    location: Optional[str] = None
 
 
 class ScheduleResponse(BaseModel):
@@ -58,6 +89,7 @@ class ScheduleResponse(BaseModel):
     end_time: str
     is_recurring: bool
     specific_date: Optional[str]
+    location: Optional[str]
 
     class Config:
         from_attributes = True

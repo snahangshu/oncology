@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, Calendar, Activity, TrendingUp, MoreVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -68,6 +69,7 @@ const systemEvents = [
 ];
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [metricsList, setMetricsList] = useState(metrics);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -146,11 +148,14 @@ export default function AdminDashboard() {
 
       {/* Manage Users Table */}
       <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-white flex items-center gap-2">
             <Users className="w-5 h-5 text-cyan-400" />
             Manage Users
           </CardTitle>
+          <Button onClick={() => navigate('/admin/doctors/new')} className="bg-emerald-500 hover:bg-emerald-600 text-white">
+            Add Doctor
+          </Button>
         </CardHeader>
         <CardContent>
           <Table>
