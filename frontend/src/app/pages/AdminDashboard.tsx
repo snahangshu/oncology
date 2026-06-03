@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Users, Calendar, Activity, TrendingUp, MoreVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -153,8 +153,8 @@ export default function AdminDashboard() {
             <Users className="w-5 h-5 text-cyan-400" />
             Manage Users
           </CardTitle>
-          <Button onClick={() => navigate('/admin/doctors/new')} className="bg-emerald-500 hover:bg-emerald-600 text-white">
-            Add Doctor
+          <Button onClick={() => navigate('/admin/staff/invite')} className="bg-emerald-500 hover:bg-emerald-600 text-white">
+            Invite Staff
           </Button>
         </CardHeader>
         <CardContent>

@@ -23,6 +23,7 @@ import app.modules.scheduling.models  # noqa
 import app.modules.infusion.models  # noqa
 import app.modules.audit.models  # noqa
 import app.modules.users.models  # noqa
+import app.modules.users.credential_models  # noqa
 import app.modules.doctors.models  # noqa
 
 target_metadata = Base.metadata

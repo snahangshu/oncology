@@ -49,17 +49,14 @@ export default function Login() {
       toast.success('Login successful!');
       
       // Smart redirect
-      if (profile.role === 'ADMIN') {
-        navigate('/role-selector');
-      } else {
-        const routes: Record<string, string> = {
-          DOCTOR: '/doctor',
-          RECEPTIONIST: '/receptionist',
-          NURSE: '/nurse',
-          PATIENT: '/patient',
-        };
-        navigate(routes[profile.role] || '/login');
-      }
+      const routes: Record<string, string> = {
+        ADMIN: '/admin',
+        DOCTOR: '/doctor',
+        RECEPTIONIST: '/receptionist',
+        NURSE: '/nurse',
+        PATIENT: '/patient',
+      };
+      navigate(routes[profile.role] || '/login');
     } catch (err: any) {
       console.error(err);
       const errorMsg = err.response?.data?.detail || 'The email or password is incorrect';

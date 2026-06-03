@@ -5,6 +5,7 @@ from app.modules.infusion.router import router as infusion_router
 from app.modules.audit.router import router as audit_router
 from app.modules.doctors.router import router as doctors_router
 from app.modules.users.router import router as users_router
+from app.modules.users.staff_router import router as staff_router
 from app.api.v1.dashboards import router as dashboards_router
 
 from app.modules.intake.patients_router import router as patients_router
@@ -19,4 +20,5 @@ api_router.include_router(infusion_router, prefix="/infusion", tags=["Infusion"]
 api_router.include_router(audit_router, prefix="/audit", tags=["Audit"])
 api_router.include_router(doctors_router, prefix="/doctors", tags=["Doctors"])
 api_router.include_router(users_router, prefix="/users", tags=["Users"])
+api_router.include_router(staff_router, prefix="/staff", tags=["Staff"])
 api_router.include_router(dashboards_router, prefix="/dashboards", tags=["Dashboards"])

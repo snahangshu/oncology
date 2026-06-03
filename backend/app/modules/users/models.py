@@ -12,6 +12,14 @@ class Role(str, enum.Enum):
     NURSE = "NURSE"
     PATIENT = "PATIENT"
 
+class VerificationStatus(str, enum.Enum):
+    INVITED = "INVITED"
+    PROFILE_INCOMPLETE = "PROFILE_INCOMPLETE"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    SUSPENDED = "SUSPENDED"
+
 class User(Base, TimestampMixin):
     __tablename__ = "users"
 
@@ -20,6 +28,11 @@ class User(Base, TimestampMixin):
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[Role] = mapped_column(Enum(Role), nullable=False, default=Role.PATIENT)
+    verification_status: Mapped[VerificationStatus] = mapped_column(
+        Enum(VerificationStatus), 
+        nullable=False, 
+        default=VerificationStatus.APPROVED # Default APPROVED for legacy records, logic will set to INVITED
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     
 class RefreshToken(Base, TimestampMixin):

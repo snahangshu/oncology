@@ -9,8 +9,10 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import RoleSelector from './pages/RoleSelector';
 import AdminDashboard from './pages/AdminDashboard';
-import DoctorOnboarding from './pages/admin/DoctorOnboarding';
+import InviteStaff from './pages/admin/InviteStaff';
+import CredentialingDashboard from './pages/admin/CredentialingDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
+import DoctorProfileSetup from './pages/doctor/DoctorProfileSetup';
 import DoctorPatients from './pages/doctor/DoctorPatients';
 import DoctorSchedule from './pages/doctor/DoctorSchedule';
 import DoctorReferrals from './pages/doctor/DoctorReferrals';
@@ -45,14 +47,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AuthRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isInitialized } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, isInitialized, user } = useAppSelector((state) => state.auth);
 
   if (!isInitialized) {
     return <div className="min-h-screen bg-[#070a13] flex items-center justify-center text-cyan-400">Loading session...</div>;
   }
 
-  if (isAuthenticated) {
-    return <Navigate to="/role-selector" replace />;
+  if (isAuthenticated && user) {
+    const routes: Record<string, string> = {
+      ADMIN: '/admin',
+      DOCTOR: '/doctor',
+      RECEPTIONIST: '/receptionist',
+      NURSE: '/nurse',
+      PATIENT: '/patient',
+    };
+    return <Navigate to={routes[user.role] || '/login'} replace />;
   }
 
   return <>{children}</>;
@@ -128,10 +137,18 @@ export default function App() {
           />
           
           <Route
-            path="/admin/doctors/new"
+            path="/admin/staff/invite"
             element={
               <ProtectedRoute>
-                <DoctorOnboarding />
+                <InviteStaff />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/credentialing"
+            element={
+              <ProtectedRoute>
+                <CredentialingDashboard />
               </ProtectedRoute>
             }
           />
@@ -141,6 +158,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <DoctorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/doctor/profile-setup"
+            element={
+              <ProtectedRoute>
+                <DoctorProfileSetup />
               </ProtectedRoute>
             }
           />

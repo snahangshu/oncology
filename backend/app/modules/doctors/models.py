@@ -149,3 +149,39 @@ class DoctorRoutingProfile(Base, TimestampMixin):
     avg_consult_duration: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     urgent_case_capacity_remaining: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     accepting_new_patients: Mapped[bool] = mapped_column(Boolean, default=True)
+
+class DoctorPublication(Base, TimestampMixin):
+    __tablename__ = "doctor_publications"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    doctor_id: Mapped[int] = mapped_column(ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    journal: Mapped[str] = mapped_column(String(255), nullable=False)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
+
+class DoctorCaseStudy(Base, TimestampMixin):
+    __tablename__ = "doctor_case_studies"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    doctor_id: Mapped[int] = mapped_column(ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    description: Mapped[str] = mapped_column(String(2000), nullable=False)
+    document_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+
+class DoctorReference(Base, TimestampMixin):
+    __tablename__ = "doctor_references"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    doctor_id: Mapped[int] = mapped_column(ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False, index=True)
+    reference_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    institution: Mapped[str] = mapped_column(String(255), nullable=False)
+    position: Mapped[str] = mapped_column(String(255), nullable=False)
+    contact_info: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class DoctorPermission(Base, TimestampMixin):
+    __tablename__ = "doctor_permissions"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    doctor_id: Mapped[int] = mapped_column(ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False, index=True)
+    permission_type: Mapped[str] = mapped_column(String(100), nullable=False) # e.g. CAN_PRESCRIBE_CHEMO
+

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Clock, AlertCircle, FileText, Pill, CheckCircle, Sparkles, FlaskConical, Timer, CalendarDays, FilePlus, Activity, RefreshCw, ExternalLink } from 'lucide-react';
+import { Clock, AlertCircle, FileText, Pill, CheckCircle, Sparkles, FlaskConical, Timer, CalendarDays, FilePlus, Activity, RefreshCw, ExternalLink, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { api } from '../shared/api';
@@ -137,11 +137,21 @@ export default function DoctorDashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
-      <div>
-        <h1 className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-2">
-          Doctor Portal
-        </h1>
-        <p className="text-slate-400">Today's consultation queue and AI-driven clinical insights</p>
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-2">
+            Doctor Portal
+          </h1>
+          <p className="text-slate-400">Today's consultation queue and AI-driven clinical insights</p>
+        </div>
+        <div className="flex gap-4">
+          <Button onClick={() => toast.info('Navigating to Credentials Management')} variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800">
+            <ShieldCheck className="w-4 h-4 mr-2" /> My Credentials
+          </Button>
+          <Button onClick={() => navigate('/doctor/profile-setup')} className="bg-cyan-500 hover:bg-cyan-600 text-white">
+            <Activity className="w-4 h-4 mr-2" /> Complete Profile
+          </Button>
+        </div>
       </div>
 
       {/* Top Row KPIs */}

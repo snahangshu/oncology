@@ -6,9 +6,31 @@ from app.modules.users.auth_deps import require_role
 from app.modules.intake.models import Patient, OncologyIntake, InsuranceRecord
 from app.modules.doctors.models import Doctor
 from app.modules.scheduling.models import Appointment
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 
 router = APIRouter()
+
+@router.get("/admin/credentialing", dependencies=[Depends(require_role([Role.ADMIN]))])
+def get_credentialing_dashboard(db: Session = Depends(get_db)):
+    from app.modules.users.credential_models import StaffDocument, DocumentStatus
+    
+    # Calculate simple stats
+    pending_count = db.query(StaffDocument).filter(StaffDocument.status == DocumentStatus.PENDING_REVIEW).count()
+    expired_count = db.query(StaffDocument).filter(StaffDocument.status == DocumentStatus.EXPIRED).count()
+    
+    # Check expiring soon (within 30 days)
+    thirty_days = datetime.utcnow().date() + timedelta(days=30)
+    expiring_soon = db.query(StaffDocument).filter(
+        StaffDocument.status == DocumentStatus.VERIFIED,
+        StaffDocument.expiry_date <= thirty_days,
+        StaffDocument.expiry_date >= datetime.utcnow().date()
+    ).count()
+
+    return {
+        "pending_reviews": pending_count,
+        "expired_documents": expired_count,
+        "expiring_soon": expiring_soon
+    }
 
 @router.get("/admin", dependencies=[Depends(require_role([Role.ADMIN]))])
 def get_admin_dashboard(db: Session = Depends(get_db)):
