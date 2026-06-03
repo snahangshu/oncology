@@ -3,16 +3,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 
-// Mock Referrals Data
-const mockReferrals = [
-  { id: 1, name: 'David Miller', from: 'Dr. Evans (Primary Care)', type: 'Prostate Cancer Suspected', status: 'Pending Review', urgency: 'High', date: 'Today, 09:00 AM' },
-  { id: 2, name: 'Sarah Connor', from: 'Dr. Wright (Gynecology)', type: 'Ovarian Mass', status: 'Awaiting Pathology', urgency: 'Critical', date: 'Yesterday' },
-  { id: 3, name: 'James Smith', from: 'Dr. Taylor (Pulmonology)', type: 'Lung Nodule', status: 'Awaiting Imaging', urgency: 'Medium', date: 'Oct 22, 2026' },
-  { id: 4, name: 'Patricia Brown', from: 'Dr. Martinez (Dermatology)', type: 'Melanoma', status: 'Pending Intake', urgency: 'High', date: 'Oct 21, 2026' },
-  { id: 5, name: 'Michael Davis', from: 'Dr. Wilson (Gastroenterology)', type: 'Colon Cancer', status: 'Awaiting Insurance', urgency: 'Medium', date: 'Oct 20, 2026' },
-];
+import { useState } from 'react';
+
+// State interface
+interface Referral {
+  id: number;
+  name: string;
+  from: string;
+  type: string;
+  status: string;
+  urgency: string;
+  date: string;
+}
 
 export default function DoctorReferrals() {
+  const [referrals, setReferrals] = useState<Referral[]>([]);
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       {/* Header Area */}
@@ -34,8 +39,8 @@ export default function DoctorReferrals() {
           <CardContent className="p-8">
             <p className="text-violet-300 font-medium mb-2 uppercase tracking-widest text-xs">Total New Cases This Week</p>
             <div className="flex items-baseline gap-3">
-              <h2 className="text-6xl font-bold text-white">12</h2>
-              <span className="text-sm text-emerald-400 font-medium">+3 since yesterday</span>
+              <h2 className="text-6xl font-bold text-white">0</h2>
+              <span className="text-sm text-slate-500 font-medium">No new cases</span>
             </div>
             <p className="text-slate-400 mt-4 text-sm max-w-[80%]">New oncology referrals requiring initial review and treatment planning.</p>
           </CardContent>
@@ -48,8 +53,8 @@ export default function DoctorReferrals() {
           <CardContent className="p-8">
             <p className="text-rose-300 font-medium mb-2 uppercase tracking-widest text-xs">Action Required Today</p>
             <div className="flex items-baseline gap-3">
-              <h2 className="text-6xl font-bold text-white">3</h2>
-              <span className="text-sm text-rose-400 font-medium bg-rose-500/10 px-2 py-1 rounded-full animate-pulse">Urgent Reviews</span>
+              <h2 className="text-6xl font-bold text-white">0</h2>
+              <span className="text-sm text-slate-500 font-medium bg-slate-800 px-2 py-1 rounded-full">All clear</span>
             </div>
             <p className="text-slate-400 mt-4 text-sm max-w-[80%]">Cases flagged as critical or high urgency that need immediate attention.</p>
           </CardContent>
@@ -59,11 +64,11 @@ export default function DoctorReferrals() {
       {/* Funnel / Status Widgets */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
-          { label: 'New Referrals', count: 12, icon: FileText, color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
-          { label: 'Pending Intake', count: 4, icon: ClipboardList, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
-          { label: 'Awaiting Pathology', count: 3, icon: FileSearch, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-          { label: 'Awaiting Imaging', count: 5, icon: ImageIcon, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
-          { label: 'Awaiting Insurance', count: 2, icon: ShieldAlert, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+          { label: 'New Referrals', count: 0, icon: FileText, color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
+          { label: 'Pending Intake', count: 0, icon: ClipboardList, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
+          { label: 'Awaiting Pathology', count: 0, icon: FileSearch, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+          { label: 'Awaiting Imaging', count: 0, icon: ImageIcon, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
+          { label: 'Awaiting Insurance', count: 0, icon: ShieldAlert, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
         ].map((stat, idx) => (
           <Card key={idx} className={`bg-slate-900/50 backdrop-blur-xl border ${stat.border} hover:scale-105 transition-transform cursor-pointer`}>
             <CardContent className="p-4 flex flex-col items-center justify-center text-center">
@@ -84,44 +89,54 @@ export default function DoctorReferrals() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y divide-slate-800/50">
-            {mockReferrals.map((ref, idx) => (
-              <div 
-                key={ref.id} 
-                className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-800/40 transition-colors group animate-in slide-in-from-bottom-4 duration-500"
-                style={{ animationDelay: `${idx * 100}ms` }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold shrink-0">
-                    {ref.name.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="text-white font-bold text-lg">{ref.name}</h4>
-                      {ref.urgency === 'Critical' && <Badge variant="outline" className="border-rose-500/50 text-rose-400 bg-rose-500/10 text-[10px] animate-pulse">Critical</Badge>}
-                      {ref.urgency === 'High' && <Badge variant="outline" className="border-orange-500/50 text-orange-400 bg-orange-500/10 text-[10px]">High</Badge>}
+            {referrals.length > 0 ? (
+              referrals.map((ref, idx) => (
+                <div 
+                  key={ref.id} 
+                  className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-800/40 transition-colors group animate-in slide-in-from-bottom-4 duration-500"
+                  style={{ animationDelay: `${idx * 100}ms` }}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold shrink-0">
+                      {ref.name.split(' ').map(n => n[0]).join('')}
                     </div>
-                    <p className="text-cyan-400 font-medium text-sm mb-1">{ref.type}</p>
-                    <p className="text-slate-500 text-xs">Referred by: {ref.from} • {ref.date}</p>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-white font-bold text-lg">{ref.name}</h4>
+                        {ref.urgency === 'Critical' && <Badge variant="outline" className="border-rose-500/50 text-rose-400 bg-rose-500/10 text-[10px] animate-pulse">Critical</Badge>}
+                        {ref.urgency === 'High' && <Badge variant="outline" className="border-orange-500/50 text-orange-400 bg-orange-500/10 text-[10px]">High</Badge>}
+                      </div>
+                      <p className="text-cyan-400 font-medium text-sm mb-1">{ref.type}</p>
+                      <p className="text-slate-500 text-xs">Referred by: {ref.from} • {ref.date}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 w-full sm:w-auto">
+                    <Badge variant="outline" className={`
+                      ${ref.status === 'Pending Review' ? 'border-violet-500/50 text-violet-400 bg-violet-500/10' : ''}
+                      ${ref.status === 'Awaiting Pathology' ? 'border-amber-500/50 text-amber-400 bg-amber-500/10' : ''}
+                      ${ref.status === 'Awaiting Imaging' ? 'border-indigo-500/50 text-indigo-400 bg-indigo-500/10' : ''}
+                      ${ref.status === 'Pending Intake' ? 'border-cyan-500/50 text-cyan-400 bg-cyan-500/10' : ''}
+                      ${ref.status === 'Awaiting Insurance' ? 'border-rose-500/50 text-rose-400 bg-rose-500/10' : ''}
+                    `}>
+                      {ref.status}
+                    </Badge>
+                    
+                    <Button size="sm" variant="outline" className="border-slate-700 hover:border-cyan-500 hover:text-cyan-400 bg-slate-800 transition-colors">
+                      Review Case <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                    </Button>
                   </div>
                 </div>
-
-                <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 w-full sm:w-auto">
-                  <Badge variant="outline" className={`
-                    ${ref.status === 'Pending Review' ? 'border-violet-500/50 text-violet-400 bg-violet-500/10' : ''}
-                    ${ref.status === 'Awaiting Pathology' ? 'border-amber-500/50 text-amber-400 bg-amber-500/10' : ''}
-                    ${ref.status === 'Awaiting Imaging' ? 'border-indigo-500/50 text-indigo-400 bg-indigo-500/10' : ''}
-                    ${ref.status === 'Pending Intake' ? 'border-cyan-500/50 text-cyan-400 bg-cyan-500/10' : ''}
-                    ${ref.status === 'Awaiting Insurance' ? 'border-rose-500/50 text-rose-400 bg-rose-500/10' : ''}
-                  `}>
-                    {ref.status}
-                  </Badge>
-                  
-                  <Button size="sm" variant="outline" className="border-slate-700 hover:border-cyan-500 hover:text-cyan-400 bg-slate-800 transition-colors">
-                    Review Case <ArrowRight className="w-3.5 h-3.5 ml-2" />
-                  </Button>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center p-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 mb-4">
+                  <FileText className="w-8 h-8" />
                 </div>
+                <p className="text-lg font-medium text-slate-300">No recent referrals</p>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">There are no new cases requiring your attention at this time.</p>
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>
