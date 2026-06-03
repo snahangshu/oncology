@@ -55,7 +55,6 @@ export default function ReceptionistDashboard() {
           </h1>
           <p className="text-slate-400">Manage patient flow and appointments</p>
         </div>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
