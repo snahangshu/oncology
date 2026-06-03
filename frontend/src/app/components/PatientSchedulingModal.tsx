@@ -7,6 +7,7 @@ import { api } from '../shared/api';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
+import { Calendar as CalendarComponent } from './ui/calendar';
 
 interface PatientSchedulingModalProps {
   patientId: number;
@@ -17,15 +18,20 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
   const [open, setOpen] = useState(false);
   const [bookingType, setBookingType] = useState<"consultation" | "infusion">("consultation");
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const queryClient = useQueryClient();
 
   const specialty = bookingType === "consultation" ? "Medical Oncology" : "Infusion Center";
 
   const { data: slots, isLoading } = useQuery({
-    queryKey: ['available_slots', patientId, specialty],
+    queryKey: ['available_slots', patientId, specialty, selectedDate?.toISOString()],
     queryFn: async () => {
       const res = await api.get(`/slots`, {
-        params: { patient_id: patientId, specialty }
+        params: { 
+          patient_id: patientId, 
+          specialty,
+          preferred_start_date: selectedDate ? selectedDate.toISOString() : undefined
+        }
       });
       return res.data;
     },
@@ -103,8 +109,24 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
               </TabsTrigger>
             </TabsList>
 
-            <div className="space-y-4 min-h-[300px]">
-              {isLoading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[350px]">
+              {/* Left Column: Calendar */}
+              <div className="bg-slate-950/30 rounded-xl border border-slate-800 p-2 flex justify-center items-start">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="bg-transparent border-none text-white rounded-lg p-3"
+                  classNames={{
+                    day_selected: "bg-emerald-500 text-white hover:bg-emerald-600 focus:bg-emerald-600",
+                    day_today: "bg-slate-800 text-emerald-400",
+                  }}
+                />
+              </div>
+
+              {/* Right Column: Slots */}
+              <div className="space-y-4">
+                {isLoading ? (
                 <div className="flex flex-col items-center justify-center h-[300px] space-y-4">
                   <div className="relative">
                     <div className="absolute inset-0 border-t-2 border-emerald-500 rounded-full animate-spin w-12 h-12" />
@@ -168,11 +190,13 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-[300px] space-y-4 bg-slate-950/30 rounded-xl border border-dashed border-slate-800">
+                <div className="flex flex-col items-center justify-center h-full min-h-[250px] space-y-4 bg-slate-950/30 rounded-xl border border-dashed border-slate-800 p-6 text-center">
                   <AlertCircle className="w-10 h-10 text-slate-600" />
-                  <p className="text-slate-400">No suitable slots found at this time.</p>
+                  <p className="text-slate-400">No suitable slots found for this date.</p>
+                  <p className="text-xs text-slate-500 mt-2">Try selecting a different date from the calendar or wait for our AI to suggest nearby openings.</p>
                 </div>
               )}
+              </div>
             </div>
           </Tabs>
 
