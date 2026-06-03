@@ -5,20 +5,24 @@ import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Progress } from '../../components/ui/progress';
 
-// Mock Treatment Data
-const mockTreatments = [
-  { id: 1, name: 'John Anderson', category: 'Chemotherapy', regimen: 'AC-T', cycle: 3, totalCycles: 8, progress: 37.5, nextDose: 'Oct 26, 2026', status: 'On Track' },
-  { id: 2, name: 'Rahul Sharma', category: 'Chemotherapy', regimen: 'CHOP', cycle: 4, totalCycles: 6, progress: 66.6, nextDose: 'Oct 28, 2026', status: 'On Track' },
-  { id: 3, name: 'Maria Garcia', category: 'Chemotherapy', regimen: 'Paclitaxel', cycle: 5, totalCycles: 12, progress: 41.6, nextDose: 'Tomorrow', status: 'Delayed - Neutropenia' },
-  { id: 4, name: 'Lisa Thompson', category: 'Radiation', regimen: 'IMRT', cycle: 15, totalCycles: 30, progress: 50.0, nextDose: 'Today', status: 'On Track' },
-  { id: 5, name: 'Robert Kim', category: 'Follow-Up', regimen: 'Observation', cycle: 0, totalCycles: 0, progress: 100, nextDose: 'N/A', status: 'Stable' },
-  { id: 6, name: 'Emily Chen', category: 'Remission', regimen: 'Post-treatment Care', cycle: 0, totalCycles: 0, progress: 100, nextDose: 'N/A', status: 'Remission (2 yrs)' },
-];
+// State interface
+interface Treatment {
+  id: number;
+  name: string;
+  category: string;
+  regimen: string;
+  cycle: number;
+  totalCycles: number;
+  progress: number;
+  nextDose: string;
+  status: string;
+}
 
 export default function DoctorTreatmentPlans() {
   const [activeTab, setActiveTab] = useState('chemotherapy');
+  const [treatments, setTreatments] = useState<Treatment[]>([]);
 
-  const filteredTreatments = mockTreatments.filter(t => {
+  const filteredTreatments = treatments.filter(t => {
     if (activeTab === 'chemotherapy') return t.category === 'Chemotherapy';
     if (activeTab === 'radiation') return t.category === 'Radiation';
     if (activeTab === 'followup') return t.category === 'Follow-Up';
@@ -104,8 +108,12 @@ export default function DoctorTreatmentPlans() {
         </div>
         
         {filteredTreatments.length === 0 && (
-           <div className="text-center py-12 text-slate-500">
-              No patients found in this treatment category.
+           <div className="flex flex-col items-center justify-center py-20 text-center col-span-full">
+             <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 mb-4">
+               <Pill className="w-8 h-8" />
+             </div>
+             <p className="text-lg font-medium text-slate-300">No active treatment plans</p>
+             <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">There are no patients currently undergoing {activeTab}.</p>
            </div>
         )}
       </Tabs>

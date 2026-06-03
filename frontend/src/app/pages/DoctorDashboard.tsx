@@ -18,68 +18,39 @@ import {
 } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
 
-const richAppointments = [
-  {
-    id: 1,
-    patientName: 'John Anderson',
-    time: '09:00 AM',
-    urgency: 'Urgent',
-    chiefComplaint: 'Severe chest pain post-infusion',
-    predictedDuration: 'High Complexity (30m)',
-    aiSummary: 'Patient presents with acute chest pain 48 hours post-doxorubicin infusion. Recent history indicates rising troponin levels. AI detects a 78% risk of anthracycline-induced cardiotoxicity. Requires immediate ECG review and cardiology consult.',
-    vitals: { bp: '145/95', hr: '98', temp: '98.6°F', weight: '185 lbs' },
-    history: 'Type 2 Diabetes, Hypertension, Stage 2 Lung Cancer',
-  },
-  {
-    id: 2,
-    patientName: 'Maria Garcia',
-    time: '09:30 AM',
-    urgency: 'Routine',
-    chiefComplaint: 'Post-cycle checkup',
-    predictedDuration: 'Routine (15m)',
-    aiSummary: 'Patient is stable post-cycle 3 of Paclitaxel. AI analysis of latest scan showed no disease progression and 15% tumor shrinkage. Proceed with standard anti-nausea protocols for next cycle.',
-    vitals: { bp: '120/80', hr: '72', temp: '98.4°F', weight: '140 lbs' },
-    history: 'Breast Cancer (ER/PR+)',
-  },
-  {
-    id: 3,
-    patientName: 'Robert Kim',
-    time: '10:00 AM',
-    urgency: 'Urgent',
-    chiefComplaint: 'Fever and severe fatigue',
-    predictedDuration: 'High Complexity (45m)',
-    aiSummary: 'Neutropenic fever alert! AI flagged patient based on latest CBC (ANC < 500). High risk of sepsis. Immediate broad-spectrum IV antibiotics recommended.',
-    vitals: { bp: '108/65', hr: '110', temp: '102.1°F', weight: '172 lbs' },
-    history: 'Non-Hodgkin Lymphoma, Asthma',
-  },
-  {
-    id: 4,
-    patientName: 'Lisa Thompson',
-    time: '10:30 AM',
-    urgency: 'Routine',
-    chiefComplaint: 'Follow-up on MRI results',
-    predictedDuration: 'Review (20m)',
-    aiSummary: 'MRI indicates stable meningioma. No significant growth detected over 6 months. Symptoms of localized headache align with radiological findings. Consider adjusting pain management.',
-    vitals: { bp: '118/76', hr: '68', temp: '98.3°F', weight: '128 lbs' },
-    history: 'Benign Meningioma, Hypothyroidism',
-  },
-];
+interface Appointment {
+  id: number | string;
+  patientId?: number | string;
+  patientName: string;
+  time: string;
+  urgency: string;
+  chiefComplaint: string;
+  predictedDuration: string;
+  aiSummary: string;
+  vitals: { bp: string; hr: string; temp: string; weight: string };
+  history: string;
+  intake_summary?: any;
+}
 
-const chemoSchedule = [
-  { patient: 'Sarah Jenkins', time: '11:00 AM', regimen: 'FOLFOX (Cycle 4)', status: 'Preparing' },
-  { patient: 'David Miller', time: '01:30 PM', regimen: 'R-CHOP (Cycle 2)', status: 'Scheduled' },
-  { patient: 'Emily Chen', time: '03:00 PM', regimen: 'Keytruda', status: 'Scheduled' },
-];
+interface ChemoSession {
+  patient: string;
+  time: string;
+  regimen: string;
+  status: string;
+}
 
-const labAlerts = [
-  { patient: 'Robert Kim', alert: 'ANC < 500 (Neutropenia)', severity: 'Critical', time: '10 mins ago' },
-  { patient: 'Lisa Thompson', alert: 'Hemoglobin 8.2 g/dL', severity: 'High', time: '1 hr ago' },
-  { patient: 'John Anderson', alert: 'Elevated Troponin', severity: 'Critical', time: '2 hrs ago' },
-];
+interface LabAlert {
+  patient: string;
+  alert: string;
+  severity: string;
+  time: string;
+}
 
 export default function DoctorDashboard() {
-  const [appointmentsList, setAppointmentsList] = useState(richAppointments);
-  const [selectedPatient, setSelectedPatient] = useState(richAppointments[0]);
+  const [appointmentsList, setAppointmentsList] = useState<Appointment[]>([]);
+  const [selectedPatient, setSelectedPatient] = useState<Appointment | null>(null);
+  const [chemoScheduleList, setChemoScheduleList] = useState<ChemoSession[]>([]);
+  const [labAlertsList, setLabAlertsList] = useState<LabAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [diagnosis, setDiagnosis] = useState('');
   const [prescription, setPrescription] = useState('');
@@ -92,24 +63,23 @@ export default function DoctorDashboard() {
         const response = await api.get('/dashboards/doctor');
         const backendAppointments = response.data.today_appointments || [];
         if (backendAppointments.length > 0) {
-          const merged = backendAppointments.map((apt: any, index: number) => {
-            const richMock = richAppointments[index % richAppointments.length];
+          const mapped = backendAppointments.map((apt: any) => {
             return {
               id: apt.appointment_id,
               patientId: apt.patient_id,
               patientName: apt.patient_name,
               time: apt.time,
-              urgency: apt.urgency_level || (index === 0 ? 'Urgent' : 'Routine'),
-              chiefComplaint: apt.primary_diagnosis || richMock.chiefComplaint,
-              predictedDuration: richMock.predictedDuration,
-              aiSummary: `AI Summary based on Intake: Patient presents with ${apt.primary_diagnosis || 'Unknown'}. Intake documents include: ${Object.keys(apt.intake_summary || {}).join(', ') || 'None'}. ` + richMock.aiSummary,
-              vitals: richMock.vitals,
-              history: apt.primary_diagnosis || richMock.history,
+              urgency: apt.urgency_level || 'Routine',
+              chiefComplaint: apt.primary_diagnosis || 'Unknown',
+              predictedDuration: 'Routine (15m)',
+              aiSummary: `AI Summary based on Intake: Patient presents with ${apt.primary_diagnosis || 'Unknown'}. Intake documents include: ${Object.keys(apt.intake_summary || {}).join(', ') || 'None'}.`,
+              vitals: { bp: '--/--', hr: '--', temp: '--', weight: '--' },
+              history: apt.primary_diagnosis || 'Unknown',
               intake_summary: apt.intake_summary,
             };
           });
-          setAppointmentsList(merged);
-          setSelectedPatient(merged[0]);
+          setAppointmentsList(mapped);
+          setSelectedPatient(mapped[0]);
         }
       } catch (err) {
         console.error('Error fetching doctor dashboard:', err);
@@ -127,10 +97,10 @@ export default function DoctorDashboard() {
     setIsGeneratingBrief(true);
     toast.info('AI is generating pre-consultation brief...', { id: 'brief-toast' });
     try {
-      await api.post(`/doctors/${selectedPatient.id}/generate-brief`, {
-        patient_name: selectedPatient.patientName,
+      await api.post(`/doctors/${selectedPatient?.id}/generate-brief`, {
+        patient_name: selectedPatient?.patientName,
         diagnosis: "Oncology Diagnosis",
-        clinical_history: selectedPatient.history,
+        clinical_history: selectedPatient?.history,
         recent_labs: "Standard CBC & CMP",
         imaging_reports: "Standard Imaging"
       });
@@ -148,7 +118,7 @@ export default function DoctorDashboard() {
     setIsStructuringPlan(true);
     toast.info('AI is structuring your treatment plan...', { id: 'plan-toast' });
     try {
-      await api.post(`/doctors/${selectedPatient.id}/structure-plan`, {
+      await api.post(`/doctors/${selectedPatient?.id}/structure-plan`, {
         clinical_note: `Diagnosis: ${diagnosis}. Prescription: ${prescription}. Notes: ${notes}`
       });
       setTimeout(() => {
@@ -184,7 +154,7 @@ export default function DoctorDashboard() {
             <p className="text-sm text-indigo-300 font-medium mb-1">Today's Appointments</p>
             <div className="flex items-baseline gap-2">
               <h2 className="text-4xl font-bold text-white">{appointmentsList.length}</h2>
-              <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full">+2 Add-ons</span>
+              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded-full">All listed</span>
             </div>
           </CardContent>
         </Card>
@@ -196,8 +166,8 @@ export default function DoctorDashboard() {
           <CardContent className="p-6">
             <p className="text-sm text-rose-300 font-medium mb-1">Critical Lab Alerts</p>
             <div className="flex items-baseline gap-2">
-              <h2 className="text-4xl font-bold text-white">3</h2>
-              <span className="text-xs text-rose-400 bg-rose-500/10 px-2 py-1 rounded-full animate-pulse">Requires Action</span>
+              <h2 className="text-4xl font-bold text-white">0</h2>
+              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded-full">All clear</span>
             </div>
           </CardContent>
         </Card>
@@ -209,8 +179,8 @@ export default function DoctorDashboard() {
           <CardContent className="p-6">
             <p className="text-sm text-emerald-300 font-medium mb-1">New Reports Uploaded</p>
             <div className="flex items-baseline gap-2">
-              <h2 className="text-4xl font-bold text-white">8</h2>
-              <span className="text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-full">Since yesterday</span>
+              <h2 className="text-4xl font-bold text-white">0</h2>
+              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded-full">No new reports</span>
             </div>
           </CardContent>
         </Card>
@@ -234,6 +204,10 @@ export default function DoctorDashboard() {
                   <div className="text-slate-400 text-center py-12">
                     <div className="w-8 h-8 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-4" />
                     Loading patient queue and predicting durations...
+                  </div>
+                ) : appointmentsList.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500">
+                    <p className="mb-2">No appointments scheduled for today.</p>
                   </div>
                 ) : appointmentsList.map((appointment, index) => (
                   <Dialog key={appointment.id}>
@@ -281,9 +255,9 @@ export default function DoctorDashboard() {
                       <DialogHeader className="flex flex-row items-center justify-between mt-2">
                         <DialogTitle className="text-white flex items-center gap-2 text-xl">
                           <FileText className="w-6 h-6 text-violet-400" />
-                          Patient Clinical Profile - {selectedPatient.patientName}
+                          Patient Clinical Profile - {selectedPatient?.patientName}
                         </DialogTitle>
-                        {selectedPatient.patientId && (
+                        {selectedPatient?.patientId && (
                           <Button 
                             onClick={() => navigate(`/patients/${selectedPatient.patientId}`)}
                             className="bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition-colors"
@@ -293,6 +267,7 @@ export default function DoctorDashboard() {
                         )}
                       </DialogHeader>
 
+                      {selectedPatient && (
                       <div className="space-y-6 mt-4">
                         {/* AI Summary Highlight Card */}
                         <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-violet-500/5 to-transparent border border-indigo-500/30 shadow-lg shadow-indigo-500/5 relative overflow-hidden">
@@ -454,6 +429,7 @@ export default function DoctorDashboard() {
                           </Button>
                         </div>
                       </div>
+                      )}
                     </DialogContent>
                   </Dialog>
                 ))}
@@ -475,7 +451,11 @@ export default function DoctorDashboard() {
             </CardHeader>
             <CardContent className="p-4">
               <div className="space-y-3">
-                {labAlerts.map((alert, idx) => (
+                {labAlertsList.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500 text-sm">
+                    No critical lab alerts.
+                  </div>
+                ) : labAlertsList.map((alert, idx) => (
                   <div key={idx} className="p-3 rounded-lg bg-slate-800/50 border border-rose-500/20 flex flex-col gap-1 hover:border-rose-500/40 transition-colors cursor-default">
                     <div className="flex items-center justify-between">
                       <h5 className="text-sm font-medium text-white">{alert.patient}</h5>
@@ -503,10 +483,14 @@ export default function DoctorDashboard() {
             </CardHeader>
             <CardContent className="p-4">
               <div className="space-y-4">
-                {chemoSchedule.map((session, idx) => (
+                {chemoScheduleList.length === 0 ? (
+                  <div className="text-center py-8 text-slate-500 text-sm">
+                    No chemotherapy sessions scheduled.
+                  </div>
+                ) : chemoScheduleList.map((session, idx) => (
                   <div key={idx} className="flex gap-4 relative">
                     {/* Timeline line */}
-                    {idx !== chemoSchedule.length - 1 && (
+                    {idx !== chemoScheduleList.length - 1 && (
                       <div className="absolute left-[5px] top-6 bottom-[-16px] w-[2px] bg-slate-700/50" />
                     )}
                     {/* Timeline dot */}
