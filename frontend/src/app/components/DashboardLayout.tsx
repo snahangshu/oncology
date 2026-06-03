@@ -49,8 +49,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     ],
     DOCTOR: [
       { name: 'Dashboard', href: '/doctor', icon: Stethoscope },
-      { name: 'Consultation Queue', href: '/doctor/queue', icon: ClipboardList },
       { name: 'My Patients', href: '/doctor/patients', icon: Users },
+      { name: 'Schedule', href: '/doctor/schedule', icon: Calendar },
+      { name: 'Referrals & Cases', href: '/doctor/referrals', icon: ClipboardList },
+      { name: 'Treatment Plans', href: '/doctor/treatment-plans', icon: Heart },
+      { name: 'Infusion Center', href: '/doctor/infusions', icon: Activity },
+      { name: 'Lab Review', href: '/doctor/labs', icon: FileText },
     ],
     RECEPTIONIST: [
       { name: 'Dashboard', href: '/receptionist', icon: LayoutDashboard },

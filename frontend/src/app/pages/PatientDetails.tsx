@@ -23,7 +23,8 @@ import {
   CheckCircle2, 
   Trash2,
   CalendarPlus,
-  Plus
+  Plus,
+  Pill
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
@@ -173,6 +174,9 @@ export default function PatientDetails() {
             <FlaskConical className="w-4 h-4" /> Labs
           </TabsTrigger>
           <TabsTrigger value="appointments" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg px-6 py-2">Appointments</TabsTrigger>
+          <TabsTrigger value="treatmentplans" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg px-6 py-2 flex gap-2 items-center">
+            <Pill className="w-4 h-4" /> Treatment Plans
+          </TabsTrigger>
           <TabsTrigger value="aisummary" className="data-[state=active]:bg-violet-900/50 data-[state=active]:text-violet-300 rounded-lg px-6 py-2 flex gap-2 items-center">
             <Bot className="w-4 h-4" /> AI Summary
           </TabsTrigger>
@@ -204,6 +208,10 @@ export default function PatientDetails() {
 
         <TabsContent value="appointments" className="outline-none">
           <AppointmentsTab appointments={dashboard.appointments} />
+        </TabsContent>
+
+        <TabsContent value="treatmentplans" className="outline-none">
+          <TreatmentPlansTab />
         </TabsContent>
 
         <TabsContent value="aisummary" className="outline-none">
@@ -647,3 +655,55 @@ function AISummaryTab({ aiSummary }: { aiSummary: any }) {
     </div>
   );
 }
+
+function TreatmentPlansTab() {
+  return (
+    <div className="space-y-6">
+      <Card className="bg-slate-900/50 border-slate-700/50">
+        <CardHeader className="border-b border-slate-800/50">
+          <CardTitle className="text-white flex items-center gap-2 text-lg">
+            <Pill className="w-5 h-5 text-cyan-400" />
+            Active Treatment Plans
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-white mb-1">Chemotherapy Regimen: AC-T</h3>
+                <p className="text-slate-400">Doxorubicin (Adriamycin) + Cyclophosphamide, followed by Paclitaxel (Taxol)</p>
+              </div>
+              <span className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+                Active
+              </span>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-300 font-medium">Progress: Cycle 3 of 8</span>
+                <span className="text-cyan-400 font-bold">37.5%</span>
+              </div>
+              <Progress value={37.5} className="h-3 bg-slate-800" indicatorClassName="bg-gradient-to-r from-cyan-500 to-violet-500" />
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+               <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-bold">Start Date</p>
+                 <p className="text-white">Sep 15, 2026</p>
+               </div>
+               <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-bold">Next Infusion</p>
+                 <p className="text-white">Oct 26, 2026</p>
+               </div>
+               <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700/50">
+                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-bold">Estimated End</p>
+                 <p className="text-white">Dec 20, 2026</p>
+               </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
