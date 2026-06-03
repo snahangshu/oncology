@@ -333,7 +333,12 @@ export default function ReceptionistDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {todayAppointmentsList.length === 0 && !isLoading ? (
+            {isLoading ? (
+               <div className="text-slate-400 text-center py-8">
+                 <div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-2" />
+                 Loading today's schedule...
+               </div>
+            ) : todayAppointmentsList.length === 0 ? (
                <div className="text-slate-400 text-center py-8">
                  No appointments scheduled for today.
                </div>
