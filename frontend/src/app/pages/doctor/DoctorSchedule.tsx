@@ -5,19 +5,20 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 
-// Mock Events
-const mockEvents = [
-  { id: 1, title: 'Tumor Board Meeting', time: '08:00 AM', duration: '1h', type: 'Meeting', color: 'violet' },
-  { id: 2, title: 'John Anderson - Post-infusion check', time: '09:00 AM', duration: '30m', type: 'Consultation', color: 'cyan', urgency: 'High' },
-  { id: 3, title: 'Maria Garcia - Cycle 3 Review', time: '09:30 AM', duration: '15m', type: 'Consultation', color: 'cyan' },
-  { id: 4, title: 'Robert Kim - Neutropenic Fever', time: '10:00 AM', duration: '45m', type: 'Urgent', color: 'rose', urgency: 'Critical' },
-  { id: 5, title: 'Infusion Center Rounds', time: '11:00 AM', duration: '1h', type: 'Infusion', color: 'emerald' },
-  { id: 6, title: 'Lunch Break / Admin', time: '12:00 PM', duration: '1h', type: 'Block', color: 'slate' },
-  { id: 7, title: 'Lisa Thompson - MRI Review', time: '01:00 PM', duration: '20m', type: 'Consultation', color: 'cyan' },
-];
+// State interface
+interface Event {
+  id: number;
+  title: string;
+  time: string;
+  duration: string;
+  type: string;
+  color: string;
+  urgency?: string;
+}
 
 export default function DoctorSchedule() {
   const [view, setView] = useState('day');
+  const [events, setEvents] = useState<Event[]>([]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
@@ -133,74 +134,84 @@ export default function DoctorSchedule() {
             <div className="flex flex-col h-full">
               {/* Day Timeline Header */}
               <div className="grid grid-cols-1 divide-y divide-slate-800/50">
-                {mockEvents.map((event, index) => {
-                  
-                  const colorMap: any = {
-                    cyan: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
-                    violet: 'border-violet-500/30 bg-violet-500/10 text-violet-400',
-                    emerald: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
-                    rose: 'border-rose-500/50 bg-rose-500/10 text-rose-400',
-                    slate: 'border-slate-600/30 bg-slate-800/50 text-slate-400',
-                  };
+                {events.length > 0 ? (
+                  events.map((event, index) => {
+                    
+                    const colorMap: any = {
+                      cyan: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
+                      violet: 'border-violet-500/30 bg-violet-500/10 text-violet-400',
+                      emerald: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
+                      rose: 'border-rose-500/50 bg-rose-500/10 text-rose-400',
+                      slate: 'border-slate-600/30 bg-slate-800/50 text-slate-400',
+                    };
 
-                  const iconMap: any = {
-                    Consultation: <Stethoscope className="w-4 h-4" />,
-                    Meeting: <Users className="w-4 h-4" />,
-                    Infusion: <Droplet className="w-4 h-4" />,
-                    Urgent: <AlertCircle className="w-4 h-4" />,
-                    Block: <Clock className="w-4 h-4" />
-                  };
+                    const iconMap: any = {
+                      Consultation: <Stethoscope className="w-4 h-4" />,
+                      Meeting: <Users className="w-4 h-4" />,
+                      Infusion: <Droplet className="w-4 h-4" />,
+                      Urgent: <AlertCircle className="w-4 h-4" />,
+                      Block: <Clock className="w-4 h-4" />
+                    };
 
-                  return (
-                    <div 
-                      key={event.id} 
-                      className="p-4 flex gap-6 hover:bg-slate-800/30 transition-colors group animate-in slide-in-from-right duration-500"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <div className="w-24 shrink-0 text-right">
-                        <span className="text-white font-medium block">{event.time}</span>
-                        <span className="text-xs text-slate-500">{event.duration}</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className={`p-4 rounded-xl border ${colorMap[event.color]} flex flex-col sm:flex-row sm:items-center justify-between gap-4 group-hover:scale-[1.01] transition-transform`}>
-                          <div className="flex items-start gap-3">
-                            <div className="mt-0.5 opacity-80">
-                              {iconMap[event.type]}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-bold">{event.title}</h4>
-                                {event.urgency && (
-                                  <Badge variant="outline" className={`text-[10px] py-0 px-1.5 h-4 ${event.urgency === 'Critical' ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-orange-500 text-orange-400'}`}>
-                                    {event.urgency}
-                                  </Badge>
-                                )}
+                    return (
+                      <div 
+                        key={event.id} 
+                        className="p-4 flex gap-6 hover:bg-slate-800/30 transition-colors group animate-in slide-in-from-right duration-500"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <div className="w-24 shrink-0 text-right">
+                          <span className="text-white font-medium block">{event.time}</span>
+                          <span className="text-xs text-slate-500">{event.duration}</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className={`p-4 rounded-xl border ${colorMap[event.color]} flex flex-col sm:flex-row sm:items-center justify-between gap-4 group-hover:scale-[1.01] transition-transform`}>
+                            <div className="flex items-start gap-3">
+                              <div className="mt-0.5 opacity-80">
+                                {iconMap[event.type]}
                               </div>
-                              <p className="text-xs opacity-80">{event.type}</p>
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-bold">{event.title}</h4>
+                                  {event.urgency && (
+                                    <Badge variant="outline" className={`text-[10px] py-0 px-1.5 h-4 ${event.urgency === 'Critical' ? 'border-rose-500 text-rose-400 animate-pulse' : 'border-orange-500 text-orange-400'}`}>
+                                      {event.urgency}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs opacity-80">{event.type}</p>
+                              </div>
                             </div>
-                          </div>
-                          
-                          {/* Actions */}
-                          {event.type !== 'Block' && (
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {event.type === 'Consultation' && (
-                                <Button size="icon" variant="ghost" className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20" title="Start Telehealth">
-                                  <Video className="w-4 h-4" />
+                            
+                            {/* Actions */}
+                            {event.type !== 'Block' && (
+                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {event.type === 'Consultation' && (
+                                  <Button size="icon" variant="ghost" className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20" title="Start Telehealth">
+                                    <Video className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                <Button size="sm" variant="outline" className="h-8 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
+                                  Reschedule
                                 </Button>
-                              )}
-                              <Button size="sm" variant="outline" className="h-8 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
-                                Reschedule
-                              </Button>
-                              <Button size="sm" variant="outline" className="h-8 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10">
-                                Cancel
-                              </Button>
-                            </div>
-                          )}
+                                <Button size="sm" variant="outline" className="h-8 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10">
+                                  Cancel
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
+                    );
+                  })
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-12 h-full text-center min-h-[400px]">
+                    <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 mb-4">
+                      <Calendar className="w-8 h-8" />
                     </div>
-                  );
-                })}
+                    <p className="text-lg font-medium text-slate-300">No events scheduled</p>
+                    <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">Your calendar is clear for this selected view.</p>
+                  </div>
+                )}
               </div>
             </div>
           </Card>

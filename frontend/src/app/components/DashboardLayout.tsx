@@ -44,8 +44,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigationByRole = {
     ADMIN: [
       { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-      { name: 'Manage Users', href: '/admin/users', icon: Users },
-      { name: 'System Health', href: '/admin/health', icon: Activity },
     ],
     DOCTOR: [
       { name: 'Dashboard', href: '/doctor', icon: Stethoscope },
@@ -58,18 +56,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     ],
     RECEPTIONIST: [
       { name: 'Dashboard', href: '/receptionist', icon: LayoutDashboard },
-      { name: 'Waiting Room', href: '/receptionist/waiting', icon: Users },
-      { name: 'Appointments', href: '/receptionist/appointments', icon: Calendar },
+      { name: 'New Patient Intake', href: '/receptionist/patients/new', icon: Users },
     ],
     NURSE: [
       { name: 'Dashboard', href: '/nurse', icon: Activity },
-      { name: 'Vitals Queue', href: '/nurse/queue', icon: Heart },
-      { name: 'Patient Prep', href: '/nurse/prep', icon: ClipboardList },
     ],
     PATIENT: [
       { name: 'My Dashboard', href: '/patient', icon: LayoutDashboard },
-      { name: 'Appointments', href: '/patient/appointments', icon: Calendar },
-      { name: 'Medical Records', href: '/patient/records', icon: FileText },
     ],
   };
 
