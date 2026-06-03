@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import RoleSelector from './pages/RoleSelector';
 import AdminDashboard from './pages/AdminDashboard';
+import DoctorOnboarding from './pages/admin/DoctorOnboarding';
 import DoctorDashboard from './pages/DoctorDashboard';
 import DoctorPatients from './pages/doctor/DoctorPatients';
 import DoctorSchedule from './pages/doctor/DoctorSchedule';
@@ -122,6 +123,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/admin/doctors/new"
+            element={
+              <ProtectedRoute>
+                <DoctorOnboarding />
               </ProtectedRoute>
             }
           />

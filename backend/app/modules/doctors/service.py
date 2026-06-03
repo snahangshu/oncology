@@ -20,10 +20,12 @@ class DoctorService:
     # ── Doctor CRUD ──────────────────────────────────────────────
 
     def create_doctor(self, request: DoctorCreateRequest) -> DoctorResponse:
+        from app.modules.doctors.models import DoctorDiseaseExpertise, DoctorTreatmentExpertise
+        
         # Check for existing email
         existing = self.doctor_repo.get_by_email(request.email)
         if existing:
-            # Update existing doctor instead of duplicating
+            # We skip complex relation updates for MVP if existing, just update basic fields
             existing.first_name = request.first_name
             existing.last_name = request.last_name
             existing.phone = request.phone
@@ -39,7 +41,37 @@ class DoctorService:
             phone=request.phone,
             specialty=request.specialty,
             status=request.status,
+            gender=request.gender,
+            profile_photo=request.profile_photo,
+            qualifications=request.qualifications,
+            experience_years=request.experience_years,
+            license_number=request.license_number,
+            doctor_role=request.doctor_role,
+            max_new_consults_per_day=request.max_new_consults_per_day,
+            max_follow_ups_per_day=request.max_follow_ups_per_day,
+            max_urgent_cases_per_day=request.max_urgent_cases_per_day,
+            max_working_hours=request.max_working_hours,
+            accepts_new_patients=request.accepts_new_patients,
+            accepts_emergency=request.accepts_emergency,
+            accepts_second_opinions=request.accepts_second_opinions,
+            accepts_rare_cancers=request.accepts_rare_cancers,
+            accepts_pediatric=request.accepts_pediatric,
+            accepts_clinical_trial_referrals=request.accepts_clinical_trial_referrals,
+            telemedicine_available=request.telemedicine_available,
+            appointment_durations=request.appointment_durations,
         )
+        
+        # Add nested relationships
+        for disease_item in request.disease_expertise:
+            doctor.disease_expertise.append(
+                DoctorDiseaseExpertise(disease_type=disease_item.disease, category=disease_item.category)
+            )
+            
+        for treatment in request.treatment_expertise:
+            doctor.treatment_expertise.append(
+                DoctorTreatmentExpertise(treatment_type=treatment)
+            )
+
         self.doctor_repo.create(doctor)
         return self._to_response(doctor)
 
