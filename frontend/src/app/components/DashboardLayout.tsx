@@ -14,7 +14,8 @@ import {
   LogOut,
   Menu,
   Shield,
-  Clock
+  Clock,
+  UserPlus
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { Button } from './ui/button';
@@ -59,6 +60,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     RECEPTIONIST: [
       { name: 'Dashboard', href: '/receptionist', icon: LayoutDashboard },
       { name: 'Patient Registry', href: '/receptionist/registry', icon: Users },
+      { name: 'New Patient Registration', href: '/receptionist/patients/new', icon: UserPlus },
       { name: 'Referrals Queue', href: '/receptionist/referrals', icon: ClipboardList },
       { name: 'Intake Management', href: '/receptionist/intakes', icon: FileText },
       { name: 'Appointment Scheduling', href: '/receptionist/scheduling', icon: Calendar },
