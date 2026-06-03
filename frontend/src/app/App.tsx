@@ -10,6 +10,12 @@ import Signup from './pages/Signup';
 import RoleSelector from './pages/RoleSelector';
 import AdminDashboard from './pages/AdminDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
+import DoctorPatients from './pages/doctor/DoctorPatients';
+import DoctorSchedule from './pages/doctor/DoctorSchedule';
+import DoctorReferrals from './pages/doctor/DoctorReferrals';
+import DoctorTreatmentPlans from './pages/doctor/DoctorTreatmentPlans';
+import InfusionCenter from './pages/doctor/InfusionCenter';
+import LabReviewCenter from './pages/doctor/LabReviewCenter';
 import ReceptionistDashboard from './pages/ReceptionistDashboard';
 import NewPatient from './pages/receptionist/NewPatient';
 import IntakeDashboard from './pages/receptionist/IntakeDashboard';
@@ -119,6 +125,60 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <DoctorDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/doctor/patients"
+            element={
+              <ProtectedRoute>
+                <DoctorPatients />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/doctor/schedule"
+            element={
+              <ProtectedRoute>
+                <DoctorSchedule />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/doctor/referrals"
+            element={
+              <ProtectedRoute>
+                <DoctorReferrals />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/doctor/treatment-plans"
+            element={
+              <ProtectedRoute>
+                <DoctorTreatmentPlans />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/doctor/infusions"
+            element={
+              <ProtectedRoute>
+                <InfusionCenter />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/doctor/labs"
+            element={
+              <ProtectedRoute>
+                <LabReviewCenter />
               </ProtectedRoute>
             }
           />
