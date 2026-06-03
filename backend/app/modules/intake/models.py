@@ -62,7 +62,9 @@ class InsuranceRecord(Base, TimestampMixin):
     provider_name: Mapped[str] = mapped_column(String(150), nullable=False)
     policy_number: Mapped[str] = mapped_column(String(100), nullable=False)
     group_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-
+    request_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    auth_status: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, default="Pending")
+    expiry_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     # Relationships
     patient: Mapped["Patient"] = relationship("Patient", back_populates="insurance_records")
 
