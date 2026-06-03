@@ -1,93 +1,32 @@
 import { useState, useEffect } from 'react';
-import { Users, Calendar, Clock, Plus, UserPlus, UploadCloud } from 'lucide-react';
-import { toast } from 'sonner';
+import { Users, Calendar, Clock, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { api } from '../shared/api';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '../components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../components/ui/select';
 import { Calendar as CalendarComponent } from '../components/ui/calendar';
 
-const waitingPatients = [
-  { id: 1, name: 'Alice Johnson', type: 'Walk-in', waitTime: '12 min', status: 'Waiting' },
-  { id: 2, name: 'Bob Williams', type: 'Scheduled', waitTime: '5 min', status: 'Waiting' },
-  { id: 3, name: 'Carol Davis', type: 'Walk-in', waitTime: '28 min', status: 'In Prep' },
-  { id: 4, name: 'David Brown', type: 'Scheduled', waitTime: '2 min', status: 'Waiting' },
-];
+interface WaitingPatient {
+  id: number;
+  name: string;
+  type: string;
+  waitTime: string;
+  status: string;
+}
 
-const todayAppointments = [
-  { id: 1, time: '09:00 AM', patient: 'Maria Garcia', doctor: 'Dr. Chen', status: 'Completed' },
-  { id: 2, time: '09:30 AM', patient: 'John Smith', doctor: 'Dr. Rodriguez', status: 'In Progress' },
-  { id: 3, time: '10:00 AM', patient: 'Emma Wilson', doctor: 'Dr. Chen', status: 'Scheduled' },
-  { id: 4, time: '10:30 AM', patient: 'Michael Brown', doctor: 'Dr. Park', status: 'Scheduled' },
-  { id: 5, time: '11:00 AM', patient: 'Sarah Lee', doctor: 'Dr. Chen', status: 'Scheduled' },
-];
+interface Appointment {
+  id: number;
+  time: string;
+  patient: string;
+  doctor: string;
+  status: string;
+}
 
 export default function ReceptionistDashboard() {
-  const [waitingRoomList, setWaitingRoomList] = useState<any[]>([]);
-  const [todayAppointmentsList, setTodayAppointmentsList] = useState<any[]>([]);
+  const [waitingRoomList, setWaitingRoomList] = useState<WaitingPatient[]>([]);
+  const [todayAppointmentsList, setTodayAppointmentsList] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [newPatient, setNewPatient] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    insurance: '',
-  });
-  
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  const handleFileUpload = async () => {
-    if (!selectedFile) return;
-    setIsUploading(true);
-    
-    // Simulate getting a patient ID
-    const patientId = 999;
-    
-    try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      
-      toast.info('Uploading document to secure vault...', { id: 'upload-toast' });
-      await api.post(`/intake/upload?patient_id=${patientId}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      
-      toast.loading('AI Agents analyzing document...', { id: 'upload-toast' });
-      await api.post(`/intake/${patientId}/analyze-insurance`, {
-        document_id: patientId,
-        document_text: "Mock text for OCR extraction..."
-      });
-      
-      setTimeout(() => {
-        toast.success('Document processed! AI extracted Insurance Auth details.', { id: 'upload-toast' });
-        setIsUploading(false);
-        setSelectedFile(null);
-      }, 3000);
-      
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to process document.', { id: 'upload-toast' });
-      setIsUploading(false);
-    }
-  };
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -106,11 +45,6 @@ export default function ReceptionistDashboard() {
     fetchDashboard();
   }, []);
 
-  const handleRegisterPatient = () => {
-    console.log('Registering patient:', newPatient);
-    setNewPatient({ firstName: '', lastName: '', email: '', phone: '', insurance: '' });
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
@@ -120,125 +54,6 @@ export default function ReceptionistDashboard() {
             Receptionist Interface
           </h1>
           <p className="text-slate-400">Manage patient flow and appointments</p>
-        </div>
-        <div className="flex gap-3">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300 shadow-lg shadow-cyan-500/5">
-                <UploadCloud className="w-4 h-4 mr-2" />
-                Upload Document
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-slate-900 border-slate-700/30">
-              <DialogHeader>
-                <DialogTitle className="text-white flex items-center gap-2">
-                  <UploadCloud className="w-5 h-5 text-cyan-400" />
-                  Upload Clinical Document
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div className="border-2 border-dashed border-slate-700/50 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer relative">
-                  <input 
-                    type="file" 
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  />
-                  <UploadCloud className="w-12 h-12 text-slate-400 mb-3" />
-                  <p className="text-slate-300 font-medium text-center">
-                    {selectedFile ? selectedFile.name : "Drag & drop file or click to browse"}
-                  </p>
-                  <p className="text-slate-500 text-sm mt-1">Supports PDF, JPG, PNG (Max 10MB)</p>
-                </div>
-                
-                <Button
-                  onClick={handleFileUpload}
-                  disabled={!selectedFile || isUploading}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/20"
-                >
-                  {isUploading ? "Processing via AI..." : "Upload & Analyze"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-white shadow-lg shadow-cyan-500/20">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Register Patient
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-slate-900 border-slate-700/30">
-            <DialogHeader>
-              <DialogTitle className="text-white flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-cyan-400" />
-                Register New Patient
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-slate-300">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={newPatient.firstName}
-                    onChange={(e) => setNewPatient({ ...newPatient, firstName: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700/30 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-slate-300">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={newPatient.lastName}
-                    onChange={(e) => setNewPatient({ ...newPatient, lastName: e.target.value })}
-                    className="bg-slate-800/50 border-slate-700/30 text-white"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-300">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newPatient.email}
-                  onChange={(e) => setNewPatient({ ...newPatient, email: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/30 text-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-slate-300">Phone</Label>
-                <Input
-                  id="phone"
-                  value={newPatient.phone}
-                  onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })}
-                  className="bg-slate-800/50 border-slate-700/30 text-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="insurance" className="text-slate-300">Insurance Provider</Label>
-                <Select onValueChange={(value) => setNewPatient({ ...newPatient, insurance: value })}>
-                  <SelectTrigger className="bg-slate-800/50 border-slate-700/30 text-white">
-                    <SelectValue placeholder="Select insurance" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-900 border-slate-700/30">
-                    <SelectItem value="blue-cross">Blue Cross Blue Shield</SelectItem>
-                    <SelectItem value="aetna">Aetna</SelectItem>
-                    <SelectItem value="united">United Healthcare</SelectItem>
-                    <SelectItem value="cigna">Cigna</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                onClick={handleRegisterPatient}
-                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
-              >
-                Register Patient
-              </Button>
-            </div>
-          </DialogContent>
-          </Dialog>
         </div>
       </div>
 
@@ -257,6 +72,10 @@ export default function ReceptionistDashboard() {
                 <div className="text-slate-400 text-center py-8">
                   <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-2" />
                   Loading waiting queue...
+                </div>
+              ) : waitingRoomList.length === 0 ? (
+                <div className="text-slate-400 text-center py-8">
+                  No patients waiting.
                 </div>
               ) : waitingRoomList.map((patient, index) => (
                 <div
@@ -328,7 +147,12 @@ export default function ReceptionistDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {todayAppointmentsList.length === 0 && !isLoading ? (
+            {isLoading ? (
+               <div className="text-slate-400 text-center py-8">
+                 <div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-2" />
+                 Loading today's schedule...
+               </div>
+            ) : todayAppointmentsList.length === 0 ? (
                <div className="text-slate-400 text-center py-8">
                  No appointments scheduled for today.
                </div>
