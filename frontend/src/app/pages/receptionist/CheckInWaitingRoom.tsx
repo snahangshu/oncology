@@ -90,7 +90,7 @@ export default function CheckInWaitingRoom() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Total Checked-In</p>
-              <h3 className="text-white text-2xl font-bold">14</h3>
+              <h3 className="text-white text-2xl font-bold">{patients.filter(p => p.status !== 'Scheduled' && p.status !== 'No Show' && p.status !== 'Completed').length}</h3>
             </div>
           </CardContent>
         </Card>
@@ -102,7 +102,7 @@ export default function CheckInWaitingRoom() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">In Waiting Room</p>
-              <h3 className="text-white text-2xl font-bold">5</h3>
+              <h3 className="text-white text-2xl font-bold">{patients.filter(p => p.status === 'Waiting').length}</h3>
             </div>
           </CardContent>
         </Card>
@@ -114,7 +114,7 @@ export default function CheckInWaitingRoom() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">With Doctor</p>
-              <h3 className="text-white text-2xl font-bold">3</h3>
+              <h3 className="text-white text-2xl font-bold">{patients.filter(p => p.status === 'With Doctor').length}</h3>
             </div>
           </CardContent>
         </Card>
@@ -126,7 +126,7 @@ export default function CheckInWaitingRoom() {
             </div>
             <div>
               <p className="text-slate-400 text-sm">Wait {'>'} 30 mins</p>
-              <h3 className="text-rose-400 text-2xl font-bold">1</h3>
+              <h3 className="text-rose-400 text-2xl font-bold">{patients.filter(p => p.waitMinutes > 30).length}</h3>
             </div>
           </CardContent>
         </Card>
