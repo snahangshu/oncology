@@ -16,7 +16,10 @@ interface PatientData {
   status: string;
 }
 
+import { useNavigate } from 'react-router';
+
 export default function PatientRegistry() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [patients, setPatients] = useState<PatientData[]>([]);
@@ -146,7 +149,12 @@ export default function PatientRegistry() {
                         {getStatusBadge(patient.status)}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-400/10"
+                          onClick={() => navigate(`/patients/${patient.id}`)}
+                        >
                           View Profile
                         </Button>
                       </td>
