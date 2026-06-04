@@ -79,6 +79,11 @@ class SchedulingService:
                         full_start = datetime.combine(current_date, start_t)
                         full_end = datetime.combine(current_date, end_t)
                         
+                        # Only show slots that are in the future
+                        if full_start <= datetime.utcnow():
+                            i += 1
+                            continue
+                        
                         doctor_specialty = doc_slots[i].specialty
                         
                         score, reasoning = scorer.score_slot(
@@ -94,6 +99,7 @@ class SchedulingService:
                         doctor_obj = doc_service.doctor_repo.get(doc_id)
                         exp = getattr(doctor_obj, 'experience_years', None) if doctor_obj else None
                         qual = getattr(doctor_obj, 'qualifications', None) if doctor_obj else None
+
 
                         options.append(
                             SlotOption(

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Users, Calendar, Activity, TrendingUp, MoreVertical } from 'lucide-react';
+import { Skeleton } from '../components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { api } from '../shared/api';
+import { toast } from 'sonner';
 import {
   Table,
   TableBody,
@@ -19,59 +21,77 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 
 const metrics = [
   {
     title: "Today's Patients",
-    value: '147',
-    change: '+12%',
+    value: '0',
+    change: '',
     icon: Users,
     gradient: 'from-cyan-500 to-blue-500',
   },
   {
     title: 'Total Appointments',
-    value: '89',
-    change: '+8%',
+    value: '0',
+    change: '',
     icon: Calendar,
     gradient: 'from-emerald-500 to-green-500',
   },
   {
     title: 'Doctors Available',
-    value: '24',
-    change: '-2',
+    value: '0',
+    change: '',
     icon: Activity,
     gradient: 'from-violet-500 to-purple-500',
   },
   {
     title: 'Appointment Utilization',
-    value: '94%',
-    change: '+5%',
+    value: '0%',
+    change: '',
     icon: TrendingUp,
     gradient: 'from-rose-500 to-pink-500',
   },
 ];
 
-const users = [
-  { id: 1, name: 'Dr. Sarah Chen', role: 'DOCTOR', status: 'Active', patients: 12, lastActive: '2 min ago' },
-  { id: 2, name: 'Dr. Michael Rodriguez', role: 'DOCTOR', status: 'Active', patients: 15, lastActive: '5 min ago' },
-  { id: 3, name: 'Emily Johnson', role: 'RECEPTIONIST', status: 'Active', patients: 0, lastActive: '1 min ago' },
-  { id: 4, name: 'Nurse Williams', role: 'NURSE', status: 'Active', patients: 8, lastActive: '3 min ago' },
-  { id: 5, name: 'Dr. James Park', role: 'DOCTOR', status: 'Inactive', patients: 0, lastActive: '2 hrs ago' },
-  { id: 6, name: 'Lisa Martinez', role: 'NURSE', status: 'Active', patients: 6, lastActive: '10 min ago' },
-];
-
-const systemEvents = [
-  { id: 1, type: 'critical', message: 'Database backup completed successfully', time: '5 min ago' },
-  { id: 2, type: 'warning', message: 'High CPU usage on server-02 (87%)', time: '12 min ago' },
-  { id: 3, type: 'info', message: 'New user registered: Dr. Amanda Lee', time: '25 min ago' },
-  { id: 4, type: 'critical', message: 'Payment gateway integration updated', time: '1 hr ago' },
-  { id: 5, type: 'info', message: 'Appointment reminder sent to 45 patients', time: '2 hrs ago' },
-];
-
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [metricsList, setMetricsList] = useState(metrics);
+  const [users, setUsers] = useState<any[]>([]);
+  const [systemEvents, setSystemEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [userDocuments, setUserDocuments] = useState<any[]>([]);
+  const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+
+  const handleViewDetails = async (user: any) => {
+    setSelectedUser(user);
+    try {
+      const response = await api.get(`/staff/${user.id}/documents`);
+      setUserDocuments(response.data);
+      setIsDocumentModalOpen(true);
+    } catch (error) {
+      toast.error('Failed to load user documents');
+    }
+  };
+
+  const handleApproveUser = async (userId: number) => {
+    try {
+      await api.post(`/staff/${userId}/approve`);
+      setUsers(users.map(u => u.id === userId ? { ...u, verification_status: 'APPROVED' } : u));
+      toast.success('User approved successfully');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Failed to approve user');
+      console.error('Failed to approve user', err);
+    }
+  };
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -82,22 +102,32 @@ export default function AdminDashboard() {
         const updatedMetrics = [
           {
             ...metrics[0],
-            value: isLoading ? '...' : String(data.today_patients || 147),
+            value: isLoading ? '...' : String(data.today_patients || 0),
+            change: data.today_patients_change || '',
           },
           {
             ...metrics[1],
-            value: isLoading ? '...' : String(data.total_appointments || 89),
+            value: isLoading ? '...' : String(data.total_appointments || 0),
+            change: data.total_appointments_change || '',
           },
           {
             ...metrics[2],
-            value: isLoading ? '...' : String(data.doctors_available || 24),
+            value: isLoading ? '...' : String(data.doctors_available || 0),
+            change: data.doctors_available_change || '',
           },
           {
             ...metrics[3],
-            value: isLoading ? '...' : `${data.utilization_percent || 94}%`,
+            value: isLoading ? '...' : `${data.utilization_percent || 0}%`,
+            change: data.utilization_percent_change || '',
           },
         ];
         setMetricsList(updatedMetrics);
+        if (data.users) {
+          setUsers(data.users);
+        }
+        if (data.systemEvents) {
+          setSystemEvents(data.systemEvents);
+        }
       } catch (err) {
         console.error('Error fetching admin dashboard:', err);
       } finally {
@@ -129,13 +159,25 @@ export default function AdminDashboard() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-slate-400 text-sm">{metric.title}</p>
-                  <h3 className="text-white mt-2 mb-1">{metric.value}</h3>
-                  <Badge
-                    variant="outline"
-                    className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
-                  >
-                    {metric.change}
-                  </Badge>
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-20 mt-2 mb-1 bg-slate-800/50" />
+                  ) : (
+                    <h3 className="text-white mt-2 mb-1">{metric.value}</h3>
+                  )}
+                  {isLoading ? (
+                    <Skeleton className="h-5 w-14 mt-1 bg-slate-800/50 rounded-full" />
+                  ) : metric.change ? (
+                    <Badge
+                      variant="outline"
+                      className={`mt-1 ${
+                        metric.change.startsWith('-')
+                          ? 'border-rose-500/30 text-rose-400 bg-rose-500/10'
+                          : 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
+                      }`}
+                    >
+                      {metric.change}
+                    </Badge>
+                  ) : null}
                 </div>
                 <div className={`p-3 rounded-xl bg-gradient-to-br ${metric.gradient} shadow-lg`}>
                   <metric.icon className="w-5 h-5 text-white" />
@@ -153,9 +195,14 @@ export default function AdminDashboard() {
             <Users className="w-5 h-5 text-cyan-400" />
             Manage Users
           </CardTitle>
-          <Button onClick={() => navigate('/admin/doctors/new')} className="bg-emerald-500 hover:bg-emerald-600 text-white">
-            Add Doctor
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate('/admin/staff/invite')} className="bg-emerald-500 hover:bg-emerald-600 text-white">
+              Invite Staff
+            </Button>
+            <Button onClick={() => navigate('/admin/doctors/new')} className="bg-emerald-500 hover:bg-emerald-600 text-white">
+              Add Doctor
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -170,7 +217,18 @@ export default function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {isLoading ? (
+                Array(5).fill(0).map((_, i) => (
+                  <TableRow key={`skel-${i}`} className="border-slate-700/30">
+                    <TableCell><Skeleton className="h-5 w-32 bg-slate-800/50" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20 bg-slate-800/50 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20 bg-slate-800/50 rounded-full" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-12 bg-slate-800/50" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24 bg-slate-800/50" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8 ml-auto bg-slate-800/50 rounded-md" /></TableCell>
+                  </TableRow>
+                ))
+              ) : users.map((user) => (
                 <TableRow
                   key={user.id}
                   className="border-slate-700/30 hover:bg-slate-800/20 transition-colors"
@@ -194,42 +252,38 @@ export default function AdminDashboard() {
                     <Badge
                       variant="outline"
                       className={
-                        user.status === 'Active'
-                          ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10 animate-pulse'
+                        user.verification_status === 'APPROVED'
+                          ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10'
+                          : user.verification_status === 'UNDER_REVIEW'
+                          ? 'border-amber-500/50 text-amber-400 bg-amber-500/10'
                           : 'border-slate-500/30 text-slate-400 bg-slate-500/10'
                       }
                     >
-                      {user.status}
+                      {user.verification_status ? user.verification_status.replace('_', ' ') : user.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-slate-300">{user.patients}</TableCell>
                   <TableCell className="text-slate-400 text-sm">{user.lastActive}</TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="hover:bg-slate-700/30"
+                    <div className="flex justify-end items-center gap-2">
+                      {user.verification_status !== 'APPROVED' && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleApproveUser(user.id)}
+                          className="bg-emerald-500 hover:bg-emerald-600 text-white h-8"
                         >
-                          <MoreVertical className="w-4 h-4 text-slate-400" />
+                          Approve
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="bg-slate-900 border-slate-700/30"
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="hover:bg-slate-700/30"
+                        onClick={() => handleViewDetails(user)}
                       >
-                        <DropdownMenuItem className="text-slate-300 focus:bg-slate-800 focus:text-white">
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-slate-300 focus:bg-slate-800 focus:text-white">
-                          Edit User
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-rose-400 focus:bg-rose-500/10 focus:text-rose-400">
-                          Deactivate
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        <MoreVertical className="w-4 h-4 text-slate-400" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -248,7 +302,17 @@ export default function AdminDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {systemEvents.map((event) => (
+            {isLoading ? (
+              Array(4).fill(0).map((_, i) => (
+                <div key={`se-skel-${i}`} className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/20 border border-slate-700/20">
+                  <Skeleton className="w-2 h-2 mt-2 rounded-full bg-slate-800/50" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4 bg-slate-800/50" />
+                    <Skeleton className="h-3 w-1/4 bg-slate-800/50" />
+                  </div>
+                </div>
+              ))
+            ) : systemEvents.map((event) => (
               <div
                 key={event.id}
                 className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/20 border border-slate-700/20 hover:border-slate-600/30 transition-colors"
@@ -271,6 +335,43 @@ export default function AdminDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* User Details Modal */}
+      <Dialog open={isDocumentModalOpen} onOpenChange={setIsDocumentModalOpen}>
+        <DialogContent className="bg-slate-900 border-slate-700/50 text-white sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{selectedUser?.name}'s Documents</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Review documents uploaded by this user.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto pr-2">
+            {userDocuments.length === 0 ? (
+              <p className="text-slate-400 text-center py-4">No documents uploaded yet.</p>
+            ) : (
+              userDocuments.map((doc) => (
+                <div key={doc.id} className="p-4 bg-slate-950 rounded-lg border border-slate-800">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-medium text-cyan-400">{doc.document_type}</span>
+                    <Badge variant="outline" className={
+                      doc.status === 'VERIFIED' ? 'border-emerald-500/50 text-emerald-400' : 
+                      doc.status === 'REJECTED' ? 'border-rose-500/50 text-rose-400' :
+                      'border-amber-500/50 text-amber-400'
+                    }>
+                      {doc.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-slate-400 mb-2 truncate">File: <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline">{doc.file_url}</a></p>
+                  <div className="text-xs text-slate-500 flex justify-between">
+                    <span>Issued: {doc.issue_date || 'N/A'}</span>
+                    <span>Expires: {doc.expiry_date || 'N/A'}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

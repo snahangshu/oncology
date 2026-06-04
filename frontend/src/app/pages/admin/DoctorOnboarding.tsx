@@ -7,7 +7,7 @@ import { Switch } from '../../components/ui/switch';
 import { toast } from 'sonner';
 import { api } from '../../shared/api';
 import { Stethoscope, User, Activity, Clock, ShieldCheck, MapPin } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 export default function DoctorOnboarding() {
   const navigate = useNavigate();

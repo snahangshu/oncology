@@ -47,6 +47,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigationByRole = {
     ADMIN: [
       { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+      { name: 'Staff & Credentialing', href: '/admin/credentialing', icon: Shield },
     ],
     DOCTOR: [
       { name: 'Dashboard', href: '/doctor', icon: Stethoscope },

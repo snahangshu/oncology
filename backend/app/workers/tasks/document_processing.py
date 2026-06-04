@@ -113,7 +113,7 @@ def process_pathology_report(patient_id: int, file_path: str, document_id: int) 
     try:
         extracted_text = extract_text_from_file(file_path)
         if not extracted_text:
-            extracted_text = "MOCK PATHOLOGY PDF TEXT: Patient has stage III breast cancer." # fallback for dummy files
+            extracted_text = "No text could be extracted from the document."
             
         agent = PathologyTriageAgent()
         res = agent.extract_tumor_details(document_id, extracted_text)
