@@ -37,6 +37,8 @@ export default function DoctorProfileSetup() {
     disease_expertise_oncology: '',
     disease_expertise_hematology: '',
     treatment_expertise: '',
+    license_file: '',
+    board_file: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,6 +95,16 @@ export default function DoctorProfileSetup() {
             className="bg-cyan-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${(step / 4) * 100}%` }}
           />
+        </div>
+        
+        <div className="mt-6 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
+          <Activity className="w-5 h-5 text-amber-400 mt-0.5" />
+          <div>
+            <p className="text-amber-400 font-medium text-sm mb-1">Action Required</p>
+            <p className="text-amber-300/80 text-sm">
+              Your profile is currently incomplete or was rejected during review. Please review your details carefully and re-upload your valid credentials to proceed.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -222,22 +234,56 @@ export default function DoctorProfileSetup() {
               <CardDescription>Upload your required credentials for verification.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center flex flex-col items-center">
+              <div className="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 transition-colors rounded-xl p-8 text-center flex flex-col items-center">
                 <Upload className="w-10 h-10 text-slate-500 mb-4" />
                 <h3 className="text-white font-medium mb-1">Upload Medical License</h3>
                 <p className="text-slate-400 text-sm mb-4">PDF, JPG, PNG up to 10MB</p>
-                <Button variant="outline" className="border-cyan-500/30 text-cyan-400">
-                  Select File
-                </Button>
+                <div className="relative">
+                  <input 
+                    type="file" 
+                    id="license-upload" 
+                    className="hidden" 
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, license_file: file.name }));
+                        toast.success(`Selected ${file.name}`);
+                      }
+                    }}
+                  />
+                  <Label htmlFor="license-upload" className="cursor-pointer">
+                    <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 border-cyan-500/30 text-cyan-400">
+                      {formData.license_file || "Select File"}
+                    </div>
+                  </Label>
+                </div>
               </div>
 
-              <div className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center flex flex-col items-center">
+              <div className="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 transition-colors rounded-xl p-8 text-center flex flex-col items-center">
                 <Upload className="w-10 h-10 text-slate-500 mb-4" />
                 <h3 className="text-white font-medium mb-1">Upload Board Certification</h3>
                 <p className="text-slate-400 text-sm mb-4">PDF, JPG, PNG up to 10MB</p>
-                <Button variant="outline" className="border-cyan-500/30 text-cyan-400">
-                  Select File
-                </Button>
+                <div className="relative">
+                  <input 
+                    type="file" 
+                    id="board-upload" 
+                    className="hidden" 
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, board_file: file.name }));
+                        toast.success(`Selected ${file.name}`);
+                      }
+                    }}
+                  />
+                  <Label htmlFor="board-upload" className="cursor-pointer">
+                    <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 border-cyan-500/30 text-cyan-400">
+                      {formData.board_file || "Select File"}
+                    </div>
+                  </Label>
+                </div>
               </div>
             </CardContent>
           </Card>

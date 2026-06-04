@@ -21,8 +21,28 @@ class DoctorService:
 
     def create_doctor(self, request: DoctorCreateRequest) -> DoctorResponse:
         from app.modules.doctors.models import DoctorDiseaseExpertise, DoctorTreatmentExpertise
+        from app.modules.users.models import User, Role, VerificationStatus
+        from app.modules.users.security import get_password_hash
         
-        # Check for existing email
+        # 1. Ensure the user exists in the auth system (users table)
+        existing_user = self.db.query(User).filter(User.email == request.email).first()
+        if not existing_user:
+            new_user = User(
+                email=request.email,
+                full_name=f"{request.first_name} {request.last_name}",
+                hashed_password=get_password_hash("Welcome123!"),
+                role=Role.DOCTOR,
+                is_active=True,
+                verification_status=VerificationStatus.PROFILE_INCOMPLETE
+            )
+            self.db.add(new_user)
+            self.db.flush() # get user id
+        else:
+            # Ensure their role is DOCTOR
+            existing_user.role = Role.DOCTOR
+            existing_user.full_name = f"{request.first_name} {request.last_name}"
+        
+        # 2. Check for existing doctor profile
         existing = self.doctor_repo.get_by_email(request.email)
         if existing:
             # We skip complex relation updates for MVP if existing, just update basic fields

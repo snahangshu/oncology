@@ -71,6 +71,9 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [userDocuments, setUserDocuments] = useState<any[]>([]);
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+  
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
 
   const handleViewDetails = async (user: any) => {
     setSelectedUser(user);
@@ -91,6 +94,30 @@ export default function AdminDashboard() {
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Failed to approve user');
       console.error('Failed to approve user', err);
+    }
+  };
+
+  const handleRejectUser = async () => {
+    if (!selectedUser) return;
+    try {
+      await api.post(`/staff/${selectedUser.id}/reject`, { reason: rejectReason });
+      setUsers(users.map(u => u.id === selectedUser.id ? { ...u, verification_status: 'REJECTED' } : u));
+      toast.success('User rejected successfully');
+      setIsRejectModalOpen(false);
+      setRejectReason('');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Failed to reject user');
+    }
+  };
+
+  const handleDeleteUser = async (user: any) => {
+    if (!window.confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) return;
+    try {
+      await api.delete(`/staff/${user.id}`);
+      setUsers(users.filter(u => u.id !== user.id));
+      toast.success('User deleted successfully');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Failed to delete user');
     }
   };
 
@@ -240,7 +267,8 @@ export default function AdminDashboard() {
               ) : users.map((user) => (
                 <TableRow
                   key={user.id}
-                  className="border-slate-700/30 hover:bg-slate-800/20 transition-colors"
+                  className="border-slate-700/30 hover:bg-slate-800/20 transition-colors cursor-pointer"
+                  onClick={() => handleViewDetails(user)}
                 >
                   <TableCell className="text-white">{user.name}</TableCell>
                   <TableCell>
@@ -275,22 +303,40 @@ export default function AdminDashboard() {
                   <TableCell className="text-slate-400 text-sm">{user.lastActive}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-slate-800 text-slate-300 h-8"
+                        onClick={(e) => { e.stopPropagation(); handleViewDetails(user); }}
+                      >
+                        View
+                      </Button>
                       {user.verification_status !== 'APPROVED' && (
                         <Button 
                           size="sm" 
-                          onClick={() => handleApproveUser(user.id)}
-                          className="bg-emerald-500 hover:bg-emerald-600 text-white h-8"
+                          onClick={(e) => { e.stopPropagation(); handleApproveUser(user.id); }}
+                          className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 h-8"
                         >
                           Approve
                         </Button>
                       )}
+                      {user.verification_status !== 'REJECTED' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border-amber-500/30 h-8"
+                          onClick={(e) => { e.stopPropagation(); setSelectedUser(user); setIsRejectModalOpen(true); }}
+                        >
+                          Reject
+                        </Button>
+                      )}
                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="hover:bg-slate-700/30"
-                        onClick={() => handleViewDetails(user)}
+                        size="sm"
+                        variant="outline"
+                        className="bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border-rose-500/30 h-8"
+                        onClick={(e) => { e.stopPropagation(); handleDeleteUser(user); }}
                       >
-                        <MoreVertical className="w-4 h-4 text-slate-400" />
+                        Delete
                       </Button>
                     </div>
                   </TableCell>
@@ -387,14 +433,23 @@ export default function AdminDashboard() {
       <Dialog open={isDocumentModalOpen} onOpenChange={setIsDocumentModalOpen}>
         <DialogContent className="bg-slate-900 border-slate-700/50 text-white sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{selectedUser?.name}'s Documents</DialogTitle>
+            <DialogTitle>{selectedUser?.name}'s Details</DialogTitle>
             <DialogDescription className="text-slate-400">
-              Review documents uploaded by this user.
+              Review user information and uploaded documents.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto pr-2">
+          <div className="space-y-4 mt-2 max-h-[70vh] overflow-y-auto pr-2">
+            {selectedUser && (
+              <div className="p-4 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
+                <p className="text-sm"><span className="text-slate-400">Email:</span> <span className="text-white">{selectedUser.email || 'N/A'}</span></p>
+                <p className="text-sm"><span className="text-slate-400">Role:</span> <span className="text-white">{selectedUser.role}</span></p>
+                <p className="text-sm"><span className="text-slate-400">Status:</span> <span className="text-white">{selectedUser.verification_status ? selectedUser.verification_status.replace('_', ' ') : selectedUser.status}</span></p>
+              </div>
+            )}
+            
+            <h4 className="text-sm font-semibold text-slate-300 mt-4 mb-2">Uploaded Documents</h4>
             {userDocuments.length === 0 ? (
-              <p className="text-slate-400 text-center py-4">No documents uploaded yet.</p>
+              <p className="text-slate-500 text-sm italic py-2">No documents uploaded yet.</p>
             ) : (
               userDocuments.map((doc) => (
                 <div key={doc.id} className="p-4 bg-slate-950 rounded-lg border border-slate-800">
@@ -416,6 +471,35 @@ export default function AdminDashboard() {
                 </div>
               ))
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Modal */}
+      <Dialog open={isRejectModalOpen} onOpenChange={setIsRejectModalOpen}>
+        <DialogContent className="bg-slate-900 border-slate-700/50 text-white sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Reject User</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Please provide a reason for rejecting {selectedUser?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <textarea
+              className="w-full bg-slate-950 border border-slate-800 rounded-md p-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50"
+              rows={4}
+              placeholder="Reason for rejection..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsRejectModalOpen(false)} className="border-slate-700 text-slate-300 hover:bg-slate-800">
+              Cancel
+            </Button>
+            <Button onClick={handleRejectUser} className="bg-amber-500 hover:bg-amber-600 text-white" disabled={!rejectReason.trim()}>
+              Confirm Rejection
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

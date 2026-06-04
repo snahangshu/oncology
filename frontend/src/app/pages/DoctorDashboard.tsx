@@ -46,7 +46,10 @@ interface LabAlert {
   time: string;
 }
 
+import { useAppSelector } from '../store';
+
 export default function DoctorDashboard() {
+  const { user } = useAppSelector((state) => state.auth);
   const [appointmentsList, setAppointmentsList] = useState<Appointment[]>([]);
   const [upcomingAppointmentsList, setUpcomingAppointmentsList] = useState<Appointment[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Appointment | null>(null);
@@ -163,6 +166,21 @@ export default function DoctorDashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {user?.verificationStatus && user.verificationStatus !== 'APPROVED' && (
+        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-400" />
+            <div>
+              <p className="text-amber-400 font-medium text-sm">Profile Status: {user.verificationStatus.replace('_', ' ')}</p>
+              <p className="text-amber-300/80 text-sm">Your credentials are currently under review. Some features may be restricted until approval.</p>
+            </div>
+          </div>
+          <Button onClick={() => navigate('/doctor/profile-setup')} size="sm" variant="outline" className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20">
+            View Setup
+          </Button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-end">
         <div>
@@ -172,11 +190,8 @@ export default function DoctorDashboard() {
           <p className="text-slate-400">Today's consultation queue and AI-driven clinical insights</p>
         </div>
         <div className="flex gap-4">
-          <Button onClick={() => toast.info('Navigating to Credentials Management')} variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800">
-            <ShieldCheck className="w-4 h-4 mr-2" /> My Credentials
-          </Button>
           <Button onClick={() => navigate('/doctor/profile-setup')} className="bg-cyan-500 hover:bg-cyan-600 text-white">
-            <Activity className="w-4 h-4 mr-2" /> Complete Profile
+            <Activity className="w-4 h-4 mr-2" /> Profile Setup
           </Button>
         </div>
       </div>

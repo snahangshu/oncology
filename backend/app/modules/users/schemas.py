@@ -12,6 +12,7 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: int
     is_active: bool
+    verification_status: str | None = None
 
     class Config:
         from_attributes = True

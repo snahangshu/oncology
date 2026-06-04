@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, Video, Users, Stethoscope, Droplet, AlertCircle } from 'lucide-react';
+import { api } from '../../shared/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../../components/ui/dialog';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { toast } from 'sonner';
 
 // State interface
 interface Event {
@@ -19,6 +24,124 @@ interface Event {
 export default function DoctorSchedule() {
   const [view, setView] = useState('day');
   const [events, setEvents] = useState<Event[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [doctorId, setDoctorId] = useState<number | null>(null);
+
+  // Dialog states
+  const [isBlockOpen, setIsBlockOpen] = useState(false);
+  const [isAvailOpen, setIsAvailOpen] = useState(false);
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
+  const [isRecurring, setIsRecurring] = useState(false);
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      try {
+        const response = await api.get('/dashboards/doctor');
+        const today = response.data.today_appointments || [];
+        const upcoming = response.data.upcoming_appointments || [];
+        const docId = response.data.doctor_id;
+        
+        if (docId) setDoctorId(docId);
+        
+        let schedEvents: any[] = [];
+        if (docId) {
+          try {
+            const schedResponse = await api.get(`/doctors/${docId}/schedule`);
+            schedEvents = (schedResponse.data || []).map((s: any) => {
+              // Create a date object. If it's recurring, we just show it on current date for now.
+              let eDate = currentDate;
+              if (s.specific_date) {
+                eDate = new Date(s.specific_date);
+              } else if (s.day_of_week !== null && s.day_of_week !== undefined) {
+                // If recurring on a specific day, align it to that day in the current week
+                eDate = new Date(currentDate);
+                const dayDiff = s.day_of_week - eDate.getDay();
+                eDate.setDate(eDate.getDate() + dayDiff);
+              }
+              
+              return {
+                id: `sched_${s.id}`,
+                title: 'Availability Block',
+                time: s.start_time,
+                duration: `${s.start_time} - ${s.end_time}`,
+                type: 'Block',
+                color: 'slate',
+                date: eDate
+              };
+            });
+          } catch (e) {
+            console.error('Error fetching schedules:', e);
+          }
+        }
+        
+        const allAppts = [...today, ...upcoming];
+        const mappedEvents = [...schedEvents, ...allAppts.map((appt: any, index: number) => ({
+          id: appt.appointment_id || index,
+          title: `Consultation - ${appt.patient_name || 'Patient'}`,
+          time: appt.time,
+          duration: '30 min',
+          type: 'Consultation',
+          color: 'cyan',
+          urgency: appt.urgency_level || 'Routine',
+          date: new Date(appt.full_time)
+        }))];
+        
+        // Filter based on selected view
+        const filteredEvents = mappedEvents.filter(e => {
+          const eDate = e.date;
+          if (view === 'day') {
+            return eDate.getDate() === currentDate.getDate() && 
+                   eDate.getMonth() === currentDate.getMonth() && 
+                   eDate.getFullYear() === currentDate.getFullYear();
+          } else if (view === 'week') {
+            // Check if it's within roughly a week
+            const startOfWeek = new Date(currentDate);
+            startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+            startOfWeek.setHours(0,0,0,0);
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23,59,59,999);
+            return eDate >= startOfWeek && eDate <= endOfWeek;
+          } else {
+            // Month view
+            return eDate.getMonth() === currentDate.getMonth() && 
+                   eDate.getFullYear() === currentDate.getFullYear();
+          }
+        });
+        
+        setEvents(filteredEvents);
+      } catch (error) {
+        console.error('Error fetching schedule:', error);
+      }
+    };
+    fetchSchedule();
+  }, [currentDate, view, isBlockOpen, isAvailOpen]);
+
+  const handleCreateSchedule = async () => {
+    if (!doctorId) {
+      toast.error('Doctor profile not found. Please complete profile setup.');
+      return;
+    }
+    
+    try {
+      const payload = {
+        start_time: startTime,
+        end_time: endTime,
+        is_recurring: isRecurring,
+        specific_date: !isRecurring ? currentDate.toISOString().split('T')[0] : null,
+        day_of_week: isRecurring ? currentDate.getDay() : null,
+      };
+      
+      await api.post(`/doctors/${doctorId}/schedule`, payload);
+      toast.success('Schedule updated successfully');
+      setIsBlockOpen(false);
+      setIsAvailOpen(false);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.detail || 'Failed to update schedule');
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
@@ -31,24 +154,79 @@ export default function DoctorSchedule() {
           <p className="text-slate-400">Manage your consultations, meetings, and clinical blocks</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300">
-            Block Time
-          </Button>
-          <Button className="bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20">
-            <Plus className="w-4 h-4 mr-2" />
-            Create Availability
-          </Button>
+          <Dialog open={isBlockOpen} onOpenChange={setIsBlockOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300">
+                Block Time
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-700 text-white">
+              <DialogHeader>
+                <DialogTitle>Block Time</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Start Time</Label>
+                  <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="col-span-3 bg-slate-800 border-slate-700" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">End Time</Label>
+                  <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="col-span-3 bg-slate-800 border-slate-700" />
+                </div>
+                <div className="flex items-center gap-2 justify-end">
+                  <input type="checkbox" id="recurringBlock" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)} className="rounded border-slate-700 bg-slate-800" />
+                  <Label htmlFor="recurringBlock">Make Recurring (Every {currentDate.toLocaleDateString('en-US', { weekday: 'long' })})</Label>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleCreateSchedule} className="bg-rose-600 hover:bg-rose-500 text-white">Save Block</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isAvailOpen} onOpenChange={setIsAvailOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Availability
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-700 text-white">
+              <DialogHeader>
+                <DialogTitle>Create Availability</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Start Time</Label>
+                  <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="col-span-3 bg-slate-800 border-slate-700" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">End Time</Label>
+                  <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="col-span-3 bg-slate-800 border-slate-700" />
+                </div>
+                <div className="flex items-center gap-2 justify-end">
+                  <input type="checkbox" id="recurringAvail" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)} className="rounded border-slate-700 bg-slate-800" />
+                  <Label htmlFor="recurringAvail">Make Recurring (Every {currentDate.toLocaleDateString('en-US', { weekday: 'long' })})</Label>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleCreateSchedule} className="bg-cyan-600 hover:bg-cyan-500 text-white">Save Availability</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
       {/* Calendar Controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50 backdrop-blur-xl">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700">
+          <Button onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))} variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700">
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-white font-bold text-lg min-w-[140px] text-center">Today, Oct 24</h2>
-          <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700">
+          <h2 className="text-white font-bold text-lg min-w-[140px] text-center">
+            {currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+          </h2>
+          <Button onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))} variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700">
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
@@ -69,7 +247,7 @@ export default function DoctorSchedule() {
             <CardHeader className="pb-3 border-b border-slate-800/50">
               <CardTitle className="text-white flex items-center gap-2 text-base">
                 <Calendar className="w-4 h-4 text-cyan-400" />
-                October 2026
+                {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
@@ -80,11 +258,16 @@ export default function DoctorSchedule() {
               </div>
               <div className="grid grid-cols-7 gap-1 text-center text-sm">
                 {/* Mock days */}
-                {Array.from({length: 31}).map((_, i) => (
+                {Array.from({length: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}).map((_, i) => (
                   <div 
                     key={i} 
+                    onClick={() => {
+                      const newDate = new Date(currentDate);
+                      newDate.setDate(i + 1);
+                      setCurrentDate(newDate);
+                    }}
                     className={`p-2 rounded-lg cursor-pointer transition-colors ${
-                      i + 1 === 24 ? 'bg-cyan-500 text-white font-bold shadow-lg shadow-cyan-500/30' : 
+                      i + 1 === currentDate.getDate() ? 'bg-cyan-500 text-white font-bold shadow-lg shadow-cyan-500/30' : 
                       'text-slate-300 hover:bg-slate-800'
                     }`}
                   >

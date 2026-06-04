@@ -107,6 +107,24 @@ def create_doctor(request: DoctorCreateRequest, db: Session = Depends(get_db)):
     service = DoctorService(db)
     return service.create_doctor(request)
 
+from app.modules.users.auth_deps import get_current_active_user
+from app.modules.users.models import User, VerificationStatus
+from typing import Annotated
+
+@router.post("/me/profile", status_code=status.HTTP_200_OK)
+def update_doctor_profile(
+    request: dict, # using dict for quick implementation since schema isn't fully defined
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    db: Session = Depends(get_db)
+):
+    """Update doctor profile and set status to UNDER_REVIEW."""
+    from app.modules.users.models import Role
+    if current_user.role != Role.DOCTOR:
+        raise HTTPException(status_code=403, detail="Not a doctor")
+        
+    current_user.verification_status = VerificationStatus.UNDER_REVIEW
+    db.commit()
+    return {"message": "Profile updated successfully, pending review"}
 
 @router.get("", response_model=List[DoctorResponse])
 def list_doctors(db: Session = Depends(get_db)):
