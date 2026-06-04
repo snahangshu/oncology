@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from './ui/dialog';
 import { Button } from './ui/button';
-import { Calendar, Clock, Loader2, Sparkles, Activity, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Loader2, Sparkles, Activity, Plus, CheckCircle2, AlertCircle, Award, Stethoscope } from 'lucide-react';
 import { api } from '../shared/api';
 import { toast } from 'sonner';
 import { Badge } from './ui/badge';
@@ -185,9 +185,27 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
                           </span>
                         </div>
                         
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-400">{slot.doctor_name || "Assigned Provider"}</span>
-                          {isSelected && <CheckCircle2 className="w-5 h-5 text-emerald-400 animate-in zoom-in" />}
+                        <div className="flex flex-col gap-1 border-t border-slate-700/50 pt-2 mt-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-slate-300 font-medium">{slot.doctor_name || "Assigned Provider"}</span>
+                            {isSelected && <CheckCircle2 className="w-5 h-5 text-emerald-400 animate-in zoom-in" />}
+                          </div>
+                          {(slot.qualifications || slot.experience_years) && (
+                            <div className="flex flex-col gap-1 mt-1">
+                              {slot.qualifications && (
+                                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                  <Award className="w-3.5 h-3.5 text-violet-400" />
+                                  <span className="truncate">{slot.qualifications}</span>
+                                </div>
+                              )}
+                              {slot.experience_years && (
+                                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                  <Stethoscope className="w-3.5 h-3.5 text-cyan-400" />
+                                  <span>{slot.experience_years} Years Experience</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );

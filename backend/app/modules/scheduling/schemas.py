@@ -13,6 +13,8 @@ class SlotOption(BaseModel):
     slot_id: str = Field(..., description="Unique slot identifier")
     doctor_id: int
     doctor_name: str
+    experience_years: Optional[int] = None
+    qualifications: Optional[str] = None
     start_time: datetime
     end_time: datetime
     score: float = Field(..., description="Weighted score from Slot Scorer (0 to 100)")

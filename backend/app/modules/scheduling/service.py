@@ -47,7 +47,7 @@ class SchedulingService:
         urgency_level = getattr(patient, 'urgency_level', "ROUTINE") if patient else "ROUTINE"
         
         while current_date <= end_date:
-            avail = doc_service.get_availability_for_date(current_date)
+            avail = doc_service.get_availability_for_date(current_date, query.appointment_type)
             
             # Group slots by doctor
             docs_slots = {}
@@ -79,6 +79,11 @@ class SchedulingService:
                         full_start = datetime.combine(current_date, start_t)
                         full_end = datetime.combine(current_date, end_t)
                         
+                        # Only show slots that are in the future
+                        if full_start <= datetime.utcnow():
+                            i += 1
+                            continue
+                        
                         doctor_specialty = doc_slots[i].specialty
                         
                         score, reasoning = scorer.score_slot(
@@ -90,11 +95,19 @@ class SchedulingService:
                             doctor_specialty=doctor_specialty
                         )
                         
+                        # Fetch doctor from DB to get details
+                        doctor_obj = doc_service.doctor_repo.get(doc_id)
+                        exp = getattr(doctor_obj, 'experience_years', None) if doctor_obj else None
+                        qual = getattr(doctor_obj, 'qualifications', None) if doctor_obj else None
+
+
                         options.append(
                             SlotOption(
                                 slot_id=f"doc_slot_{slot_id_counter}",
                                 doctor_id=doc_id,
                                 doctor_name=doc_slots[i].doctor_name,
+                                experience_years=exp,
+                                qualifications=qual,
                                 start_time=full_start,
                                 end_time=full_end,
                                 score=score,
@@ -109,7 +122,7 @@ class SchedulingService:
             current_date += timedelta(days=1)
 
         options.sort(key=lambda x: x.score, reverse=True)
-        return options[:3]
+        return options[:12]
 
     def confirm_slot(self, request: SlotConfirmRequest) -> SlotConfirmResponse:
         """

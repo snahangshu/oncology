@@ -19,7 +19,7 @@ class AnthropicClientManager:
 
     def invoke(
         self,
-        model: str = "claude-3-5-sonnet-20241022",
+        model: str = "claude-sonnet-4-6",
         system: str = "",
         messages: list = None,
         max_tokens: int = 1000,

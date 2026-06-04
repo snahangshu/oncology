@@ -101,3 +101,43 @@ def draft_comms_message(patient_id: int, recipient: str, patient_name: str, miss
     
     # Return the drafted message
     return res
+
+@celery_app.task(name="app.workers.tasks.document_processing.process_pathology_report")
+def process_pathology_report(patient_id: int, file_path: str, document_id: int) -> dict:
+    """
+    Parses a pathology report, extracts tumor details via AI, and updates the patient record.
+    """
+    from app.modules.ai.classifiers.pathology import PathologyTriageAgent
+    from app.modules.intake.models import Patient
+    db = SessionLocal()
+    try:
+        extracted_text = extract_text_from_file(file_path)
+        if not extracted_text:
+            extracted_text = "No text could be extracted from the document."
+            
+        agent = PathologyTriageAgent()
+        res = agent.extract_tumor_details(document_id, extracted_text)
+        
+        patient = db.query(Patient).filter(Patient.id == patient_id).first()
+        if patient:
+            # Safely set the diagnosis string and urgency
+            patient.primary_diagnosis = f"{res['cancer_type']} (Stage {res['stage']})"
+            patient.urgency_level = res['urgency_level']
+            
+            from app.modules.intake.models import OncologyIntake
+            intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
+            if not intake:
+                intake = OncologyIntake(patient_id=patient_id)
+                db.add(intake)
+                
+            intake.pathology_report = {
+                "fileUrl": f"/api/v1/documents/{document_id}",
+                "originalName": os.path.basename(file_path),
+                "fileType": "pdf"
+            }
+            db.commit()
+            
+        return res
+    finally:
+        db.close()
+

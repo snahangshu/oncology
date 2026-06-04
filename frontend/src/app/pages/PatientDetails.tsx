@@ -7,6 +7,12 @@ import { api } from '../shared/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Progress } from '../components/ui/progress';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import { toast } from 'sonner';
 import { 
   AlertCircle, 
@@ -469,6 +475,7 @@ function LabsTab({ patientId, documents, role }: { patientId: string, documents:
 // Reusable Multi-file uploader component
 function DocumentUploader({ patientId, docType, label, files, canDelete, onSuccess, expanded = false }: any) {
   const [isUploading, setIsUploading] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{name: string, url: string} | null>(null);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -535,7 +542,7 @@ function DocumentUploader({ patientId, docType, label, files, canDelete, onSucce
           ) : (
             files.map((file: any) => (
               <div key={file.id} className="flex items-center justify-between p-2 rounded-md bg-slate-900 border border-slate-800 hover:border-cyan-500/30 transition-colors group/link">
-                <a href={file.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer">
+                <button onClick={(e) => { e.preventDefault(); setPreviewDoc({ name: file.original_name, url: file.file_url }); }} className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer text-left">
                   <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-xs text-slate-300 truncate group-hover/link:text-cyan-300 transition-colors">
@@ -545,7 +552,7 @@ function DocumentUploader({ patientId, docType, label, files, canDelete, onSucce
                       {new Date(file.uploaded_at).toLocaleDateString()}
                     </p>
                   </div>
-                </a>
+                </button>
                 {canDelete && (
                    <button onClick={(e) => handleDelete(e, docType)} className="p-1.5 text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors" title="Delete File">
                      <Trash2 className="w-3.5 h-3.5" />
@@ -556,6 +563,26 @@ function DocumentUploader({ patientId, docType, label, files, canDelete, onSucce
           )}
         </div>
       </CardContent>
+      {/* Document Preview Dialog */}
+      <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
+        <DialogContent className="max-w-6xl w-[90vw] h-[90vh] bg-slate-900 border-slate-700 p-0 flex flex-col z-[100]">
+          <DialogHeader className="p-4 border-b border-slate-800 bg-slate-900/50 shrink-0">
+            <DialogTitle className="text-white capitalize flex items-center gap-2">
+              <FileText className="w-5 h-5 text-emerald-400" />
+              {previewDoc?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 w-full bg-slate-950">
+            {previewDoc && (
+              <iframe 
+                src={previewDoc.url} 
+                className="w-full h-full border-0 rounded-b-lg" 
+                title={previewDoc.name}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

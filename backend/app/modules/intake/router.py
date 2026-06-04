@@ -135,11 +135,17 @@ async def upload_my_document(
         uploaded_by=current_user.id
     )
     db.add(new_doc)
+    db.flush()
 
     # If Phase 1, also update OncologyIntake JSON for fast checklist reading
     if phase == IntakePhase.PHASE_1:
         setattr(intake, doc_enum.lower(), doc_metadata)
         recalculate_status(intake)
+        
+        if doc_enum == DocumentType.PATHOLOGY_REPORT:
+            from app.workers.tasks.document_processing import process_pathology_report
+            # In a real app we'd download the cloudinary URL to a local tmp file, but for MVP we mock the path
+            process_pathology_report.delay(patient.id, f"/tmp/{file.filename}", new_doc.id)
         
     db.commit()
     db.refresh(intake)
@@ -201,11 +207,16 @@ async def upload_document(
         uploaded_by=current_user.id
     )
     db.add(new_doc)
+    db.flush()
 
     # If Phase 1, also update OncologyIntake JSON
     if phase == IntakePhase.PHASE_1:
         setattr(intake, doc_enum.lower(), doc_metadata)
         recalculate_status(intake)
+        
+        if doc_enum == DocumentType.PATHOLOGY_REPORT:
+            from app.workers.tasks.document_processing import process_pathology_report
+            process_pathology_report.delay(patient_id, f"/tmp/{file.filename}", new_doc.id)
         
     db.commit()
     db.refresh(intake)

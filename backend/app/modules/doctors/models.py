@@ -13,7 +13,12 @@ class Doctor(Base, TimestampMixin):
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     phone: Mapped[str] = mapped_column(String(50), nullable=False)
-    specialty: Mapped[str] = mapped_column(String(150), nullable=False)
+    specialty: Mapped[str] = mapped_column(
+        String(150), nullable=False,
+        comment="E.g., Medical Oncology, Radiation Oncology, Surgical Oncology"
+    )
+    experience_years: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    qualifications: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="active", nullable=False)
 
     # Core Enterprise Info
@@ -199,6 +204,22 @@ class DoctorTimeOff(Base, TimestampMixin):
     start_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     end_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     reason: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    # Relationships
+    doctor: Mapped["Doctor"] = relationship("Doctor")
+class DoctorCapacityProfile(Base, TimestampMixin):
+    """
+    Enterprise scheduling capacity constraints for a doctor.
+    Limits the number of specific appointment types per day.
+    """
+    __tablename__ = "doctor_capacity_profiles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    doctor_id: Mapped[int] = mapped_column(
+        ForeignKey("doctors.id", ondelete="CASCADE"), unique=True, nullable=False
+    )
+    max_new_consults_per_day: Mapped[int] = mapped_column(Integer, default=5, nullable=False)
+    max_follow_ups_per_day: Mapped[int] = mapped_column(Integer, default=15, nullable=False)
 
     # Relationships
     doctor: Mapped["Doctor"] = relationship("Doctor")
