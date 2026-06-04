@@ -42,6 +42,20 @@ def invite_staff(
     db.refresh(new_user)
     return new_user
 
+@router.post("/{user_id}/approve")
+def approve_staff_user(
+    user_id: int,
+    current_admin: Annotated[User, Depends(require_role([Role.ADMIN]))],
+    db: Session = Depends(get_db)
+):
+    user_to_approve = db.query(User).filter(User.id == user_id).first()
+    if not user_to_approve:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    user_to_approve.verification_status = VerificationStatus.APPROVED
+    db.commit()
+    return {"message": f"User {user_to_approve.full_name} approved successfully"}
+
 @router.get("/requirements/{role}", response_model=RoleRequirementsResponse)
 def get_role_requirements(
     role: Role,
@@ -90,6 +104,14 @@ def get_my_documents(
     db: Session = Depends(get_db)
 ):
     return db.query(StaffDocument).filter(StaffDocument.user_id == current_user.id).all()
+
+@router.get("/{user_id}/documents", response_model=List[DocumentResponse])
+def get_user_documents(
+    user_id: int,
+    current_admin: Annotated[User, Depends(require_role([Role.ADMIN]))],
+    db: Session = Depends(get_db)
+):
+    return db.query(StaffDocument).filter(StaffDocument.user_id == user_id).all()
 
 @router.post("/documents/{doc_id}/review", response_model=DocumentResponse)
 def review_document(

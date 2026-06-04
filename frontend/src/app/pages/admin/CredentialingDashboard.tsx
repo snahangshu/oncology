@@ -25,12 +25,7 @@ export default function CredentialingDashboard() {
   const [stats, setStats] = useState<CredentialStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Mock list of staff pending review
-  const pendingStaff = [
-    { id: 101, name: 'Dr. Rajesh Sharma', role: 'Medical Oncologist', status: 'PENDING_REVIEW', submitted_at: '2 hrs ago', missing_docs: 0 },
-    { id: 102, name: 'Dr. Anjali Desai', role: 'Hematologist', status: 'PROFILE_INCOMPLETE', submitted_at: '1 day ago', missing_docs: 2 },
-    { id: 103, name: 'Nurse Williams', role: 'Oncology Nurse', status: 'PENDING_REVIEW', submitted_at: '5 hrs ago', missing_docs: 0 }
-  ];
+  const [pendingStaff, setPendingStaff] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchStats = async () => {

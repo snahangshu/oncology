@@ -34,12 +34,100 @@ def get_credentialing_dashboard(db: Session = Depends(get_db)):
 
 @router.get("/admin", dependencies=[Depends(require_role([Role.ADMIN]))])
 def get_admin_dashboard(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    users_data = []
+    for u in users:
+        users_data.append({
+            "id": u.id,
+            "name": u.full_name,
+            "role": u.role.value if u.role else "UNKNOWN",
+            "status": "Active" if u.is_active else "Inactive",
+            "verification_status": u.verification_status.value if u.verification_status else "APPROVED",
+            "patients": 0,
+            "lastActive": "Just now"
+        })
+
+    # For system events, fetch recent audit logs or return empty
+    from app.modules.users.credential_models import AuditLog
+    recent_audits = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(5).all()
+    system_events = []
+    for a in recent_audits:
+        system_events.append({
+            "id": a.id,
+            "type": "info",
+            "message": f"{a.action} on {a.entity_type} {a.entity_id}: {a.details or ''}",
+            "time": a.created_at.strftime("%I:%M %p") if a.created_at else "Just now"
+        })
+
+    today_start = datetime.combine(date.today(), time.min)
+    today_end = datetime.combine(date.today(), time.max)
+    yesterday_start = today_start - timedelta(days=1)
+    yesterday_end = today_end - timedelta(days=1)
+    
+    # Calculate real today's patients (unique patients with appointments today)
+    today_appts = db.query(Appointment).filter(
+        Appointment.start_time >= today_start,
+        Appointment.start_time <= today_end
+    ).all()
+    today_patients = len(set(a.patient_id for a in today_appts))
+
+    yesterday_appts = db.query(Appointment).filter(
+        Appointment.start_time >= yesterday_start,
+        Appointment.start_time <= yesterday_end
+    ).all()
+    yesterday_patients = len(set(a.patient_id for a in yesterday_appts))
+
+    def calc_change_str(curr, prev, is_percent=True):
+        if prev == 0:
+            return f"+{curr}%" if is_percent else f"+{curr}"
+        diff = curr - prev
+        pct = int((diff / prev) * 100)
+        return f"+{pct}%" if pct >= 0 else f"{pct}%"
+
+    today_patients_change = calc_change_str(today_patients, yesterday_patients)
+    
+    # Calculate total appointments
+    total_appointments = db.query(Appointment).count()
+    last_30_start = today_start - timedelta(days=30)
+    prev_30_start = last_30_start - timedelta(days=30)
+    appts_last_30 = db.query(Appointment).filter(Appointment.created_at >= last_30_start).count()
+    appts_prev_30 = db.query(Appointment).filter(Appointment.created_at >= prev_30_start, Appointment.created_at < last_30_start).count()
+    total_appointments_change = calc_change_str(appts_last_30, appts_prev_30)
+    
+    doctors_available = db.query(Doctor).filter(Doctor.status == "active").count()
+    doctors_available_change = "+0"
+
+    from app.modules.scheduling.models import SlotAvailability
+    total_slots_today = db.query(SlotAvailability).filter(
+        SlotAvailability.start_time >= today_start,
+        SlotAvailability.start_time <= today_end
+    ).count()
+    booked_slots_today = db.query(SlotAvailability).filter(
+        SlotAvailability.start_time >= today_start,
+        SlotAvailability.start_time <= today_end,
+        SlotAvailability.is_booked == True
+    ).count()
+
+    if total_slots_today > 0:
+        utilization_percent = int((booked_slots_today / total_slots_today) * 100)
+    else:
+        # Fallback
+        utilization_percent = min(int((len(today_appts) / max(doctors_available * 8, 1)) * 100), 100)
+
+    utilization_percent_change = "+0%"
+
     return {
-        "today_patients": 45,
-        "total_appointments": 120,
-        "doctors_available": db.query(Doctor).filter(Doctor.status == "active").count(),
-        "revenue": 15400,
-        "utilization_percent": 85
+        "today_patients": today_patients,
+        "today_patients_change": today_patients_change,
+        "total_appointments": total_appointments,
+        "total_appointments_change": total_appointments_change,
+        "doctors_available": doctors_available,
+        "doctors_available_change": doctors_available_change,
+        "revenue": 0,
+        "utilization_percent": utilization_percent,
+        "utilization_percent_change": utilization_percent_change,
+        "users": users_data,
+        "systemEvents": system_events
     }
 
 @router.get("/doctor", dependencies=[Depends(require_role([Role.DOCTOR]))])

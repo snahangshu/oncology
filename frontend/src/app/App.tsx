@@ -11,6 +11,7 @@ import RoleSelector from './pages/RoleSelector';
 import AdminDashboard from './pages/AdminDashboard';
 import InviteStaff from './pages/admin/InviteStaff';
 import CredentialingDashboard from './pages/admin/CredentialingDashboard';
+import DoctorOnboarding from './pages/admin/DoctorOnboarding';
 import DoctorDashboard from './pages/DoctorDashboard';
 import DoctorProfileSetup from './pages/doctor/DoctorProfileSetup';
 import DoctorPatients from './pages/doctor/DoctorPatients';
@@ -149,6 +150,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <CredentialingDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/doctors/new"
+            element={
+              <ProtectedRoute>
+                <DoctorOnboarding />
               </ProtectedRoute>
             }
           />
