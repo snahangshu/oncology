@@ -34,6 +34,19 @@ export default function DoctorSchedule() {
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
   const [isRecurring, setIsRecurring] = useState(false);
+  const [endDate, setEndDate] = useState<string>('');
+
+  const handleDeleteSchedule = async (id: string | number) => {
+    if (!doctorId) return;
+    try {
+      const scheduleId = String(id).replace('sched_', '');
+      await api.delete(`/doctors/${doctorId}/schedule/${scheduleId}`);
+      toast.success('Schedule block removed');
+      setRefreshTrigger(prev => prev + 1);
+    } catch (error: any) {
+      toast.error('Failed to remove schedule block');
+    }
+  };
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -149,18 +162,37 @@ export default function DoctorSchedule() {
     }
     
     try {
-      const payload = {
-        start_time: startTime,
-        end_time: endTime,
-        is_recurring: isRecurring,
-        specific_date: !isRecurring ? currentDate.toISOString().split('T')[0] : null,
-        day_of_week: isRecurring ? currentDate.getDay() : null,
-      };
+      if (!isRecurring && endDate && endDate > currentDate.toISOString().split('T')[0]) {
+        // Multi-day block
+        let curr = new Date(currentDate);
+        const end = new Date(endDate);
+        while (curr <= end) {
+          await api.post(`/doctors/${doctorId}/schedule`, {
+            start_time: startTime,
+            end_time: endTime,
+            is_recurring: false,
+            specific_date: curr.toISOString().split('T')[0],
+            day_of_week: null
+          });
+          curr.setDate(curr.getDate() + 1);
+        }
+      } else {
+        // Single block or recurring
+        const payload = {
+          start_time: startTime,
+          end_time: endTime,
+          is_recurring: isRecurring,
+          specific_date: !isRecurring ? currentDate.toISOString().split('T')[0] : null,
+          day_of_week: isRecurring ? currentDate.getDay() : null,
+        };
+        await api.post(`/doctors/${doctorId}/schedule`, payload);
+      }
       
-      await api.post(`/doctors/${doctorId}/schedule`, payload);
       toast.success('Schedule updated successfully');
       setIsBlockOpen(false);
       setIsAvailOpen(false);
+      setEndDate('');
+      setRefreshTrigger(prev => prev + 1);
     } catch (error: any) {
       console.error(error);
       toast.error(error.response?.data?.detail || 'Failed to update schedule');
@@ -197,8 +229,14 @@ export default function DoctorSchedule() {
                   <Label className="text-right">End Time</Label>
                   <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="col-span-3 bg-slate-800 border-slate-700" />
                 </div>
+                {!isRecurring && (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">End Date (Opt.)</Label>
+                    <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={currentDate.toISOString().split('T')[0]} className="col-span-3 bg-slate-800 border-slate-700 text-slate-300" />
+                  </div>
+                )}
                 <div className="flex items-center gap-2 justify-end">
-                  <input type="checkbox" id="recurringBlock" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)} className="rounded border-slate-700 bg-slate-800" />
+                  <input type="checkbox" id="recurringBlock" checked={isRecurring} onChange={e => { setIsRecurring(e.target.checked); setEndDate(''); }} className="rounded border-slate-700 bg-slate-800" />
                   <Label htmlFor="recurringBlock">Make Recurring (Every {currentDate.toLocaleDateString('en-US', { weekday: 'long' })})</Label>
                 </div>
               </div>
@@ -228,8 +266,14 @@ export default function DoctorSchedule() {
                   <Label className="text-right">End Time</Label>
                   <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="col-span-3 bg-slate-800 border-slate-700" />
                 </div>
+                {!isRecurring && (
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">End Date (Opt.)</Label>
+                    <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={currentDate.toISOString().split('T')[0]} className="col-span-3 bg-slate-800 border-slate-700 text-slate-300" />
+                  </div>
+                )}
                 <div className="flex items-center gap-2 justify-end">
-                  <input type="checkbox" id="recurringAvail" checked={isRecurring} onChange={e => setIsRecurring(e.target.checked)} className="rounded border-slate-700 bg-slate-800" />
+                  <input type="checkbox" id="recurringAvail" checked={isRecurring} onChange={e => { setIsRecurring(e.target.checked); setEndDate(''); }} className="rounded border-slate-700 bg-slate-800" />
                   <Label htmlFor="recurringAvail">Make Recurring (Every {currentDate.toLocaleDateString('en-US', { weekday: 'long' })})</Label>
                 </div>
               </div>
@@ -429,21 +473,27 @@ export default function DoctorSchedule() {
                             </div>
                             
                             {/* Actions */}
-                            {event.type !== 'Block' && (
-                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                {event.type === 'Consultation' && (
-                                  <Button size="icon" variant="ghost" className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20" title="Start Telehealth">
-                                    <Video className="w-4 h-4" />
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {event.type === 'Block' ? (
+                                <Button size="sm" variant="outline" onClick={() => handleDeleteSchedule(event.id)} className="h-8 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10">
+                                  Delete Block
+                                </Button>
+                              ) : (
+                                <>
+                                  {event.type === 'Consultation' && (
+                                    <Button size="icon" variant="ghost" className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20" title="Start Telehealth">
+                                      <Video className="w-4 h-4" />
+                                    </Button>
+                                  )}
+                                  <Button size="sm" variant="outline" className="h-8 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
+                                    Reschedule
                                   </Button>
-                                )}
-                                <Button size="sm" variant="outline" className="h-8 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
-                                  Reschedule
-                                </Button>
-                                <Button size="sm" variant="outline" className="h-8 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10">
-                                  Cancel
-                                </Button>
-                              </div>
-                            )}
+                                  <Button size="sm" variant="outline" className="h-8 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10">
+                                    Cancel
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
