@@ -300,11 +300,49 @@ def patient_chat(
     from app.modules.ai.classifiers.patient_assistant import PatientAssistantAgent
     agent = PatientAssistantAgent()
     
-    # Mocking history/meds for the agent context
-    history = patient.primary_diagnosis or "Unknown"
-    meds = "No active medications listed"
+    # 1. Fetch Clinic Staff
+    from app.modules.doctors.models import Doctor
+    doctors = db.query(Doctor).filter(Doctor.status == 'active').all()
+    clinic_staff_list = [f"Dr. {d.last_name} ({d.specialty})" if d.specialty != "Infusion Center" else f"{d.first_name} {d.last_name} ({d.specialty})" for d in doctors]
+    clinic_staff_str = "\n".join(clinic_staff_list) if doctors else "No staff data available."
+
+    # 2. Fetch Appointments
+    from app.modules.scheduling.models import Appointment
+    appointments = db.query(Appointment).filter(Appointment.patient_id == patient_id).order_by(Appointment.start_time).all()
+    appts_list = []
+    for a in appointments:
+        doc = next((d for d in doctors if d.id == a.doctor_id), None)
+        doc_name = f"Dr. {doc.last_name}" if doc else "Unknown Provider"
+        if doc and doc.specialty == "Infusion Center":
+            doc_name = f"{doc.first_name} {doc.last_name}"
+        time_str = a.start_time.strftime("%Y-%m-%d %H:%M") if a.start_time else "TBD"
+        appts_list.append(f"- {time_str} | {doc_name} ({a.specialty}) | Status: {a.status}")
+    appts_str = "\n".join(appts_list) if appts_list else "No past or future appointments found."
+
+    # 3. Fetch Intake Phase & Documents
+    from app.modules.intake.models import OncologyIntake, UploadedDocument
+    intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
+    active_phase = intake.intake_status if intake else "Unknown Phase"
     
-    result = agent.process_message(history, meds, request.message)
+    uploaded_docs = db.query(UploadedDocument).filter(UploadedDocument.patient_id == patient_id).all()
+    docs_list = []
+    for d in uploaded_docs:
+        if d.extracted_text:
+            docs_list.append(f"[{d.document_type.value}]\n{d.extracted_text[:300]}...") # truncate for context limits
+    docs_str = "\n\n".join(docs_list) if docs_list else "No clinical documents available."
+
+    # 4. Construct Context
+    context_data = {
+        "patient_name": f"{patient.first_name} {patient.last_name}",
+        "clinic_staff": clinic_staff_str,
+        "history": patient.primary_diagnosis or "Unknown",
+        "active_phase": active_phase,
+        "meds": "No active medications listed",
+        "appointments": appts_str,
+        "clinical_docs": docs_str
+    }
+    
+    result = agent.process_message(context_data, request.message)
     metadata = result.get("metadata", {})
     action = None
     

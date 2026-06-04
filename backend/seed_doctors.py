@@ -16,6 +16,7 @@ def seed_doctors():
             {"first": "Michael", "last": "Smith", "email": "msmith@hospital.com", "phone": "555-0002", "specialty": "Medical Oncology", "new_cap": 6, "follow_cap": 20},
             {"first": "Emily", "last": "Chen", "email": "echen@hospital.com", "phone": "555-0003", "specialty": "Radiation Oncology", "new_cap": 4, "follow_cap": 15},
             {"first": "David", "last": "Patel", "email": "dpatel@hospital.com", "phone": "555-0004", "specialty": "Breast Oncology", "new_cap": 5, "follow_cap": 15},
+            {"first": "Infusion", "last": "Center (Main)", "email": "infusion@hospital.com", "phone": "555-0005", "specialty": "Infusion Center", "new_cap": 100, "follow_cap": 100},
         ]
 
         for d_data in doctors_data:

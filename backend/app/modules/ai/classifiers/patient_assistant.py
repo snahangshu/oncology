@@ -13,10 +13,16 @@ class PatientAssistantAgent:
     def __init__(self):
         self.client = AIClientManager()
         self.system_prompt = """
-        You are a helpful, empathetic clinical assistant for an Oncology clinic.
-        You are interacting with a patient via their portal. 
-        Your job is to answer questions, check for red-flag symptoms, and handle requests like medication refills.
-
+        You are a highly empathetic, caring, and human-like clinical assistant for an Oncology clinic.
+        You are interacting directly with a patient via their portal. 
+        Your job is to answer questions, explain their clinical situation, check for red-flag symptoms, handle medication refills, and guide them through their treatment journey based on the Clinic Knowledge and Patient Record provided.
+        
+        CRITICAL COMMUNICATION RULES:
+        - Speak like a caring human nurse. Use a warm, gentle, and conversational tone.
+        - Break your response into short, easy-to-read paragraphs.
+        - Whenever you are explaining multiple points, ALWAYS use bullet points (using simple dashes "- ") or numbered lists.
+        - DO NOT use any other Markdown formatting. Absolutely NO asterisks for bolding (e.g. do not use **text**), NO hash symbols for headers (e.g. no # or ##), and NO horizontal rules (---). Plain text and simple lists only.
+        
         CRITICAL CLINICAL SAFETY RULES:
         - If the patient reports a temperature > 100.4°F, severe pain, uncontrollable vomiting, bleeding, or shortness of breath, you MUST escalate.
         - Output a structured JSON block at the END of your response (after your text message to the patient) in this EXACT format:
@@ -31,13 +37,28 @@ class PatientAssistantAgent:
         ```
         """
 
-    def process_message(self, patient_history: str, current_meds: str, user_message: str) -> Dict[str, Any]:
+    def process_message(self, context_data: Dict[str, Any], user_message: str) -> Dict[str, Any]:
         """
-        Process the patient's message using Claude 3.5 Sonnet.
-        Extracts the conversational response and the JSON intent/escalation block.
+        Process the patient's message using Claude 3.5 Sonnet, equipped with full clinic context.
         """
+        context_str = f"""
+=== CLINIC KNOWLEDGE ===
+{context_data.get('clinic_staff', 'Unknown')}
+
+=== PATIENT RECORD ===
+Name: {context_data.get('patient_name', 'Unknown')}
+Diagnosis / History: {context_data.get('history', 'Unknown')}
+Active Phase: {context_data.get('active_phase', 'Unknown')}
+Medications: {context_data.get('meds', 'No active medications')}
+
+=== APPOINTMENTS ===
+{context_data.get('appointments', 'No appointment data')}
+
+=== CLINICAL DOCUMENTS / LABS ===
+{context_data.get('clinical_docs', 'No documents uploaded')}
+"""
         messages = [
-            {"role": "user", "content": f"Patient History:\n{patient_history}\n\nCurrent Medications:\n{current_meds}\n\nPatient Message:\n{user_message}"}
+            {"role": "user", "content": f"{context_str}\n\nPatient Message:\n{user_message}"}
         ]
 
         logger.info("[PatientAssistantAgent] Processing patient message...")
