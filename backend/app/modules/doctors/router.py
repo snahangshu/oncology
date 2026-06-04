@@ -123,6 +123,30 @@ def update_doctor_profile(
         raise HTTPException(status_code=403, detail="Not a doctor")
         
     current_user.verification_status = VerificationStatus.UNDER_REVIEW
+    
+    from app.modules.users.credential_models import StaffDocument, DocumentStatus
+    
+    # Delete old documents to prevent duplicates on re-upload
+    db.query(StaffDocument).filter(StaffDocument.user_id == current_user.id).delete()
+    
+    if request.get("license_file"):
+        doc1 = StaffDocument(
+            user_id=current_user.id,
+            document_type="Medical License",
+            file_url=request.get("license_file"),
+            status=DocumentStatus.PENDING_REVIEW
+        )
+        db.add(doc1)
+        
+    if request.get("board_file"):
+        doc2 = StaffDocument(
+            user_id=current_user.id,
+            document_type="Board Certification",
+            file_url=request.get("board_file"),
+            status=DocumentStatus.PENDING_REVIEW
+        )
+        db.add(doc2)
+        
     db.commit()
     return {"message": "Profile updated successfully, pending review"}
 
