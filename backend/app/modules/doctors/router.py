@@ -6,7 +6,9 @@ from app.dependencies import get_db
 from app.modules.doctors.schemas import (
     DoctorCreateRequest, DoctorUpdateRequest, DoctorResponse,
     ScheduleCreateRequest, ScheduleResponse,
-    DailyAvailabilityResponse, AppointmentResponse
+    DailyAvailabilityResponse, AppointmentResponse,
+    TimeOffCreateRequest, TimeOffResponse,
+    EmergencyBlockCreateRequest, EmergencyBlockResponse
 )
 from app.modules.doctors.service import DoctorService
 
@@ -200,3 +202,49 @@ def remove_schedule(doctor_id: int, schedule_id: int, db: Session = Depends(get_
     deleted = service.remove_schedule(doctor_id, schedule_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Schedule not found")
+
+
+# ── Time Off Management ──────────────────────────────────────────
+
+@router.post("/{doctor_id}/time_off", response_model=TimeOffResponse, status_code=status.HTTP_201_CREATED)
+def add_time_off(doctor_id: int, request: TimeOffCreateRequest, db: Session = Depends(get_db)):
+    """Add a time-off block for a doctor."""
+    service = DoctorService(db)
+    return service.add_time_off(doctor_id, request)
+
+@router.get("/{doctor_id}/time_off", response_model=List[TimeOffResponse])
+def get_time_offs(doctor_id: int, db: Session = Depends(get_db)):
+    """Get a doctor's time-off blocks."""
+    service = DoctorService(db)
+    return service.get_time_offs(doctor_id)
+
+@router.delete("/{doctor_id}/time_off/{time_off_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_time_off(doctor_id: int, time_off_id: int, db: Session = Depends(get_db)):
+    """Remove a time-off block."""
+    service = DoctorService(db)
+    deleted = service.remove_time_off(doctor_id, time_off_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Time off not found")
+
+
+# ── Emergency Block Management ───────────────────────────────────
+
+@router.post("/{doctor_id}/emergency_blocks", response_model=EmergencyBlockResponse, status_code=status.HTTP_201_CREATED)
+def add_emergency_block(doctor_id: int, request: EmergencyBlockCreateRequest, db: Session = Depends(get_db)):
+    """Add an emergency/reserved block for a doctor."""
+    service = DoctorService(db)
+    return service.add_emergency_block(doctor_id, request)
+
+@router.get("/{doctor_id}/emergency_blocks", response_model=List[EmergencyBlockResponse])
+def get_emergency_blocks(doctor_id: int, db: Session = Depends(get_db)):
+    """Get a doctor's emergency blocks."""
+    service = DoctorService(db)
+    return service.get_emergency_blocks(doctor_id)
+
+@router.delete("/{doctor_id}/emergency_blocks/{block_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_emergency_block(doctor_id: int, block_id: int, db: Session = Depends(get_db)):
+    """Remove an emergency block."""
+    service = DoctorService(db)
+    deleted = service.remove_emergency_block(doctor_id, block_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Emergency block not found")

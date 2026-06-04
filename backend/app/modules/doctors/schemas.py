@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List, Dict, Any
-from datetime import time, date
+from datetime import time, date, datetime
 
 # ── Nested Expertise Schemas ─────────────────────────────────────
 class DiseaseExpertiseItem(BaseModel):
@@ -124,6 +124,38 @@ class AppointmentResponse(BaseModel):
     urgency_level: Optional[str] = None
     primary_diagnosis: Optional[str] = None
     patient_comments: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+# ── Time Off Schemas ──────────────────────────────────────────────
+
+class TimeOffCreateRequest(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    reason: Optional[str] = None
+
+class TimeOffResponse(BaseModel):
+    id: int
+    doctor_id: int
+    start_time: datetime
+    end_time: datetime
+    reason: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+# ── Emergency Block Schemas ────────────────────────────────────────
+
+class EmergencyBlockCreateRequest(BaseModel):
+    time_slot: time
+    description: Optional[str] = None
+
+class EmergencyBlockResponse(BaseModel):
+    id: int
+    doctor_id: int
+    time_slot: time
+    description: Optional[str] = None
 
     class Config:
         from_attributes = True

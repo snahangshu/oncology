@@ -223,3 +223,19 @@ class DoctorCapacityProfile(Base, TimestampMixin):
 
     # Relationships
     doctor: Mapped["Doctor"] = relationship("Doctor")
+
+class DoctorEmergencyBlock(Base, TimestampMixin):
+    """
+    Represents an emergency/reserved slot that isn't returned in normal availability.
+    """
+    __tablename__ = "doctor_emergency_blocks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    doctor_id: Mapped[int] = mapped_column(
+        ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    time_slot: Mapped[time] = mapped_column(Time, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    # Relationships
+    doctor: Mapped["Doctor"] = relationship("Doctor")

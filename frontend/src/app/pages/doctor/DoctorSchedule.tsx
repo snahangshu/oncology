@@ -1,24 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, Video, Users, Stethoscope, Droplet, AlertCircle } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, Video, Users, Stethoscope, Droplet, AlertCircle, CalendarRange, ShieldAlert, Check } from 'lucide-react';
 import { api } from '../../shared/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../../components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { toast } from 'sonner';
 
 // State interface
 interface Event {
-  id: number;
+  id: string | number;
   title: string;
   time: string;
   duration: string;
   type: string;
   color: string;
   urgency?: string;
+  date: Date;
 }
 
 export default function DoctorSchedule() {
@@ -26,30 +26,45 @@ export default function DoctorSchedule() {
   const [events, setEvents] = useState<Event[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [doctorId, setDoctorId] = useState<number | null>(null);
-
-  // Dialog states
-  const [isBlockOpen, setIsBlockOpen] = useState(false);
-  const [isAvailOpen, setIsAvailOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('17:00');
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [endDate, setEndDate] = useState<string>('');
 
-  const handleDeleteSchedule = async (id: string | number) => {
+  // Shift Generator State
+  const [shiftStart, setShiftStart] = useState('09:00');
+  const [shiftEnd, setShiftEnd] = useState('17:00');
+  const [lunchStart, setLunchStart] = useState('12:00');
+  const [lunchEnd, setLunchEnd] = useState('13:00');
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [shiftStartDate, setShiftStartDate] = useState('');
+  const [shiftEndDate, setShiftEndDate] = useState('');
+
+  // Time Off State
+  const [timeOffReason, setTimeOffReason] = useState('Vacation');
+  const [timeOffStart, setTimeOffStart] = useState('');
+  const [timeOffEnd, setTimeOffEnd] = useState('');
+
+  // Emergency Block State
+  const [emergencyTime, setEmergencyTime] = useState('');
+  const [emergencyDesc, setEmergencyDesc] = useState('');
+
+  const handleDeleteSchedule = async (id: string | number, type: string) => {
     if (!doctorId) return;
     try {
-      const scheduleId = String(id).replace('sched_', '');
-      await api.delete(`/doctors/${doctorId}/schedule/${scheduleId}`);
-      toast.success('Schedule block removed');
+      if (type === 'Block') {
+        const scheduleId = String(id).replace('sched_', '');
+        await api.delete(`/doctors/${doctorId}/schedule/${scheduleId}`);
+        toast.success('Schedule block removed');
+      } else if (type === 'TimeOff') {
+        const toId = String(id).replace('toff_', '');
+        await api.delete(`/doctors/${doctorId}/time_off/${toId}`);
+        toast.success('Time off removed');
+      } else if (type === 'Emergency') {
+        const ebId = String(id).replace('eb_', '');
+        await api.delete(`/doctors/${doctorId}/emergency_blocks/${ebId}`);
+        toast.success('Emergency block removed');
+      }
       setRefreshTrigger(prev => prev + 1);
     } catch (error: any) {
-      if (error.response?.status === 404) {
-        toast.success('Schedule block already removed');
-        setRefreshTrigger(prev => prev + 1);
-      } else {
-        toast.error('Failed to remove schedule block');
-      }
+      toast.error('Failed to remove block');
     }
   };
 
@@ -64,21 +79,26 @@ export default function DoctorSchedule() {
         if (docId) setDoctorId(docId);
         
         let schedEvents: any[] = [];
+        let timeOffEvents: any[] = [];
+        let emergencyEvents: any[] = [];
+
         if (docId) {
           try {
-            const schedResponse = await api.get(`/doctors/${docId}/schedule`);
-            schedEvents = (schedResponse.data || []).map((s: any) => {
-              // Create a date object. If it's recurring, we just show it on current date for now.
+            const [schedRes, toffRes, ebRes] = await Promise.all([
+              api.get(`/doctors/${docId}/schedule`),
+              api.get(`/doctors/${docId}/time_off`),
+              api.get(`/doctors/${docId}/emergency_blocks`)
+            ]);
+
+            schedEvents = (schedRes.data || []).map((s: any) => {
               let eDate = currentDate;
               if (s.specific_date) {
                 eDate = new Date(s.specific_date);
               } else if (s.day_of_week !== null && s.day_of_week !== undefined) {
-                // If recurring on a specific day, align it to that day in the current week
                 eDate = new Date(currentDate);
                 const dayDiff = s.day_of_week - eDate.getDay();
                 eDate.setDate(eDate.getDate() + dayDiff);
               }
-              
               return {
                 id: `sched_${s.id}`,
                 title: 'Availability Block',
@@ -89,13 +109,38 @@ export default function DoctorSchedule() {
                 date: eDate
               };
             });
+
+            timeOffEvents = (toffRes.data || []).map((t: any) => {
+               return {
+                 id: `toff_${t.id}`,
+                 title: `Time Off: ${t.reason || 'Unavailable'}`,
+                 time: t.start_time.split('T')[1].substring(0,5),
+                 duration: 'Time Off Block',
+                 type: 'TimeOff',
+                 color: 'violet',
+                 date: new Date(t.start_time)
+               };
+            });
+
+            emergencyEvents = (ebRes.data || []).map((e: any) => {
+               return {
+                 id: `eb_${e.id}`,
+                 title: `Emergency Block: ${e.description || 'Reserved'}`,
+                 time: e.time_slot,
+                 duration: '15 min',
+                 type: 'Emergency',
+                 color: 'rose',
+                 date: currentDate // shown every day for simplicity in MVP
+               };
+            });
+
           } catch (e) {
             console.error('Error fetching schedules:', e);
           }
         }
         
         const allAppts = [...today, ...upcoming];
-        const mappedEvents = [...schedEvents, ...allAppts.map((appt: any, index: number) => ({
+        const mappedAppts = allAppts.map((appt: any, index: number) => ({
           id: appt.appointment_id || index,
           title: `Consultation - ${appt.patient_name || 'Patient'}`,
           time: appt.time,
@@ -104,17 +149,18 @@ export default function DoctorSchedule() {
           color: 'cyan',
           urgency: appt.urgency_level || 'Routine',
           date: new Date(appt.full_time)
-        }))];
+        }));
+
+        const allEvents = [...schedEvents, ...timeOffEvents, ...emergencyEvents, ...mappedAppts];
         
         // Filter based on selected view
-        const filteredEvents = mappedEvents.filter(e => {
+        const filteredEvents = allEvents.filter(e => {
           const eDate = e.date;
           if (view === 'day') {
             return eDate.getDate() === currentDate.getDate() && 
                    eDate.getMonth() === currentDate.getMonth() && 
                    eDate.getFullYear() === currentDate.getFullYear();
           } else if (view === 'week') {
-            // Check if it's within roughly a week
             const startOfWeek = new Date(currentDate);
             startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
             startOfWeek.setHours(0,0,0,0);
@@ -123,91 +169,130 @@ export default function DoctorSchedule() {
             endOfWeek.setHours(23,59,59,999);
             return eDate >= startOfWeek && eDate <= endOfWeek;
           } else {
-            // Month view
             return eDate.getMonth() === currentDate.getMonth() && 
                    eDate.getFullYear() === currentDate.getFullYear();
           }
         });
         
+        // sort by time
+        filteredEvents.sort((a,b) => a.time.localeCompare(b.time));
+
         setEvents(filteredEvents);
       } catch (error) {
         console.error('Error fetching schedule:', error);
       }
     };
     fetchSchedule();
-  }, [currentDate, view, isBlockOpen, isAvailOpen, refreshTrigger]);
+  }, [currentDate, view, refreshTrigger]);
 
-  const handleQuickAdd = async (start: string, end: string, isRecurring: boolean) => {
-    if (!doctorId) {
-      toast.error('Doctor profile not found. Please complete profile setup.');
+  const toggleDay = (day: number) => {
+    setSelectedDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
+  };
+
+  const handleGenerateShift = async () => {
+    if (!doctorId) return;
+    if (selectedDays.length === 0) {
+      toast.error('Please select at least one day for the shift.');
       return;
     }
-    
+
     try {
-      const payload = {
-        start_time: start,
-        end_time: end,
-        is_recurring: isRecurring,
-        specific_date: !isRecurring ? currentDate.toISOString().split('T')[0] : null,
-        day_of_week: isRecurring ? currentDate.getDay() : null,
-      };
+      const promises = [];
       
-      await api.post(`/doctors/${doctorId}/schedule`, payload);
-      toast.success(`Quick Availability added for ${start} - ${end}`);
+      if (shiftStartDate && shiftEndDate) {
+        // Date range specific shifts
+        let curr = new Date(shiftStartDate);
+        const end = new Date(shiftEndDate);
+        
+        while (curr <= end) {
+          if (selectedDays.includes(curr.getDay())) {
+            const specificDate = curr.toISOString().split('T')[0];
+            
+            // Morning Block
+            if (shiftStart < lunchStart) {
+              promises.push(api.post(`/doctors/${doctorId}/schedule`, {
+                start_time: shiftStart,
+                end_time: lunchStart,
+                is_recurring: false,
+                specific_date: specificDate,
+                day_of_week: null
+              }));
+            }
+            // Afternoon Block
+            if (lunchEnd < shiftEnd) {
+              promises.push(api.post(`/doctors/${doctorId}/schedule`, {
+                start_time: lunchEnd,
+                end_time: shiftEnd,
+                is_recurring: false,
+                specific_date: specificDate,
+                day_of_week: null
+              }));
+            }
+          }
+          curr.setDate(curr.getDate() + 1);
+        }
+      } else {
+        // Recurring shifts
+        for (const day of selectedDays) {
+          // Morning Block
+          if (shiftStart < lunchStart) {
+            promises.push(api.post(`/doctors/${doctorId}/schedule`, {
+              start_time: shiftStart,
+              end_time: lunchStart,
+              is_recurring: true,
+              day_of_week: day
+            }));
+          }
+          // Afternoon Block
+          if (lunchEnd < shiftEnd) {
+            promises.push(api.post(`/doctors/${doctorId}/schedule`, {
+              start_time: lunchEnd,
+              end_time: shiftEnd,
+              is_recurring: true,
+              day_of_week: day
+            }));
+          }
+        }
+      }
+      
+      await Promise.all(promises);
+      toast.success('Shift Schedule Generated');
       setRefreshTrigger(prev => prev + 1);
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to add availability');
+    } catch (e: any) {
+      toast.error(e.response?.data?.detail || 'Failed to generate shift');
     }
   };
 
-  const handleCreateSchedule = async () => {
-    if (!doctorId) {
-      toast.error('Doctor profile not found. Please complete profile setup.');
-      return;
-    }
-    
+  const handleAddTimeOff = async () => {
+    if (!doctorId || !timeOffStart || !timeOffEnd) return;
     try {
-      if (!isRecurring && endDate && endDate > currentDate.toISOString().split('T')[0]) {
-        // Multi-day block
-        let curr = new Date(currentDate);
-        const end = new Date(endDate);
-        const promises = [];
-        
-        while (curr <= end) {
-          promises.push(
-            api.post(`/doctors/${doctorId}/schedule`, {
-              start_time: startTime,
-              end_time: endTime,
-              is_recurring: false,
-              specific_date: curr.toISOString().split('T')[0],
-              day_of_week: null
-            })
-          );
-          curr.setDate(curr.getDate() + 1);
-        }
-        
-        // Execute all requests concurrently to prevent hanging the UI
-        await Promise.all(promises);
-      } else {
-        // Single block or recurring
-        const payload = {
-          start_time: startTime,
-          end_time: endTime,
-          is_recurring: isRecurring,
-          specific_date: !isRecurring ? currentDate.toISOString().split('T')[0] : null,
-          day_of_week: isRecurring ? currentDate.getDay() : null,
-        };
-        await api.post(`/doctors/${doctorId}/schedule`, payload);
-      }
-      
-      toast.success('Schedule updated successfully');
-      setIsBlockOpen(false);
-      setIsAvailOpen(false);
-      setEndDate('');
+      await api.post(`/doctors/${doctorId}/time_off`, {
+        start_time: new Date(timeOffStart).toISOString(),
+        end_time: new Date(timeOffEnd).toISOString(),
+        reason: timeOffReason
+      });
+      toast.success('Time off added successfully');
       setRefreshTrigger(prev => prev + 1);
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error.response?.data?.detail || 'Failed to update schedule');
+      setTimeOffStart('');
+      setTimeOffEnd('');
+    } catch (e: any) {
+      toast.error('Failed to add time off');
+    }
+  };
+
+  const handleAddEmergencyBlock = async () => {
+    if (!doctorId || !emergencyTime) return;
+    try {
+      await api.post(`/doctors/${doctorId}/emergency_blocks`, {
+        time_slot: emergencyTime,
+        description: emergencyDesc
+      });
+      toast.success('Emergency block added');
+      setRefreshTrigger(prev => prev + 1);
+      setEmergencyTime('');
+      setEmergencyDesc('');
+    } catch (e: any) {
+      toast.error('Failed to add emergency block');
     }
   };
 
@@ -217,83 +302,9 @@ export default function DoctorSchedule() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-2 text-3xl font-bold tracking-tight">
-            Schedule & Calendar
+            Schedule & Availability
           </h1>
-          <p className="text-slate-400">Manage your consultations, meetings, and clinical blocks</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Dialog open={isBlockOpen} onOpenChange={setIsBlockOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300">
-                Block Time
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-700 text-white">
-              <DialogHeader>
-                <DialogTitle>Block Time</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Start Time</Label>
-                  <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="col-span-3 bg-slate-800 border-slate-700" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">End Time</Label>
-                  <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="col-span-3 bg-slate-800 border-slate-700" />
-                </div>
-                {!isRecurring && (
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right">End Date (Opt.)</Label>
-                    <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={currentDate.toISOString().split('T')[0]} className="col-span-3 bg-slate-800 border-slate-700 text-slate-300" />
-                  </div>
-                )}
-                <div className="flex items-center gap-2 justify-end">
-                  <input type="checkbox" id="recurringBlock" checked={isRecurring} onChange={e => { setIsRecurring(e.target.checked); setEndDate(''); }} className="rounded border-slate-700 bg-slate-800" />
-                  <Label htmlFor="recurringBlock">Make Recurring (Every {currentDate.toLocaleDateString('en-US', { weekday: 'long' })})</Label>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleCreateSchedule} className="bg-rose-600 hover:bg-rose-500 text-white">Save Block</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={isAvailOpen} onOpenChange={setIsAvailOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Availability
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-700 text-white">
-              <DialogHeader>
-                <DialogTitle>Create Availability</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Start Time</Label>
-                  <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="col-span-3 bg-slate-800 border-slate-700" />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">End Time</Label>
-                  <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="col-span-3 bg-slate-800 border-slate-700" />
-                </div>
-                {!isRecurring && (
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right">End Date (Opt.)</Label>
-                    <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={currentDate.toISOString().split('T')[0]} className="col-span-3 bg-slate-800 border-slate-700 text-slate-300" />
-                  </div>
-                )}
-                <div className="flex items-center gap-2 justify-end">
-                  <input type="checkbox" id="recurringAvail" checked={isRecurring} onChange={e => { setIsRecurring(e.target.checked); setEndDate(''); }} className="rounded border-slate-700 bg-slate-800" />
-                  <Label htmlFor="recurringAvail">Make Recurring (Every {currentDate.toLocaleDateString('en-US', { weekday: 'long' })})</Label>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleCreateSchedule} className="bg-cyan-600 hover:bg-cyan-500 text-white">Save Availability</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <p className="text-slate-400">Manage your shifts, time off, and protected emergency blocks</p>
         </div>
       </div>
 
@@ -321,112 +332,141 @@ export default function DoctorSchedule() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Left Column: Mini Calendar & Filters */}
-        <div className="space-y-6">
+        {/* Left Column: Management Configuration */}
+        <div className="space-y-6 lg:col-span-1">
           <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl">
-            <CardHeader className="pb-3 border-b border-slate-800/50">
-              <CardTitle className="text-white flex items-center gap-2 text-base">
-                <Calendar className="w-4 h-4 text-cyan-400" />
-                {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-7 gap-1 text-center text-xs mb-2">
-                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
-                  <div key={d} className="text-slate-500 font-medium py-1">{d}</div>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-1 text-center text-sm">
-                {/* Mock days */}
-                {Array.from({length: new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}).map((_, i) => (
-                  <div 
-                    key={i} 
-                    onClick={() => {
-                      const newDate = new Date(currentDate);
-                      newDate.setDate(i + 1);
-                      setCurrentDate(newDate);
-                    }}
-                    className={`p-2 rounded-lg cursor-pointer transition-colors ${
-                      i + 1 === currentDate.getDate() ? 'bg-cyan-500 text-white font-bold shadow-lg shadow-cyan-500/30' : 
-                      'text-slate-300 hover:bg-slate-800'
-                    }`}
-                  >
-                    {i + 1}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+             <Tabs defaultValue="schedule" className="w-full">
+               <CardHeader className="pb-0 border-b border-slate-800/50">
+                  <TabsList className="w-full bg-slate-800/50 border border-slate-700/50 grid grid-cols-3 mb-3">
+                    <TabsTrigger value="schedule" className="text-xs data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300">Shifts</TabsTrigger>
+                    <TabsTrigger value="timeoff" className="text-xs data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-300">Time Off</TabsTrigger>
+                    <TabsTrigger value="emergency" className="text-xs data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-300">Protected</TabsTrigger>
+                  </TabsList>
+               </CardHeader>
+               <CardContent className="pt-4">
+                  
+                  {/* Shifts Tab */}
+                  <TabsContent value="schedule" className="space-y-4 animate-in fade-in zoom-in-95 mt-0">
+                    <div className="space-y-1 mb-4">
+                       <h3 className="text-sm font-bold text-white flex items-center gap-2"><Clock className="w-4 h-4 text-cyan-400"/> Shift Generator</h3>
+                       <p className="text-xs text-slate-400">Generate recurring availability shifts.</p>
+                    </div>
 
-          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl">
-            <CardHeader className="pb-3 border-b border-slate-800/50">
-              <CardTitle className="text-white text-base flex items-center gap-2">
-                <Clock className="w-4 h-4 text-cyan-400" />
-                Quick Availability
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-3">
-              <p className="text-xs text-slate-400 mb-2">Click to instantly add availability for {currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
-              
-              <Button 
-                variant="outline" 
-                onClick={() => handleQuickAdd('09:00', '17:00', false)}
-                className="w-full justify-start text-slate-300 border-slate-700 hover:bg-cyan-500/10 hover:text-cyan-300 hover:border-cyan-500/30"
-              >
-                <Plus className="w-3.5 h-3.5 mr-2" />
-                Full Day (9 AM - 5 PM)
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={() => handleQuickAdd('08:00', '12:00', false)}
-                className="w-full justify-start text-slate-300 border-slate-700 hover:bg-cyan-500/10 hover:text-cyan-300 hover:border-cyan-500/30"
-              >
-                <Plus className="w-3.5 h-3.5 mr-2" />
-                Morning (8 AM - 12 PM)
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={() => handleQuickAdd('13:00', '17:00', false)}
-                className="w-full justify-start text-slate-300 border-slate-700 hover:bg-cyan-500/10 hover:text-cyan-300 hover:border-cyan-500/30"
-              >
-                <Plus className="w-3.5 h-3.5 mr-2" />
-                Afternoon (1 PM - 5 PM)
-              </Button>
-            </CardContent>
-          </Card>
+                    <div className="space-y-3">
+                       <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                             <Label className="text-xs text-slate-400">Shift Start</Label>
+                             <Input type="time" value={shiftStart} onChange={e=>setShiftStart(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                          </div>
+                          <div className="space-y-1">
+                             <Label className="text-xs text-slate-400">Shift End</Label>
+                             <Input type="time" value={shiftEnd} onChange={e=>setShiftEnd(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                          </div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                             <Label className="text-xs text-slate-400">Lunch Start</Label>
+                             <Input type="time" value={lunchStart} onChange={e=>setLunchStart(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                          </div>
+                          <div className="space-y-1">
+                             <Label className="text-xs text-slate-400">Lunch End</Label>
+                             <Input type="time" value={lunchEnd} onChange={e=>setLunchEnd(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                          </div>
+                       </div>
+                       
+                       <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                             <Label className="text-xs text-slate-400">Valid From (Optional)</Label>
+                             <Input type="date" value={shiftStartDate} onChange={e=>setShiftStartDate(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm text-slate-300" />
+                          </div>
+                          <div className="space-y-1">
+                             <Label className="text-xs text-slate-400">Valid Until (Optional)</Label>
+                             <Input type="date" value={shiftEndDate} onChange={e=>setShiftEndDate(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm text-slate-300" />
+                          </div>
+                       </div>
+                       
+                       <div className="pt-2">
+                          <Label className="text-xs text-slate-400 mb-2 block">Days of Week</Label>
+                          <div className="flex flex-wrap gap-1">
+                            {['Su','Mo','Tu','We','Th','Fr','Sa'].map((d, i) => (
+                               <Badge 
+                                 key={d} 
+                                 variant={selectedDays.includes(i) ? "default" : "outline"}
+                                 className={`cursor-pointer ${selectedDays.includes(i) ? 'bg-cyan-600 hover:bg-cyan-500' : 'border-slate-700 text-slate-400 hover:text-white'}`}
+                                 onClick={() => toggleDay(i)}
+                               >
+                                 {d}
+                               </Badge>
+                            ))}
+                          </div>
+                       </div>
 
-          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl">
-            <CardHeader className="pb-3 border-b border-slate-800/50">
-              <CardTitle className="text-white text-base">Calendars</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-3">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="w-4 h-4 rounded border border-cyan-500 bg-cyan-500/20 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-sm bg-cyan-400" />
-                </div>
-                <span className="text-slate-300 text-sm group-hover:text-white transition-colors">Consultations</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="w-4 h-4 rounded border border-violet-500 bg-violet-500/20 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-sm bg-violet-400" />
-                </div>
-                <span className="text-slate-300 text-sm group-hover:text-white transition-colors">Tumor Board Meetings</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="w-4 h-4 rounded border border-emerald-500 bg-emerald-500/20 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-sm bg-emerald-400" />
-                </div>
-                <span className="text-slate-300 text-sm group-hover:text-white transition-colors">Infusion Sessions</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="w-4 h-4 rounded border border-rose-500 bg-rose-500/20 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-sm bg-rose-400" />
-                </div>
-                <span className="text-slate-300 text-sm group-hover:text-white transition-colors">Urgent / ER</span>
-              </label>
-            </CardContent>
+                       <Button onClick={handleGenerateShift} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white mt-2 h-8 text-xs">
+                          Generate Shift
+                       </Button>
+                    </div>
+                  </TabsContent>
+
+                  {/* Time Off Tab */}
+                  <TabsContent value="timeoff" className="space-y-4 animate-in fade-in zoom-in-95 mt-0">
+                    <div className="space-y-1 mb-4">
+                       <h3 className="text-sm font-bold text-white flex items-center gap-2"><CalendarRange className="w-4 h-4 text-violet-400"/> Time Off</h3>
+                       <p className="text-xs text-slate-400">Manage vacations and leaves. Overlays on shifts.</p>
+                    </div>
+
+                    <div className="space-y-3">
+                       <div className="space-y-1">
+                          <Label className="text-xs text-slate-400">Reason / Type</Label>
+                          <select 
+                            value={timeOffReason} 
+                            onChange={e=>setTimeOffReason(e.target.value)}
+                            className="w-full flex h-8 w-full items-center justify-between rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                          >
+                             <option>Vacation</option>
+                             <option>Conference</option>
+                             <option>Medical Leave</option>
+                             <option>Personal Leave</option>
+                             <option>Other</option>
+                          </select>
+                       </div>
+                       <div className="space-y-1">
+                          <Label className="text-xs text-slate-400">Start Date & Time</Label>
+                          <Input type="datetime-local" value={timeOffStart} onChange={e=>setTimeOffStart(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                       </div>
+                       <div className="space-y-1">
+                          <Label className="text-xs text-slate-400">End Date & Time</Label>
+                          <Input type="datetime-local" value={timeOffEnd} onChange={e=>setTimeOffEnd(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                       </div>
+                       <Button onClick={handleAddTimeOff} className="w-full bg-violet-600 hover:bg-violet-500 text-white mt-2 h-8 text-xs">
+                          Add Time Off
+                       </Button>
+                    </div>
+                  </TabsContent>
+
+                  {/* Emergency Blocks Tab */}
+                  <TabsContent value="emergency" className="space-y-4 animate-in fade-in zoom-in-95 mt-0">
+                    <div className="space-y-1 mb-4">
+                       <h3 className="text-sm font-bold text-white flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-rose-400"/> Protected Slots</h3>
+                       <p className="text-xs text-slate-400">Reserve slots for emergencies. Hidden from normal availability.</p>
+                    </div>
+
+                    <div className="space-y-3">
+                       <div className="space-y-1">
+                          <Label className="text-xs text-slate-400">Reserved Time Slot</Label>
+                          <Input type="time" value={emergencyTime} onChange={e=>setEmergencyTime(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                       </div>
+                       <div className="space-y-1">
+                          <Label className="text-xs text-slate-400">Description</Label>
+                          <Input placeholder="e.g. Leukemia ER" value={emergencyDesc} onChange={e=>setEmergencyDesc(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                       </div>
+                       <Button onClick={handleAddEmergencyBlock} className="w-full bg-rose-600 hover:bg-rose-500 text-white mt-2 h-8 text-xs">
+                          Reserve Protected Block
+                       </Button>
+                    </div>
+                  </TabsContent>
+
+               </CardContent>
+             </Tabs>
           </Card>
         </div>
 
@@ -449,6 +489,8 @@ export default function DoctorSchedule() {
 
                     const iconMap: any = {
                       Consultation: <Stethoscope className="w-4 h-4" />,
+                      TimeOff: <CalendarRange className="w-4 h-4" />,
+                      Emergency: <ShieldAlert className="w-4 h-4" />,
                       Meeting: <Users className="w-4 h-4" />,
                       Infusion: <Droplet className="w-4 h-4" />,
                       Urgent: <AlertCircle className="w-4 h-4" />,
@@ -459,7 +501,7 @@ export default function DoctorSchedule() {
                       <div 
                         key={event.id} 
                         className="p-4 flex gap-6 hover:bg-slate-800/30 transition-colors group animate-in slide-in-from-right duration-500"
-                        style={{ animationDelay: `${index * 100}ms` }}
+                        style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div className="w-24 shrink-0 text-right">
                           <span className="text-white font-medium block">{event.time}</span>
@@ -469,7 +511,7 @@ export default function DoctorSchedule() {
                           <div className={`p-4 rounded-xl border ${colorMap[event.color]} flex flex-col sm:flex-row sm:items-center justify-between gap-4 group-hover:scale-[1.01] transition-transform`}>
                             <div className="flex items-start gap-3">
                               <div className="mt-0.5 opacity-80">
-                                {iconMap[event.type]}
+                                {iconMap[event.type] || <Check className="w-4 h-4" />}
                               </div>
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
@@ -486,9 +528,9 @@ export default function DoctorSchedule() {
                             
                             {/* Actions */}
                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {event.type === 'Block' ? (
-                                <Button size="sm" variant="outline" onClick={() => handleDeleteSchedule(event.id)} className="h-8 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10">
-                                  Delete Block
+                              {(event.type === 'Block' || event.type === 'TimeOff' || event.type === 'Emergency') ? (
+                                <Button size="sm" variant="outline" onClick={() => handleDeleteSchedule(event.id, event.type)} className="h-8 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10">
+                                  Delete
                                 </Button>
                               ) : (
                                 <>
