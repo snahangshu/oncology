@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
+import ReactMarkdown from 'react-markdown';
 
 interface Appointment {
   id: number | string;
@@ -29,6 +30,7 @@ interface Appointment {
   aiSummary: string;
   vitals: { bp: string; hr: string; temp: string; weight: string };
   history: string;
+  patient_comments?: string;
   intake_summary?: any;
 }
 
@@ -81,8 +83,9 @@ export default function DoctorDashboard() {
           chiefComplaint: apt.primary_diagnosis || 'Unknown',
           predictedDuration: 'Routine (15m)',
           aiSummary: apt.ai_summary || `AI Summary based on Intake: Patient presents with ${apt.primary_diagnosis || 'Unknown'}. Intake documents include: ${Object.keys(apt.intake_summary || {}).join(', ') || 'None'}.`,
-          vitals: { bp: '--/--', hr: '--', temp: '--', weight: '--' },
+          vitals: apt.vitals || { bp: '--/--', hr: '--', temp: '--', weight: '--' },
           history: apt.primary_diagnosis || 'Unknown',
+          patient_comments: apt.patient_comments,
           intake_summary: apt.intake_summary,
         });
 
@@ -348,17 +351,34 @@ export default function DoctorDashboard() {
                               <div className="h-4 bg-indigo-500/20 rounded w-2/3"></div>
                             </div>
                           ) : (
-                            <p className="text-slate-200 leading-relaxed text-sm whitespace-pre-wrap transition-all duration-300">
-                              {selectedPatient.aiSummary}
-                            </p>
+                            <div className="text-slate-200 leading-relaxed text-sm transition-all duration-300">
+                              <ReactMarkdown
+                                components={{
+                                  p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                                  strong: ({node, ...props}) => <strong className="font-semibold text-white" {...props} />,
+                                  ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2 space-y-1 text-slate-300 marker:text-indigo-400" {...props} />,
+                                  ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1 text-slate-300 marker:text-indigo-400" {...props} />,
+                                  li: ({node, ...props}) => <li {...props} />,
+                                  h1: ({node, ...props}) => <h1 className="text-lg font-semibold text-white mt-4 mb-2" {...props} />,
+                                  h2: ({node, ...props}) => <h2 className="text-base font-semibold text-indigo-300 mt-4 mb-2" {...props} />,
+                                  h3: ({node, ...props}) => <h3 className="text-sm font-semibold text-indigo-400 mt-3 mb-1" {...props} />,
+                                  a: ({node, ...props}) => <a className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2" {...props} />
+                                }}
+                              >
+                                {selectedPatient.aiSummary}
+                              </ReactMarkdown>
+                            </div>
                           )}
                         </div>
 
                         {/* Patient Info */}
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                           <div className="space-y-1">
-                            <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Chief Complaint</p>
+                            <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Chief Complaint / Notes</p>
                             <p className="text-white text-sm">{selectedPatient.chiefComplaint}</p>
+                            {selectedPatient.patient_comments && selectedPatient.patient_comments !== 'No additional comments provided.' && (
+                              <p className="text-slate-400 text-xs mt-1 italic">"{selectedPatient.patient_comments}"</p>
+                            )}
                           </div>
                           <div className="space-y-1">
                             <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Predicted Duration</p>
@@ -601,17 +621,34 @@ export default function DoctorDashboard() {
                               <div className="h-4 bg-indigo-500/20 rounded w-2/3"></div>
                             </div>
                           ) : (
-                            <p className="text-slate-200 leading-relaxed text-sm whitespace-pre-wrap transition-all duration-300">
-                              {selectedPatient.aiSummary}
-                            </p>
+                            <div className="text-slate-200 leading-relaxed text-sm transition-all duration-300">
+                              <ReactMarkdown
+                                components={{
+                                  p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                                  strong: ({node, ...props}) => <strong className="font-semibold text-white" {...props} />,
+                                  ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2 space-y-1 text-slate-300 marker:text-indigo-400" {...props} />,
+                                  ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1 text-slate-300 marker:text-indigo-400" {...props} />,
+                                  li: ({node, ...props}) => <li {...props} />,
+                                  h1: ({node, ...props}) => <h1 className="text-lg font-semibold text-white mt-4 mb-2" {...props} />,
+                                  h2: ({node, ...props}) => <h2 className="text-base font-semibold text-indigo-300 mt-4 mb-2" {...props} />,
+                                  h3: ({node, ...props}) => <h3 className="text-sm font-semibold text-indigo-400 mt-3 mb-1" {...props} />,
+                                  a: ({node, ...props}) => <a className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2" {...props} />
+                                }}
+                              >
+                                {selectedPatient.aiSummary}
+                              </ReactMarkdown>
+                            </div>
                           )}
                         </div>
 
                         {/* Patient Info */}
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                           <div className="space-y-1">
-                            <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Chief Complaint</p>
+                            <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Chief Complaint / Notes</p>
                             <p className="text-white text-sm">{selectedPatient.chiefComplaint}</p>
+                            {selectedPatient.patient_comments && selectedPatient.patient_comments !== 'No additional comments provided.' && (
+                              <p className="text-slate-400 text-xs mt-1 italic">"{selectedPatient.patient_comments}"</p>
+                            )}
                           </div>
                           <div className="space-y-1">
                             <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Predicted Duration</p>

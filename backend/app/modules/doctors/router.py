@@ -126,7 +126,7 @@ def update_doctor_profile(
         
     current_user.verification_status = VerificationStatus.UNDER_REVIEW
     
-    from app.modules.users.credential_models import StaffDocument, DocumentStatus
+    from app.modules.users.credential_models import StaffDocument, DocumentStatus, DocumentType
     
     # Delete old documents to prevent duplicates on re-upload
     db.query(StaffDocument).filter(StaffDocument.user_id == current_user.id).delete()
@@ -134,7 +134,7 @@ def update_doctor_profile(
     if request.get("license_file"):
         doc1 = StaffDocument(
             user_id=current_user.id,
-            document_type="Medical License",
+            document_type=DocumentType.MEDICAL_LICENSE,
             file_url=request.get("license_file"),
             status=DocumentStatus.PENDING_REVIEW
         )
@@ -143,7 +143,7 @@ def update_doctor_profile(
     if request.get("board_file"):
         doc2 = StaffDocument(
             user_id=current_user.id,
-            document_type="Board Certification",
+            document_type=DocumentType.BOARD_CERTIFICATION,
             file_url=request.get("board_file"),
             status=DocumentStatus.PENDING_REVIEW
         )

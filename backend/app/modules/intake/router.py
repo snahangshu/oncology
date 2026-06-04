@@ -107,6 +107,18 @@ async def upload_my_document(
     phase = DOC_PHASE_MAP[doc_enum]
     contents = await file.read()
     
+    extracted_text = None
+    if file.content_type == "application/pdf":
+        try:
+            import fitz
+            pdf_doc = fitz.open(stream=contents, filetype="pdf")
+            text = ""
+            for page in pdf_doc:
+                text += page.get_text()
+            extracted_text = text.strip()
+        except Exception as e:
+            print(f"Failed to extract PDF text: {e}")
+    
     try:
         result = cloudinary.uploader.upload(
             contents,
@@ -132,7 +144,8 @@ async def upload_my_document(
         phase=phase,
         file_url=result.get("secure_url"),
         original_name=file.filename,
-        uploaded_by=current_user.id
+        uploaded_by=current_user.id,
+        extracted_text=extracted_text
     )
     db.add(new_doc)
     db.flush()
@@ -179,6 +192,18 @@ async def upload_document(
     phase = DOC_PHASE_MAP[doc_enum]
     contents = await file.read()
     
+    extracted_text = None
+    if file.content_type == "application/pdf":
+        try:
+            import fitz
+            pdf_doc = fitz.open(stream=contents, filetype="pdf")
+            text = ""
+            for page in pdf_doc:
+                text += page.get_text()
+            extracted_text = text.strip()
+        except Exception as e:
+            print(f"Failed to extract PDF text: {e}")
+    
     try:
         result = cloudinary.uploader.upload(
             contents,
@@ -204,7 +229,8 @@ async def upload_document(
         phase=phase,
         file_url=result.get("secure_url"),
         original_name=file.filename,
-        uploaded_by=current_user.id
+        uploaded_by=current_user.id,
+        extracted_text=extracted_text
     )
     db.add(new_doc)
     db.flush()

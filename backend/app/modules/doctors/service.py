@@ -147,6 +147,7 @@ class DoctorService:
             end_time=end,
             is_recurring=request.is_recurring,
             specific_date=specific,
+            location=request.location,
         )
         self.schedule_repo.create(schedule)
         return self._schedule_to_response(schedule)
@@ -386,4 +387,5 @@ class DoctorService:
             end_time=s.end_time.strftime("%H:%M"),
             is_recurring=s.is_recurring,
             specific_date=s.specific_date.isoformat() if s.specific_date else None,
+            location=s.location,
         )

@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDropzone } from 'react-dropzone';
-import { Calendar, FileText, Clock, Upload, Plus, Heart, CheckCircle2, Loader2, FileUp, MessageSquare, X, Send, Globe } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Calendar, FileText, Clock, Upload, Plus, Heart, CheckCircle2, Loader2, FileUp, MessageSquare, X, Send, Globe, Activity } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Label } from '../components/ui/label';
+import { Input } from '../components/ui/input';
 import { api } from '../shared/api';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -70,48 +72,69 @@ export default function PatientDashboard() {
     }
   });
 
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+    queryKey: ['patient_dashboard', intake?.patient_id],
+    queryFn: async () => {
+      const res = await api.get(`/patients/${intake.patient_id}/dashboard`);
+      return res.data;
+    },
+    enabled: !!intake?.patient_id
+  });
+
+  const [clinicalForm, setClinicalForm] = useState({ primary_diagnosis: '', patient_comments: '' });
+
   useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const response = await api.get('/dashboards/patient');
-        const appointments = response.data.upcoming_appointments || [];
-        const prescriptions = response.data.recent_prescriptions || [];
-        
-        if (appointments.length > 0) {
-          const merged = appointments.map((apt: any) => {
-            return {
-              id: apt.appointment_id,
-              date: new Date(apt.start_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
-              time: new Date(apt.start_time).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
-              doctor: apt.doctor_name,
-              type: `${apt.specialty} Consultation`,
-              status: apt.status.charAt(0).toUpperCase() + apt.status.slice(1),
-            };
-          });
-          setAppointmentsList(merged);
-        } else {
-          setAppointmentsList([]);
-        }
-        
-        if (prescriptions.length > 0) {
-          const merged = prescriptions.map((rx: any, index: number) => {
-            return {
-              name: rx.medication,
-              dosage: 'Standard',
-              frequency: 'Once daily',
-              refillsLeft: 3,
-            };
-          });
-          setPrescriptionsList(merged);
-        }
-      } catch (err) {
-        console.error('Error fetching patient dashboard:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchDashboard();
-  }, []);
+    if (dashboardData?.patient) {
+      setClinicalForm({
+        primary_diagnosis: dashboardData.patient.primary_diagnosis || '',
+        patient_comments: dashboardData.patient.patient_comments || ''
+      });
+    }
+  }, [dashboardData]);
+
+  const updateClinicalMutation = useMutation({
+    mutationFn: async (data: any) => {
+      await api.put(`/patients/${intake.patient_id}/clinical`, data);
+    },
+    onSuccess: () => {
+      toast.success("Clinical profile updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ['patient_dashboard', intake?.patient_id] });
+    },
+    onError: () => toast.error("Failed to update clinical profile")
+  });
+
+  useEffect(() => {
+    if (!dashboardData) return;
+    const appointments = dashboardData.appointments || [];
+    const prescriptions = dashboardData.prescriptions || []; // Assuming these exist, else empty
+    
+    if (appointments.length > 0) {
+      const merged = appointments.map((apt: any) => {
+        return {
+          id: apt.id,
+          date: new Date(apt.start_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
+          time: new Date(apt.start_time).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+          doctor: apt.doctor_name || 'Assigned Provider',
+          type: apt.type,
+          status: apt.status.charAt(0).toUpperCase() + apt.status.slice(1),
+        };
+      });
+      setAppointmentsList(merged);
+    } else {
+      setAppointmentsList([]);
+    }
+    
+    if (prescriptions.length > 0) {
+      const merged = prescriptions.map((rx: any) => ({
+        name: rx.medication,
+        dosage: 'Standard',
+        frequency: 'Once daily',
+        refillsLeft: 3,
+      }));
+      setPrescriptionsList(merged);
+    }
+    setIsLoading(false);
+  }, [dashboardData]);
 
   const handleGeneratePlan = async () => {
     if (!intake) return;
@@ -267,6 +290,56 @@ export default function PatientDashboard() {
         </CardContent>
       </Card>
 
+
+      {/* Clinical Profile & Symptoms */}
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden relative group">
+        <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Activity className="w-5 h-5 text-violet-400" />
+            Clinical Profile & Symptoms
+          </CardTitle>
+          <CardDescription className="text-slate-400">
+            Update your current diagnosis and symptoms. This helps our AI perfectly predict your scheduling and resource needs before you book.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {dashboardLoading ? (
+            <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-violet-500" /></div>
+          ) : (
+            <div className="space-y-4 relative z-10">
+              <div className="space-y-2">
+                <Label className="text-slate-300">Primary Diagnosis</Label>
+                <Input 
+                  value={clinicalForm.primary_diagnosis}
+                  onChange={(e) => setClinicalForm(prev => ({ ...prev, primary_diagnosis: e.target.value }))}
+                  placeholder="e.g. Stage IV Lung Cancer" 
+                  className="bg-slate-800/50 border-slate-700/50 text-white focus:border-violet-500/50 focus:ring-violet-500/20" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-slate-300">Presenting Symptoms / Notes</Label>
+                <textarea 
+                  value={clinicalForm.patient_comments}
+                  onChange={(e) => setClinicalForm(prev => ({ ...prev, patient_comments: e.target.value }))}
+                  placeholder="Describe how you are feeling, e.g. severe pain, shortness of breath..." 
+                  className="w-full min-h-[100px] rounded-md bg-slate-800/50 border border-slate-700/50 text-white p-3 text-sm focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 outline-none transition-all resize-y"
+                />
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button 
+                  onClick={() => updateClinicalMutation.mutate(clinicalForm)}
+                  disabled={updateClinicalMutation.isPending}
+                  className="bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-600 hover:to-cyan-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_25px_rgba(139,92,246,0.4)] transition-all"
+                >
+                  {updateClinicalMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                  Save Clinical Profile
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Upcoming Appointments */}
       <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
@@ -502,9 +575,6 @@ export default function PatientDashboard() {
   );
 }
 
-function Label({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <label className={className}>{children}</label>;
-}
 
 // Phase 1 Upload Zone
 function PatientDocumentUploadZone({ docType, label, existingData, uploadedFiles, onUploadSuccess }: any) {

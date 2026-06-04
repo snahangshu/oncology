@@ -20,6 +20,8 @@ const patientSchema = z.object({
   email: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Valid phone number is required'),
   address: z.string().optional(),
+  primary_diagnosis: z.string().optional(),
+  patient_comments: z.string().optional(),
   insurance_details: z.object({
     provider_name: z.string().min(1, 'Provider name is required'),
     policy_number: z.string().min(1, 'Policy number is required'),
@@ -117,6 +119,31 @@ export default function NewPatient() {
             <div className="space-y-2 md:col-span-2">
               <Label className="text-slate-300">Physical Address</Label>
               <Input {...register('address')} placeholder="123 Main St, City, State, ZIP" className="bg-slate-800/50 border-slate-700/30 text-white" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Clinical Information Card */}
+        <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="text-xl text-white flex items-center gap-2">
+              <Activity className="w-5 h-5 text-violet-400" />
+              Clinical Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-slate-300">Primary Diagnosis</Label>
+              <Input {...register('primary_diagnosis')} placeholder="e.g. Stage IV Lung Cancer" className="bg-slate-800/50 border-slate-700/30 text-white" />
+              <p className="text-xs text-slate-500">This helps our AI system automatically triage and allocate the correct appointment duration.</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Presenting Symptoms / Notes</Label>
+              <textarea 
+                {...register('patient_comments')} 
+                placeholder="Patient is experiencing severe pain..." 
+                className="w-full min-h-[100px] rounded-md bg-slate-800/50 border border-slate-700/30 text-white p-3 text-sm focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 outline-none transition-all"
+              />
             </div>
           </CardContent>
         </Card>

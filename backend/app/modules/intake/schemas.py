@@ -24,7 +24,13 @@ class PatientRegistrationRequest(BaseModel):
     email: EmailStr
     phone: str
     address: Optional[str] = Field(None, description="Patient address")
+    primary_diagnosis: Optional[str] = Field(None, description="Primary clinical diagnosis if known")
+    patient_comments: Optional[str] = Field(None, description="Patient's condition description/comments")
     insurance_details: InsuranceDetailsSchema
+
+class PatientClinicalUpdateRequest(BaseModel):
+    primary_diagnosis: Optional[str] = Field(None, description="Primary clinical diagnosis if known")
+    patient_comments: Optional[str] = Field(None, description="Patient's condition description/comments")
 
 class PatientRegistrationResponse(BaseModel):
     patient_id: int

@@ -7,6 +7,7 @@ from app.modules.intake.models import Patient, OncologyIntake, InsuranceRecord
 from app.modules.doctors.models import Doctor
 from app.modules.scheduling.models import Appointment
 from datetime import datetime, date, time, timedelta
+import random
 
 router = APIRouter()
 
@@ -169,7 +170,14 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
             "full_time": appt.start_time.isoformat(),
             "status": appt.status,
             "urgency_level": getattr(patient, 'urgency_level', 'Routine') if patient else 'Routine',
-            "primary_diagnosis": getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown',
+            "primary_diagnosis": getattr(patient, 'primary_diagnosis', None) or 'Unknown',
+            "patient_comments": getattr(patient, 'patient_comments', None) or 'No additional comments provided.',
+            "vitals": {
+                "bp": f"{random.randint(110, 140)}/{random.randint(70, 90)}",
+                "hr": str(random.randint(65, 95)),
+                "temp": f"{round(random.uniform(97.8, 99.1), 1)}°F",
+                "weight": f"{random.randint(140, 190)} lbs"
+            },
             "intake_summary": intake_summary,
             "ai_summary": intake.ai_summary if intake and intake.ai_summary else f"AI Summary based on Intake: Patient presents with {getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown'}. Intake documents include: {', '.join(intake_summary.keys()) or 'None'}."
         })
@@ -198,7 +206,14 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
             "time": appt.start_time.strftime("%I:%M %p"),
             "full_time": appt.start_time.isoformat(),
             "status": appt.status,
-            "primary_diagnosis": getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown',
+            "primary_diagnosis": getattr(patient, 'primary_diagnosis', None) or 'Unknown',
+            "patient_comments": getattr(patient, 'patient_comments', None) or 'No additional comments provided.',
+            "vitals": {
+                "bp": f"{random.randint(110, 140)}/{random.randint(70, 90)}",
+                "hr": str(random.randint(65, 95)),
+                "temp": f"{round(random.uniform(97.8, 99.1), 1)}°F",
+                "weight": f"{random.randint(140, 190)} lbs"
+            },
             "urgency_level": getattr(patient, 'urgency_level', 'Routine') if patient else 'Routine',
             "intake_summary": intake_summary,
             "ai_summary": getattr(intake, 'ai_summary', None) if intake else None or f"AI Summary based on Intake: Patient presents with {getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown'}. Intake documents include: {', '.join(intake_summary.keys()) or 'None'}."

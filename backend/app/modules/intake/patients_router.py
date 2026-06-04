@@ -48,7 +48,9 @@ def register_patient(
             gender=request.gender,
             email=request.email,
             phone=request.phone,
-            address=request.address
+            address=request.address,
+            primary_diagnosis=request.primary_diagnosis,
+            patient_comments=request.patient_comments
         )
         db.add(new_patient)
         db.flush() # Flush to get new_patient.id
@@ -89,6 +91,26 @@ def register_patient(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+from app.modules.intake.schemas import PatientClinicalUpdateRequest
+
+@router.put("/{patient_id}/clinical")
+def update_clinical_info(
+    patient_id: int,
+    request: PatientClinicalUpdateRequest,
+    db: Session = Depends(get_db)
+):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+        
+    if request.primary_diagnosis is not None:
+        patient.primary_diagnosis = request.primary_diagnosis
+    if request.patient_comments is not None:
+        patient.patient_comments = request.patient_comments
+        
+    db.commit()
+    return {"status": "success", "message": "Clinical info updated"}
 
 from app.modules.intake.models import UploadedDocument, IntakePhase, DocumentType
 from app.modules.scheduling.models import Appointment
@@ -235,7 +257,9 @@ def get_patient_dashboard(
             "gender": patient.gender,
             "email": patient.email,
             "phone": patient.phone,
-            "address": patient.address
+            "address": patient.address,
+            "primary_diagnosis": patient.primary_diagnosis,
+            "patient_comments": patient.patient_comments
         },
         "snapshot": snapshot,
         "insurance": [
