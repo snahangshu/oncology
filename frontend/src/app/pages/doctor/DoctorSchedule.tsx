@@ -44,7 +44,12 @@ export default function DoctorSchedule() {
       toast.success('Schedule block removed');
       setRefreshTrigger(prev => prev + 1);
     } catch (error: any) {
-      toast.error('Failed to remove schedule block');
+      if (error.response?.status === 404) {
+        toast.success('Schedule block already removed');
+        setRefreshTrigger(prev => prev + 1);
+      } else {
+        toast.error('Failed to remove schedule block');
+      }
     }
   };
 
