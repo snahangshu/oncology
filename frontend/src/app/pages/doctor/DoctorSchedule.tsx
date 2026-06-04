@@ -171,16 +171,23 @@ export default function DoctorSchedule() {
         // Multi-day block
         let curr = new Date(currentDate);
         const end = new Date(endDate);
+        const promises = [];
+        
         while (curr <= end) {
-          await api.post(`/doctors/${doctorId}/schedule`, {
-            start_time: startTime,
-            end_time: endTime,
-            is_recurring: false,
-            specific_date: curr.toISOString().split('T')[0],
-            day_of_week: null
-          });
+          promises.push(
+            api.post(`/doctors/${doctorId}/schedule`, {
+              start_time: startTime,
+              end_time: endTime,
+              is_recurring: false,
+              specific_date: curr.toISOString().split('T')[0],
+              day_of_week: null
+            })
+          );
           curr.setDate(curr.getDate() + 1);
         }
+        
+        // Execute all requests concurrently to prevent hanging the UI
+        await Promise.all(promises);
       } else {
         // Single block or recurring
         const payload = {
