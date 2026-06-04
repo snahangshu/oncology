@@ -30,6 +30,7 @@ export default function DoctorSchedule() {
   // Dialog states
   const [isBlockOpen, setIsBlockOpen] = useState(false);
   const [isAvailOpen, setIsAvailOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
   const [isRecurring, setIsRecurring] = useState(false);
@@ -116,7 +117,30 @@ export default function DoctorSchedule() {
       }
     };
     fetchSchedule();
-  }, [currentDate, view, isBlockOpen, isAvailOpen]);
+  }, [currentDate, view, isBlockOpen, isAvailOpen, refreshTrigger]);
+
+  const handleQuickAdd = async (start: string, end: string, isRecurring: boolean) => {
+    if (!doctorId) {
+      toast.error('Doctor profile not found. Please complete profile setup.');
+      return;
+    }
+    
+    try {
+      const payload = {
+        start_time: start,
+        end_time: end,
+        is_recurring: isRecurring,
+        specific_date: !isRecurring ? currentDate.toISOString().split('T')[0] : null,
+        day_of_week: isRecurring ? currentDate.getDay() : null,
+      };
+      
+      await api.post(`/doctors/${doctorId}/schedule`, payload);
+      toast.success(`Quick Availability added for ${start} - ${end}`);
+      setRefreshTrigger(prev => prev + 1);
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to add availability');
+    }
+  };
 
   const handleCreateSchedule = async () => {
     if (!doctorId) {
@@ -275,6 +299,45 @@ export default function DoctorSchedule() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl">
+            <CardHeader className="pb-3 border-b border-slate-800/50">
+              <CardTitle className="text-white text-base flex items-center gap-2">
+                <Clock className="w-4 h-4 text-cyan-400" />
+                Quick Availability
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 space-y-3">
+              <p className="text-xs text-slate-400 mb-2">Click to instantly add availability for {currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+              
+              <Button 
+                variant="outline" 
+                onClick={() => handleQuickAdd('09:00', '17:00', false)}
+                className="w-full justify-start text-slate-300 border-slate-700 hover:bg-cyan-500/10 hover:text-cyan-300 hover:border-cyan-500/30"
+              >
+                <Plus className="w-3.5 h-3.5 mr-2" />
+                Full Day (9 AM - 5 PM)
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={() => handleQuickAdd('08:00', '12:00', false)}
+                className="w-full justify-start text-slate-300 border-slate-700 hover:bg-cyan-500/10 hover:text-cyan-300 hover:border-cyan-500/30"
+              >
+                <Plus className="w-3.5 h-3.5 mr-2" />
+                Morning (8 AM - 12 PM)
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={() => handleQuickAdd('13:00', '17:00', false)}
+                className="w-full justify-start text-slate-300 border-slate-700 hover:bg-cyan-500/10 hover:text-cyan-300 hover:border-cyan-500/30"
+              >
+                <Plus className="w-3.5 h-3.5 mr-2" />
+                Afternoon (1 PM - 5 PM)
+              </Button>
             </CardContent>
           </Card>
 
