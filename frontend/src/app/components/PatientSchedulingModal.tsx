@@ -99,14 +99,14 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
             <TabsList className="grid w-full grid-cols-2 bg-slate-950/50 p-1 mb-6 rounded-xl border border-slate-800">
               <TabsTrigger 
                 value="consultation" 
-                className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 data-[state=active]:shadow-lg rounded-lg transition-all"
+                className="text-slate-400 hover:text-slate-200 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 data-[state=active]:shadow-lg rounded-lg transition-all"
               >
                 <Activity className="w-4 h-4 mr-2" />
                 Doctor Consultation
               </TabsTrigger>
               <TabsTrigger 
                 value="infusion"
-                className="data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-400 data-[state=active]:shadow-lg rounded-lg transition-all"
+                className="text-slate-400 hover:text-slate-200 data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-400 data-[state=active]:shadow-lg rounded-lg transition-all"
               >
                 <Activity className="w-4 h-4 mr-2" />
                 Infusion Therapy
@@ -124,6 +124,7 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
                   classNames={{
                     day_selected: "bg-emerald-500 text-white hover:bg-emerald-600 focus:bg-emerald-600",
                     day_today: "bg-slate-800 text-emerald-400",
+                    nav_button: "border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 hover:text-white w-7 h-7 flex items-center justify-center rounded-md",
                   }}
                 />
               </div>
