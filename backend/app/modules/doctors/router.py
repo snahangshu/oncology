@@ -56,8 +56,15 @@ def generate_brief(patient_id: int, request: BriefRequest, db: Session = Depends
     
     # In eager mode, we can get the result immediately
     summary = ""
-    if hasattr(task, 'result') and isinstance(task.result, dict) and 'brief' in task.result:
-        summary = task.result['brief']
+    if hasattr(task, 'result') and isinstance(task.result, dict):
+        parsed = task.result
+        parts = []
+        if parsed.get('chief_complaint'): parts.append(f"**Chief Complaint:** {parsed['chief_complaint']}")
+        if parsed.get('history_summary'): parts.append(f"**History:** {parsed['history_summary']}")
+        if parsed.get('recent_labs_summary'): parts.append(f"**Labs:** {parsed['recent_labs_summary']}")
+        if parsed.get('imaging_summary'): parts.append(f"**Imaging:** {parsed['imaging_summary']}")
+        if parsed.get('critical_alerts'): parts.append(f"**Critical Alerts:** {', '.join(parsed['critical_alerts'])}")
+        summary = "\n\n".join(parts)
         from app.modules.intake.models import OncologyIntake
         intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
         if intake:

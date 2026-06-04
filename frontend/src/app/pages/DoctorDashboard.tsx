@@ -311,7 +311,7 @@ export default function DoctorDashboard() {
                               Regenerate Brief
                             </Button>
                           </div>
-                          <p className="text-slate-200 leading-relaxed text-sm">
+                          <p className="text-slate-200 leading-relaxed text-sm whitespace-pre-wrap">
                             {selectedPatient.aiSummary}
                           </p>
                         </div>
@@ -555,7 +555,7 @@ export default function DoctorDashboard() {
                               Regenerate Brief
                             </Button>
                           </div>
-                          <p className="text-slate-200 leading-relaxed text-sm">
+                          <p className="text-slate-200 leading-relaxed text-sm whitespace-pre-wrap">
                             {selectedPatient.aiSummary}
                           </p>
                         </div>
