@@ -41,6 +41,9 @@ def process_uploaded_doc(patient_id: int, file_path: str) -> int:
         if not extracted_text:
             extracted_text = "No text could be extracted from the document."
             
+        doc.extracted_text = extracted_text
+        repo.update(doc)
+            
         # Trigger completeness checks
         trigger_completeness_check.delay(doc.id, extracted_text)
         return doc.id
@@ -114,6 +117,12 @@ def process_pathology_report(patient_id: int, file_path: str, document_id: int) 
         extracted_text = extract_text_from_file(file_path)
         if not extracted_text:
             extracted_text = "No text could be extracted from the document."
+            
+        from app.modules.intake.models import UploadedDocument
+        doc = db.query(UploadedDocument).filter(UploadedDocument.id == document_id).first()
+        if doc:
+            doc.extracted_text = extracted_text
+            db.commit()
             
         agent = PathologyTriageAgent()
         res = agent.extract_tumor_details(document_id, extracted_text)

@@ -203,10 +203,25 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
             "ai_summary": getattr(intake, 'ai_summary', None) if intake else None or f"AI Summary based on Intake: Patient presents with {getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown'}. Intake documents include: {', '.join(intake_summary.keys()) or 'None'}."
         })
 
+    from app.modules.scheduling.models import ClinicalAlert
+    unresolved_alerts = db.query(ClinicalAlert).filter(ClinicalAlert.is_resolved == False).all()
+    alerts_result = []
+    for alert in unresolved_alerts:
+        pat = db.query(Patient).filter(Patient.id == alert.patient_id).first()
+        alerts_result.append({
+            "id": alert.id,
+            "patient_name": f"{pat.first_name} {pat.last_name}" if pat else "Unknown",
+            "type": alert.alert_type,
+            "severity": alert.severity,
+            "message": alert.message,
+            "created_at": alert.created_at.isoformat() if alert.created_at else None
+        })
+
     return {
         "today_appointments": result,
         "upcoming_appointments": upcoming_result,
-        "queue_size": len([a for a in result if a['status'] in ['waiting', 'confirmed']])
+        "queue_size": len([a for a in result if a['status'] in ['waiting', 'confirmed']]),
+        "clinical_alerts": alerts_result
     }
 
 @router.get("/receptionist", dependencies=[Depends(require_role([Role.RECEPTIONIST]))])

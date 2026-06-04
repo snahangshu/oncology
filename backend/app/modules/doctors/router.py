@@ -37,17 +37,26 @@ def generate_brief(patient_id: int, request: BriefRequest, db: Session = Depends
     clinical_history = request.clinical_history
     imaging_reports = request.imaging_reports
     
+    docs = []
+    from app.modules.intake.models import UploadedDocument
+    uploaded_docs = db.query(UploadedDocument).filter(UploadedDocument.patient_id == patient_id).all()
+    
+    for d in uploaded_docs:
+        if d.extracted_text:
+            docs.append(f"{d.document_type.value}:\n{d.extracted_text}")
+
     if intake:
-        docs = []
-        if intake.pathology_report:
+        if intake.pathology_report and not uploaded_docs:
             docs.append("PATHOLOGY REPORT:\n" + (json.dumps(intake.pathology_report, indent=2) if isinstance(intake.pathology_report, dict) else str(intake.pathology_report)))
-        if intake.referral_letter:
+        if intake.referral_letter and not uploaded_docs:
             docs.append("REFERRAL LETTER:\n" + (json.dumps(intake.referral_letter, indent=2) if isinstance(intake.referral_letter, dict) else str(intake.referral_letter)))
-        if docs:
-            clinical_history = clinical_history + "\n\n--- UPLOADED DOCUMENTS ---\n" + "\n\n".join(docs)
-            
-        if intake.imaging_report:
-            imaging_reports = json.dumps(intake.imaging_report, indent=2) if isinstance(intake.imaging_report, dict) else str(intake.imaging_report)
+
+    if docs:
+        clinical_history = clinical_history + "\n\n--- UPLOADED DOCUMENTS ---\n" + "\n\n".join(docs)
+        
+    imaging_reports = "Standard Imaging"
+    if intake and intake.imaging_report:
+        imaging_reports = json.dumps(intake.imaging_report, indent=2) if isinstance(intake.imaging_report, dict) else str(intake.imaging_report)
 
     task = generate_pre_consult_brief.delay(
         patient_id, request.patient_name, diagnosis,
@@ -73,12 +82,21 @@ def generate_brief(patient_id: int, request: BriefRequest, db: Session = Depends
             
     return {"status": "success", "task_id": task.id, "summary": summary}
 
-@router.post("/{patient_id}/structure-plan", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/{patient_id}/structure-plan", status_code=status.HTTP_200_OK)
 def structure_plan(patient_id: int, request: PlanRequest):
     """Trigger the TreatmentPlanStructurer to structure an oncologist's decision."""
     from app.workers.tasks.clinical_analysis import structure_treatment_plan
     task = structure_treatment_plan.delay(patient_id, request.clinical_note)
-    return {"status": "processing", "task_id": task.id}
+    
+    from app.modules.ai.classifiers.medical_coding import MedicalCodingAgent
+    agent = MedicalCodingAgent()
+    coding_result = agent.process_consultation(request.clinical_note)
+    
+    return {
+        "status": "success", 
+        "task_id": task.id,
+        "coding_analysis": coding_result
+    }
 
 
 # ── Doctor CRUD ──────────────────────────────────────────────────

@@ -8,7 +8,17 @@ from app.modules.intake.models import Patient, InsuranceRecord, OncologyIntake
 from app.modules.users.models import User, Role
 from app.modules.users.security import pwd_context
 
+from pydantic import BaseModel
+from typing import Optional
+
 router = APIRouter()
+
+class ChatRequest(BaseModel):
+    message: str
+
+class ChatResponse(BaseModel):
+    reply: str
+    action_taken: Optional[str] = None
 
 @router.post("", response_model=PatientRegistrationResponse, status_code=status.HTTP_201_CREATED)
 def register_patient(
@@ -252,3 +262,81 @@ def get_patient_dashboard(
             "toxicityAssessment": None
         }
     }
+
+@router.post("/{patient_id}/chat", response_model=ChatResponse)
+def patient_chat(
+    patient_id: int,
+    request: ChatRequest,
+    db: Session = Depends(get_db)
+):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+        
+    from app.modules.ai.classifiers.patient_assistant import PatientAssistantAgent
+    agent = PatientAssistantAgent()
+    
+    # Mocking history/meds for the agent context
+    history = patient.primary_diagnosis or "Unknown"
+    meds = "No active medications listed"
+    
+    result = agent.process_message(history, meds, request.message)
+    metadata = result.get("metadata", {})
+    action = None
+    
+    if metadata.get("escalate"):
+        from app.modules.scheduling.models import ClinicalAlert
+        alert = ClinicalAlert(
+            patient_id=patient_id,
+            alert_type="SYMPTOM_ESCALATION",
+            severity="HIGH",
+            message=metadata.get("reason_for_escalation") or "Urgent symptom reported via portal"
+        )
+        db.add(alert)
+        db.commit()
+        action = "Escalated to clinical staff."
+        
+    elif metadata.get("intent") == "refill_request":
+        med_name = metadata.get("refill_medication")
+        action = f"Refill requested for {med_name}."
+        
+    return ChatResponse(
+        reply=result.get("reply", "I am currently unavailable."),
+        action_taken=action
+    )
+
+@router.post("/{patient_id}/refill")
+def request_refill(
+    patient_id: int,
+    medication_name: str,
+    db: Session = Depends(get_db)
+):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+        
+    # In a real system, we'd log this in a MedicationRefill table.
+    return {"status": "success", "message": f"Refill request for {medication_name} sent to your provider."}
+
+class SurvivorshipRequest(BaseModel):
+    language: str
+
+@router.post("/{patient_id}/generate-survivorship-plan")
+def generate_survivorship_plan(
+    patient_id: int,
+    request: SurvivorshipRequest,
+    db: Session = Depends(get_db)
+):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+        
+    from app.modules.ai.classifiers.survivorship import SurvivorshipAgent
+    agent = SurvivorshipAgent()
+    
+    # Mock data for clinical history and treatment summary
+    clinical_history = patient.primary_diagnosis or "Oncology diagnosis"
+    treatment_summary = "Patient completed 6 cycles of Chemotherapy."
+    
+    plan = agent.generate_plan(clinical_history, treatment_summary, request.language)
+    return {"status": "success", "plan": plan}

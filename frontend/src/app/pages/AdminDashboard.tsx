@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Users, Calendar, Activity, TrendingUp, MoreVertical } from 'lucide-react';
+import { Users, Calendar, Activity, TrendingUp, MoreVertical, Beaker } from 'lucide-react';
 import { Skeleton } from '../components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -65,6 +65,7 @@ export default function AdminDashboard() {
   const [metricsList, setMetricsList] = useState(metrics);
   const [users, setUsers] = useState<any[]>([]);
   const [systemEvents, setSystemEvents] = useState<any[]>([]);
+  const [inventoryForecast, setInventoryForecast] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -132,6 +133,14 @@ export default function AdminDashboard() {
         console.error('Error fetching admin dashboard:', err);
       } finally {
         setIsLoading(false);
+      }
+      try {
+        const forecastRes = await api.get('/infusion/inventory-forecast');
+        if (forecastRes.data && forecastRes.data.forecast) {
+          setInventoryForecast(forecastRes.data.forecast);
+        }
+      } catch (err) {
+        console.error('Error fetching inventory forecast', err);
       }
     };
     fetchDashboard();
@@ -333,6 +342,44 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Drug Inventory Forecast */}
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Beaker className="w-5 h-5 text-indigo-400" />
+            AI Drug Inventory Forecasting
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-slate-700/30">
+                <TableHead className="text-slate-400">Drug</TableHead>
+                <TableHead className="text-slate-400">Current Stock</TableHead>
+                <TableHead className="text-slate-400">Needed (7 Days)</TableHead>
+                <TableHead className="text-slate-400">Needed (14 Days)</TableHead>
+                <TableHead className="text-slate-400">Needed (30 Days)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {inventoryForecast.map((item, idx) => (
+                <TableRow key={idx} className="border-slate-700/30 hover:bg-slate-800/20">
+                  <TableCell className="text-white font-medium">{item.drug}</TableCell>
+                  <TableCell className="text-slate-300">
+                    <Badge variant="outline" className={item.current_stock < item.needed_7_days ? 'border-rose-500/50 text-rose-400 bg-rose-500/10' : 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10'}>
+                      {item.current_stock} vials
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-indigo-300">{item.needed_7_days} vials</TableCell>
+                  <TableCell className="text-indigo-300">{item.needed_14_days} vials</TableCell>
+                  <TableCell className="text-indigo-300">{item.needed_30_days} vials</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
