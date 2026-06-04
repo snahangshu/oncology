@@ -2,7 +2,7 @@ from typing import Optional, List
 from datetime import date
 from sqlalchemy.orm import Session
 from app.shared.base_repository import BaseRepository
-from app.modules.doctors.models import Doctor, DoctorSchedule
+from app.modules.doctors.models import Doctor, DoctorSchedule, DoctorTimeOff, DoctorEmergencyBlock
 
 
 class DoctorRepository(BaseRepository[Doctor]):
@@ -54,6 +54,36 @@ class DoctorScheduleRepository(BaseRepository[DoctorSchedule]):
         )
         if schedule:
             self.db.delete(schedule)
+            self.db.commit()
+            return True
+        return False
+
+class DoctorTimeOffRepository(BaseRepository[DoctorTimeOff]):
+    def __init__(self, db: Session):
+        super().__init__(DoctorTimeOff, db)
+        
+    def get_by_doctor_id(self, doctor_id: int) -> List[DoctorTimeOff]:
+        return self.db.query(self.model).filter(self.model.doctor_id == doctor_id).all()
+        
+    def delete_by_id_and_doctor(self, time_off_id: int, doctor_id: int) -> bool:
+        time_off = self.db.query(self.model).filter(self.model.id == time_off_id, self.model.doctor_id == doctor_id).first()
+        if time_off:
+            self.db.delete(time_off)
+            self.db.commit()
+            return True
+        return False
+
+class DoctorEmergencyBlockRepository(BaseRepository[DoctorEmergencyBlock]):
+    def __init__(self, db: Session):
+        super().__init__(DoctorEmergencyBlock, db)
+        
+    def get_by_doctor_id(self, doctor_id: int) -> List[DoctorEmergencyBlock]:
+        return self.db.query(self.model).filter(self.model.doctor_id == doctor_id).all()
+        
+    def delete_by_id_and_doctor(self, block_id: int, doctor_id: int) -> bool:
+        block = self.db.query(self.model).filter(self.model.id == block_id, self.model.doctor_id == doctor_id).first()
+        if block:
+            self.db.delete(block)
             self.db.commit()
             return True
         return False

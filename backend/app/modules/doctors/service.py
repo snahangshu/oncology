@@ -7,7 +7,9 @@ from app.modules.doctors.schemas import (
     DoctorCreateRequest, DoctorUpdateRequest, DoctorResponse,
     ScheduleCreateRequest, ScheduleResponse,
     DoctorAvailabilitySlot, DailyAvailabilityResponse,
-    AppointmentResponse
+    AppointmentResponse,
+    TimeOffCreateRequest, TimeOffResponse,
+    EmergencyBlockCreateRequest, EmergencyBlockResponse
 )
 
 
@@ -156,6 +158,55 @@ class DoctorService:
     def remove_schedule(self, doctor_id: int, schedule_id: int) -> bool:
         return self.schedule_repo.delete_by_id_and_doctor(schedule_id, doctor_id)
 
+    # ── Time Off ─────────────────────────────────────────────────
+    def add_time_off(self, doctor_id: int, request: TimeOffCreateRequest) -> TimeOffResponse:
+        from app.modules.doctors.models import DoctorTimeOff
+        from app.modules.doctors.repository import DoctorTimeOffRepository
+        repo = DoctorTimeOffRepository(self.db)
+        time_off = DoctorTimeOff(
+            doctor_id=doctor_id,
+            start_time=request.start_time,
+            end_time=request.end_time,
+            reason=request.reason
+        )
+        repo.create(time_off)
+        return TimeOffResponse.model_validate(time_off)
+
+    def get_time_offs(self, doctor_id: int) -> List[TimeOffResponse]:
+        from app.modules.doctors.repository import DoctorTimeOffRepository
+        repo = DoctorTimeOffRepository(self.db)
+        time_offs = repo.get_by_doctor_id(doctor_id)
+        return [TimeOffResponse.model_validate(t) for t in time_offs]
+
+    def remove_time_off(self, doctor_id: int, time_off_id: int) -> bool:
+        from app.modules.doctors.repository import DoctorTimeOffRepository
+        repo = DoctorTimeOffRepository(self.db)
+        return repo.delete_by_id_and_doctor(time_off_id, doctor_id)
+
+    # ── Emergency Blocks ─────────────────────────────────────────
+    def add_emergency_block(self, doctor_id: int, request: EmergencyBlockCreateRequest) -> EmergencyBlockResponse:
+        from app.modules.doctors.models import DoctorEmergencyBlock
+        from app.modules.doctors.repository import DoctorEmergencyBlockRepository
+        repo = DoctorEmergencyBlockRepository(self.db)
+        block = DoctorEmergencyBlock(
+            doctor_id=doctor_id,
+            time_slot=request.time_slot,
+            description=request.description
+        )
+        repo.create(block)
+        return EmergencyBlockResponse.model_validate(block)
+
+    def get_emergency_blocks(self, doctor_id: int) -> List[EmergencyBlockResponse]:
+        from app.modules.doctors.repository import DoctorEmergencyBlockRepository
+        repo = DoctorEmergencyBlockRepository(self.db)
+        blocks = repo.get_by_doctor_id(doctor_id)
+        return [EmergencyBlockResponse.model_validate(b) for b in blocks]
+
+    def remove_emergency_block(self, doctor_id: int, block_id: int) -> bool:
+        from app.modules.doctors.repository import DoctorEmergencyBlockRepository
+        repo = DoctorEmergencyBlockRepository(self.db)
+        return repo.delete_by_id_and_doctor(block_id, doctor_id)
+
     # ── Availability ─────────────────────────────────────────────
 
     def get_availability_for_date(self, target_date: date, appointment_type: Optional[str] = None) -> DailyAvailabilityResponse:
@@ -167,7 +218,7 @@ class DoctorService:
         schedules = self.schedule_repo.get_schedules_for_day(day_of_week, target_date)
 
         from app.modules.scheduling.models import Appointment
-        from app.modules.doctors.models import DoctorTimeOff, DoctorCapacityProfile
+        from app.modules.doctors.models import DoctorTimeOff, DoctorCapacityProfile, DoctorEmergencyBlock
         
         # --- Instance-level caching to fix N+1 queries during 14-day loop ---
         if not hasattr(self, '_cache_initialized'):
@@ -183,6 +234,8 @@ class DoctorService:
                 DoctorTimeOff.start_time >= range_start, DoctorTimeOff.start_time <= range_end
             ).all()
             
+            self._cached_emergency_blocks = self.db.query(DoctorEmergencyBlock).all()
+            
             self._cached_capacities = {cap.doctor_id: cap for cap in self.db.query(DoctorCapacityProfile).all()}
             self._cached_doctors = {}
 
@@ -191,6 +244,7 @@ class DoctorService:
         
         appointments = [a for a in self._cached_appts if day_start <= a.start_time <= day_end]
         time_offs = [t for t in self._cached_time_offs if day_start <= t.start_time <= day_end]
+        emergency_blocks = self._cached_emergency_blocks
         capacities = self._cached_capacities
 
         slots: List[DoctorAvailabilitySlot] = []
@@ -239,6 +293,16 @@ class DoctorService:
                         for toff in time_offs
                         if getattr(toff, 'doctor_id', None) == doctor.id
                     )
+
+                # Skip if it is an emergency block (don't yield it in availability)
+                is_emergency = any(
+                    eb.time_slot == current_time.time()
+                    for eb in emergency_blocks
+                    if eb.doctor_id == doctor.id
+                )
+                if is_emergency:
+                    current_time = chunk_end
+                    continue
 
                 slots.append(DoctorAvailabilitySlot(
                     doctor_id=doctor.id,
