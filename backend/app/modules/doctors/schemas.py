@@ -84,12 +84,12 @@ class ScheduleCreateRequest(BaseModel):
 class ScheduleResponse(BaseModel):
     id: int
     doctor_id: int
-    day_of_week: Optional[int]
+    day_of_week: Optional[int] = None
     start_time: str
     end_time: str
     is_recurring: bool
-    specific_date: Optional[str]
-    location: Optional[str]
+    specific_date: Optional[str] = None
+    location: Optional[str] = None
 
     class Config:
         from_attributes = True
