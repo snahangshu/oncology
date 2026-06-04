@@ -56,6 +56,40 @@ def approve_staff_user(
     db.commit()
     return {"message": f"User {user_to_approve.full_name} approved successfully"}
 
+from pydantic import BaseModel
+class RejectRequest(BaseModel):
+    reason: str
+
+@router.post("/{user_id}/reject")
+def reject_staff_user(
+    user_id: int,
+    request: RejectRequest,
+    current_admin: Annotated[User, Depends(require_role([Role.ADMIN]))],
+    db: Session = Depends(get_db)
+):
+    user_to_reject = db.query(User).filter(User.id == user_id).first()
+    if not user_to_reject:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    user_to_reject.verification_status = VerificationStatus.REJECTED
+    # In a real app we'd save request.reason or email the user
+    db.commit()
+    return {"message": f"User {user_to_reject.full_name} rejected"}
+
+@router.delete("/{user_id}")
+def delete_staff_user(
+    user_id: int,
+    current_admin: Annotated[User, Depends(require_role([Role.ADMIN]))],
+    db: Session = Depends(get_db)
+):
+    user_to_delete = db.query(User).filter(User.id == user_id).first()
+    if not user_to_delete:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    db.delete(user_to_delete)
+    db.commit()
+    return {"message": "User deleted successfully"}
+
 @router.get("/requirements/{role}", response_model=RoleRequirementsResponse)
 def get_role_requirements(
     role: Role,

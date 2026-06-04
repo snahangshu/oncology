@@ -55,6 +55,11 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (isAuthenticated && user) {
+    if (user.role === 'DOCTOR') {
+      if (user.verificationStatus === 'REJECTED' || user.verificationStatus === 'PROFILE_INCOMPLETE') {
+        return <Navigate to="/doctor/profile-setup" replace />;
+      }
+    }
     const routes: Record<string, string> = {
       ADMIN: '/admin',
       DOCTOR: '/doctor',
@@ -83,6 +88,7 @@ export default function App() {
           email: profile.email,
           role: profile.role,
           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
+          verificationStatus: profile.verification_status,
         }));
       } catch (error) {
         // No session cookie or expired

@@ -40,6 +40,7 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
         users_data.append({
             "id": u.id,
             "name": u.full_name,
+            "email": u.email,
             "role": u.role.value if u.role else "UNKNOWN",
             "status": "Active" if u.is_active else "Inactive",
             "verification_status": u.verification_status.value if u.verification_status else "APPROVED",
@@ -204,6 +205,7 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
         })
 
     return {
+        "doctor_id": doctor.id,
         "today_appointments": result,
         "upcoming_appointments": upcoming_result,
         "queue_size": len([a for a in result if a['status'] in ['waiting', 'confirmed']])

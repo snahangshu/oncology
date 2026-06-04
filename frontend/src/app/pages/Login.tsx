@@ -41,14 +41,23 @@ export default function Login() {
         id: String(profile.id),
         name: profile.full_name,
         email: profile.email,
+        email: profile.email,
         role: profile.role,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
+        verificationStatus: profile.verification_status,
       };
 
       dispatch(login({ user: userObj }));
       toast.success('Login successful!');
       
       // Smart redirect
+      if (profile.role === 'DOCTOR') {
+        if (profile.verification_status === 'REJECTED' || profile.verification_status === 'PROFILE_INCOMPLETE') {
+          navigate('/doctor/profile-setup');
+          return;
+        }
+      }
+      
       const routes: Record<string, string> = {
         ADMIN: '/admin',
         DOCTOR: '/doctor',
