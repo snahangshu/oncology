@@ -28,9 +28,17 @@ class SlotAvailability(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     start_time: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
     end_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    chair_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    chair_id: Mapped[int] = mapped_column(ForeignKey("infusion_chairs.id", ondelete="CASCADE"), nullable=False)
     nurse_id: Mapped[int] = mapped_column(Integer, nullable=False)
     is_booked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+class InfusionChair(Base, TimestampMixin):
+    __tablename__ = "infusion_chairs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    chair_number: Mapped[str] = mapped_column(String(50), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="Available", nullable=False)
+    branch_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
 class ClinicalAlert(Base, TimestampMixin):
     __tablename__ = "clinical_alerts"
