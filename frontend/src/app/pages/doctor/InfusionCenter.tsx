@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '../../shared/api';
 
 // State interface
 interface Infusion {
@@ -21,6 +22,27 @@ interface Infusion {
 
 export default function InfusionCenter() {
   const [infusions, setInfusions] = useState<Infusion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInfusions = async () => {
+      try {
+        const response = await api.get('/infusion/active');
+        setInfusions(response.data);
+      } catch (error) {
+        console.error("Failed to fetch active infusions", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchInfusions();
+  }, []);
+
+  const totalToday = infusions.length;
+  const inProgress = infusions.filter(i => i.status === 'In Progress').length;
+  const completed = infusions.filter(i => i.status === 'Completed').length;
+  const delayed = infusions.filter(i => i.status === 'Delayed').length;
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       {/* Header Area */}
@@ -43,7 +65,7 @@ export default function InfusionCenter() {
               </div>
               <p className="text-sm text-slate-400 uppercase tracking-wider font-bold">Total Today</p>
             </div>
-            <h2 className="text-3xl font-bold text-white">0</h2>
+            <h2 className="text-3xl font-bold text-white">{totalToday}</h2>
           </CardContent>
         </Card>
         <Card className="bg-slate-900/50 backdrop-blur-xl border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
@@ -54,7 +76,7 @@ export default function InfusionCenter() {
               </div>
               <p className="text-sm text-emerald-400 uppercase tracking-wider font-bold">In Progress</p>
             </div>
-            <h2 className="text-3xl font-bold text-white">0</h2>
+            <h2 className="text-3xl font-bold text-white">{inProgress}</h2>
           </CardContent>
         </Card>
         <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
@@ -65,7 +87,7 @@ export default function InfusionCenter() {
               </div>
               <p className="text-sm text-slate-400 uppercase tracking-wider font-bold">Completed</p>
             </div>
-            <h2 className="text-3xl font-bold text-white">0</h2>
+            <h2 className="text-3xl font-bold text-white">{completed}</h2>
           </CardContent>
         </Card>
         <Card className="bg-slate-900/50 backdrop-blur-xl border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]">
@@ -76,7 +98,7 @@ export default function InfusionCenter() {
               </div>
               <p className="text-sm text-rose-400 uppercase tracking-wider font-bold">Delayed</p>
             </div>
-            <h2 className="text-3xl font-bold text-white">0</h2>
+            <h2 className="text-3xl font-bold text-white">{delayed}</h2>
           </CardContent>
         </Card>
       </div>

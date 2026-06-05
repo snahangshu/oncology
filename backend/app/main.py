@@ -5,6 +5,7 @@ from app.config import settings
 from app.api.v1.router import api_router
 
 import cloudinary
+from app.modules.audit.middleware import AuditLoggingMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,6 +36,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    
+    # Audit Logging Middleware
+    app.add_middleware(AuditLoggingMiddleware)
 
     # Register API routes
     app.include_router(api_router, prefix=settings.API_PREFIX)

@@ -122,7 +122,9 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    const fetchDashboard = async () => {
+    let intervalId: NodeJS.Timeout;
+    
+    const fetchDashboard = async (isBackground = false) => {
       try {
         const response = await api.get('/dashboards/admin');
         const data = response.data;
@@ -130,22 +132,22 @@ export default function AdminDashboard() {
         const updatedMetrics = [
           {
             ...metrics[0],
-            value: isLoading ? '...' : String(data.today_patients || 0),
+            value: (isLoading && !isBackground) ? '...' : String(data.today_patients || 0),
             change: data.today_patients_change || '',
           },
           {
             ...metrics[1],
-            value: isLoading ? '...' : String(data.total_appointments || 0),
+            value: (isLoading && !isBackground) ? '...' : String(data.total_appointments || 0),
             change: data.total_appointments_change || '',
           },
           {
             ...metrics[2],
-            value: isLoading ? '...' : String(data.doctors_available || 0),
+            value: (isLoading && !isBackground) ? '...' : String(data.doctors_available || 0),
             change: data.doctors_available_change || '',
           },
           {
             ...metrics[3],
-            value: isLoading ? '...' : `${data.utilization_percent || 0}%`,
+            value: (isLoading && !isBackground) ? '...' : `${data.utilization_percent || 0}%`,
             change: data.utilization_percent_change || '',
           },
         ];
@@ -159,7 +161,7 @@ export default function AdminDashboard() {
       } catch (err) {
         console.error('Error fetching admin dashboard:', err);
       } finally {
-        setIsLoading(false);
+        if (!isBackground) setIsLoading(false);
       }
       try {
         const forecastRes = await api.get('/infusion/inventory-forecast');
@@ -170,8 +172,12 @@ export default function AdminDashboard() {
         console.error('Error fetching inventory forecast', err);
       }
     };
+    
     fetchDashboard();
-  }, [isLoading]);
+    intervalId = setInterval(() => fetchDashboard(true), 5000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

@@ -51,13 +51,19 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
 
     # For system events, fetch recent audit logs or return empty
     from app.modules.users.credential_models import AuditLog
-    recent_audits = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(5).all()
+    recent_audits = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(10).all()
     system_events = []
     for a in recent_audits:
+        event_type = "info"
+        if "UNAUTHORIZED" in a.action or "FAILED" in a.action or "DELETE" in a.action:
+            event_type = "critical"
+        elif "UPDATE" in a.action or "OVERRIDE" in a.action:
+            event_type = "warning"
+            
         system_events.append({
             "id": a.id,
-            "type": "info",
-            "message": f"{a.action} on {a.entity_type} {a.entity_id}: {a.details or ''}",
+            "type": event_type,
+            "message": f"[{a.action}] on {a.entity_type} {a.entity_id}: {a.details or ''}",
             "time": a.created_at.strftime("%I:%M %p") if a.created_at else "Just now"
         })
 
