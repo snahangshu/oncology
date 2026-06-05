@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     # AI Services
     ANTHROPIC_API_KEY: str = Field(default="your-claude-api-key-here")
     OPENAI_API_KEY: str = Field(default="your-openai-api-key-here")
+    OMNIDIMENSION_API_KEY: str = Field(default="")
 
     # FHIR ARIA Integration
     FHIR_BASE_URL: str = Field(default="https://aria-fhir.hospital-system.org/r4")
