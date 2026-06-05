@@ -413,16 +413,29 @@ def complete_appointment(
         try:
             from app.modules.intake.models import TreatmentPlan
             
-            tp = TreatmentPlan(
-                patient_id=patient_id,
-                regimen_name=request.regimen_name,
-                description=request.plan_description,
-                cycles=request.cycles or 6,
-                status="Active"
-            )
-            db.add(tp)
+            # Find ANY existing plan for this appointment to avoid duplicates
+            existing_plan = db.query(TreatmentPlan).filter(
+                TreatmentPlan.appointment_id == appt_id
+            ).first()
+            
+            if existing_plan:
+                existing_plan.regimen_name = request.regimen_name
+                existing_plan.description = request.plan_description
+                existing_plan.cycles = request.cycles or 6
+                existing_plan.status = "Active"
+            else:
+                # Fallback: create a new one if somehow draft was skipped
+                tp = TreatmentPlan(
+                    patient_id=patient_id,
+                    appointment_id=appt_id,
+                    regimen_name=request.regimen_name,
+                    description=request.plan_description,
+                    cycles=request.cycles or 6,
+                    status="Active"
+                )
+                db.add(tp)
         except Exception as e:
-            print(f"Error generating treatment plan: {e}")
+            print(f"Error updating treatment plan: {e}")
 
     db.commit()
     return {"status": "success", "message": "Appointment marked as completed."}

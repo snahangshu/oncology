@@ -136,6 +136,7 @@ class TreatmentPlan(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    appointment_id: Mapped[Optional[int]] = mapped_column(ForeignKey("appointments.id", ondelete="SET NULL"), nullable=True)
     regimen_name: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
     start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
@@ -158,6 +159,12 @@ class TreatmentCycle(Base, TimestampMixin):
     scheduled_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     actual_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(String(50), default="PLANNED", nullable=False)
+    
+    # Infusion Readiness Workflow Flags
+    labs_uploaded: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    ai_fit_check_passed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    pharmacy_vials_approved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    ready_for_booking: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     dose_status: Mapped[str] = mapped_column(String(50), default="FULL_DOSE", nullable=False)
     chair_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # Soft link to chair
     appointment_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # Soft link to appointment

@@ -26,6 +26,14 @@ export default function InfusionCenter() {
     }
   });
 
+  const { data: pharmacyQueue, isLoading: pharmacyLoading } = useQuery({
+    queryKey: ['infusion_pharmacy_queue'],
+    queryFn: async () => {
+      const res = await api.get('/infusion/pharmacy-queue');
+      return res.data;
+    }
+  });
+
   const clearMutation = useMutation({
     mutationFn: async (planId: number) => {
       const res = await api.post(`/infusion/clear/${planId}`);
@@ -61,6 +69,12 @@ export default function InfusionCenter() {
         <TabsList className="bg-slate-900 border border-slate-700/50 mb-6 p-1">
           <TabsTrigger value="today" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 text-slate-400">
             Today's Infusions
+          </TabsTrigger>
+          <TabsTrigger value="pharmacy" className="data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-400 text-slate-400 flex items-center gap-2">
+            Pharmacy Vials Auth
+            {pharmacyQueue?.length > 0 && (
+              <span className="bg-rose-500 text-slate-950 text-xs font-bold px-2 py-0.5 rounded-full">{pharmacyQueue.length}</span>
+            )}
           </TabsTrigger>
           <TabsTrigger value="clearance" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-slate-400 flex items-center gap-2">
             Clearance Queue
@@ -226,6 +240,68 @@ export default function InfusionCenter() {
                     <CheckCircle className="w-12 h-12 text-emerald-500/50 mx-auto mb-4" />
                     <h3 className="text-slate-300 font-bold text-lg">Queue is Empty</h3>
                     <p className="text-slate-500">All treatment plans have been cleared for scheduling.</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pharmacy" className="space-y-6 outline-none">
+          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-slate-800/50 bg-slate-900/20">
+              <CardTitle className="text-white text-lg flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-rose-400" />
+                Pharmacy Vials Authorization Queue
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {pharmacyLoading ? (
+                  <p className="text-slate-400 text-center py-8">Loading queue...</p>
+                ) : pharmacyQueue?.length > 0 ? (
+                  pharmacyQueue.map((item: any) => (
+                    <div key={item.cycle_id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/50 hover:border-rose-500/30 transition-colors gap-4">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-slate-800 rounded-xl border border-slate-700 text-center">
+                          <CheckCircle className="w-6 h-6 text-rose-400 mx-auto mb-1" />
+                        </div>
+                        <div>
+                          <h4 className="text-white font-bold text-lg">{item.patient_name} - {item.regimen}</h4>
+                          <div className="flex gap-4 mt-2">
+                            <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300">
+                              Cycle {item.cycle_number}
+                            </Badge>
+                            <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/30 text-emerald-400 uppercase">
+                              AI FIT-CHECK PASSED
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Button 
+                          className="bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/20"
+                          onClick={async () => {
+                            try {
+                              await api.post(`/journey/cycle/${item.cycle_id}/pharmacy-auth`);
+                              toast.success("Pharmacy authorized! Booking slot unlocked for patient.");
+                              queryClient.invalidateQueries({ queryKey: ['infusion_pharmacy_queue'] });
+                            } catch (e) {
+                              toast.error("Failed to authorize vials");
+                            }
+                          }}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Approve Vials (Unlock Booking)
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <CheckCircle className="w-12 h-12 text-emerald-500/50 mx-auto mb-4" />
+                    <h3 className="text-slate-300 font-bold text-lg">Queue is Empty</h3>
+                    <p className="text-slate-500">All requested drugs have been authorized.</p>
                   </div>
                 )}
               </div>

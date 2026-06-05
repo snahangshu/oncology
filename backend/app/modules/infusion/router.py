@@ -183,6 +183,28 @@ def get_clearance_queue(db: Session = Depends(get_db)):
         } for p in plans
     ]
 
+@router.get("/pharmacy-queue")
+def get_pharmacy_queue(db: Session = Depends(get_db)):
+    """Queue of Cycles waiting for Pharmacy Vials Auth."""
+    from app.modules.intake.models import TreatmentCycle, Patient
+    cycles = db.query(TreatmentCycle).filter(
+        TreatmentCycle.ai_fit_check_passed == True,
+        TreatmentCycle.pharmacy_vials_approved == False
+    ).all()
+    
+    result = []
+    for c in cycles:
+        plan = db.query(TreatmentPlan).filter(TreatmentPlan.id == c.treatment_plan_id).first()
+        patient = db.query(Patient).filter(Patient.id == plan.patient_id).first() if plan else None
+        result.append({
+            "cycle_id": c.id,
+            "patient_id": plan.patient_id if plan else None,
+            "patient_name": f"{patient.first_name} {patient.last_name}" if patient else "Unknown",
+            "regimen": plan.regimen_name if plan else "Unknown",
+            "cycle_number": c.cycle_number,
+        })
+    return result
+
 @router.post("/clear/{plan_id}")
 def clear_for_scheduling(plan_id: int, db: Session = Depends(get_db)):
     """Doctor clears plan. AI Scheduling Engine takes over."""

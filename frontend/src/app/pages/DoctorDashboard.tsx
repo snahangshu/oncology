@@ -145,11 +145,17 @@ export default function DoctorDashboard() {
   };
 
   const handleCompleteConsultation = async () => {
+    if (!selectedPatient || !selectedPatient.patientId) {
+      toast.error('Please select a valid patient appointment first.');
+      return;
+    }
+
     setIsStructuringPlan(true);
     toast.info('AI is structuring your treatment plan...', { id: 'plan-toast' });
     try {
-      const res = await api.post(`/doctors/${selectedPatient?.patientId}/structure-plan`, {
-        clinical_note: `Diagnosis: ${diagnosis}. Prescription: ${prescription}. Notes: ${notes}`
+      const res = await api.post(`/doctors/${selectedPatient.patientId}/structure-plan`, {
+        clinical_note: `Diagnosis: ${diagnosis}. Prescription: ${prescription}. Notes: ${notes}`,
+        appointment_id: selectedPatient.id
       });
       
       if (res.data.coding_analysis) {
@@ -932,8 +938,12 @@ export default function DoctorDashboard() {
                 Review Notes
               </Button>
               <Button className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={async () => {
+                if (!selectedPatient || !selectedPatient.patientId || !selectedPatient.id) {
+                  toast.error("Cannot complete: No valid patient selected.");
+                  return;
+                }
                 try {
-                  await api.put(`/patients/${selectedPatient?.patientId}/appointments/${selectedPatient?.id}/complete`, {
+                  await api.put(`/patients/${selectedPatient.patientId}/appointments/${selectedPatient.id}/complete`, {
                     notes: notes,
                     diagnosis: diagnosis,
                     regimen_name: editablePlan?.regimen_name,
@@ -943,7 +953,7 @@ export default function DoctorDashboard() {
                   toast.success("Codes approved and submitted for billing. Appointment completed!");
                   
                   // Instantly remove the completed appointment from the queue
-                  setAppointmentsList((prev) => prev.filter(a => a.id !== selectedPatient?.id));
+                  setAppointmentsList((prev) => prev.filter(a => a.id !== selectedPatient.id));
                   
                   setShowCodingModal(false);
                   setSelectedPatient(null);

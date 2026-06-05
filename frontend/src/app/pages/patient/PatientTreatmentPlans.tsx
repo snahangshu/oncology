@@ -102,20 +102,77 @@ function TreatmentJourneyTimeline({ planId, currentCycle, totalCycles }: { planI
                   </div>
                 </div>
 
-                {isNext && cycle.scheduled_date && (
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300 py-1.5 px-3">
-                      <CalendarDays className="w-4 h-4 mr-2 text-cyan-400" />
-                      {new Date(cycle.scheduled_date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-                    </Badge>
-                    <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300 py-1.5 px-3">
-                      <Clock className="w-4 h-4 mr-2 text-amber-400" />
-                      Arrival: 15 mins prior
-                    </Badge>
-                    <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300 py-1.5 px-3">
-                      <MapPin className="w-4 h-4 mr-2 text-rose-400" />
-                      {cycle.chair_id ? `Chair ${cycle.chair_id}` : 'Infusion Center, Floor 2'}
-                    </Badge>
+                {isNext && (
+                  <div className="mt-4 space-y-4">
+                    {/* Readiness Stepper */}
+                    <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-800/50">
+                      <h6 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-cyan-400" /> Pre-Infusion Readiness
+                      </h6>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${cycle.labs_uploaded ? 'bg-emerald-500' : 'bg-rose-500 animate-pulse'}`} />
+                            <span className="text-sm text-slate-400">1. Recent Labs Uploaded</span>
+                          </div>
+                          {!cycle.labs_uploaded && (
+                            <Button size="sm" variant="outline" className="h-7 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10" onClick={async () => {
+                              try {
+                                toast.info("Uploading labs...");
+                                // Mock upload
+                                const formData = new FormData();
+                                formData.append("file", new Blob(["mock pdf content"], {type: "application/pdf"}));
+                                await api.post(`/journey/cycle/${cycle.id}/upload-labs`, formData);
+                                toast.success("Labs uploaded successfully. Running AI Fit-Check...");
+                                await api.post(`/journey/cycle/${cycle.id}/ai-fit-check`);
+                                toast.success("AI Fit-Check passed! Awaiting Pharmacy Auth.");
+                                // Note: Need a refetch mechanism to update UI, for now rely on page reload or react-query refetch
+                              } catch (e) {
+                                toast.error("Failed to upload labs");
+                              }
+                            }}>Upload Labs</Button>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${cycle.ai_fit_check_passed ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+                            <span className="text-sm text-slate-400">2. AI Fit-Check (ANC &gt; 1500)</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${cycle.pharmacy_vials_approved ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+                            <span className="text-sm text-slate-400">3. Pharmacy Vials Auth</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${cycle.ready_for_booking ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+                            <span className="text-sm text-slate-400">4. Booking Unlocked</span>
+                          </div>
+                          {cycle.ready_for_booking && !cycle.scheduled_date && (
+                             <Button size="sm" className="h-7 text-xs bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold">Book Slot</Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {cycle.scheduled_date && (
+                      <div className="flex flex-wrap gap-3">
+                        <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300 py-1.5 px-3">
+                          <CalendarDays className="w-4 h-4 mr-2 text-cyan-400" />
+                          {new Date(cycle.scheduled_date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                        </Badge>
+                        <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300 py-1.5 px-3">
+                          <Clock className="w-4 h-4 mr-2 text-amber-400" />
+                          Arrival: 15 mins prior
+                        </Badge>
+                        <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300 py-1.5 px-3">
+                          <MapPin className="w-4 h-4 mr-2 text-rose-400" />
+                          {cycle.chair_id ? `Chair ${cycle.chair_id}` : 'Infusion Center, Floor 2'}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

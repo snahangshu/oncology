@@ -24,6 +24,7 @@ class BriefRequest(BaseModel):
 
 class PlanRequest(BaseModel):
     clinical_note: str
+    appointment_id: Optional[int] = None
 
 @router.post("/{patient_id}/generate-brief", status_code=status.HTTP_200_OK)
 def generate_brief(patient_id: int, request: BriefRequest, db: Session = Depends(get_db)):
@@ -85,8 +86,30 @@ def generate_brief(patient_id: int, request: BriefRequest, db: Session = Depends
     return {"status": "success", "task_id": task.id, "summary": summary}
 
 @router.post("/{patient_id}/structure-plan", status_code=status.HTTP_200_OK)
-def structure_plan(patient_id: int, request: PlanRequest):
+def structure_plan(patient_id: int, request: PlanRequest, db: Session = Depends(get_db)):
     """Trigger the TreatmentPlanStructurer and MedicalCodingAgent."""
+    from app.modules.intake.models import TreatmentPlan
+    
+    # Check if a DRAFT plan already exists for this appointment
+    if request.appointment_id:
+        existing_draft = db.query(TreatmentPlan).filter(
+            TreatmentPlan.appointment_id == request.appointment_id,
+            TreatmentPlan.status == "DRAFT"
+        ).first()
+        
+        if existing_draft:
+            # Reconstruct parsed_plan from DB to avoid AI re-run
+            return {
+                "message": "Draft plan retrieved",
+                "coding_analysis": None,  # Can be cached later if needed
+                "treatment_plan": {
+                    "regimen_name": existing_draft.regimen_name,
+                    "number_of_cycles": existing_draft.cycles,
+                    "intent": "Curative", # Simplified for draft
+                    "medications": [{"drug_name": existing_draft.description}]
+                }
+            }
+
     from app.modules.ai.classifiers.treatment_plan_structurer import TreatmentPlanStructurer
     structurer = TreatmentPlanStructurer()
     
@@ -94,6 +117,23 @@ def structure_plan(patient_id: int, request: PlanRequest):
     parsed_plan = {}
     try:
         parsed_plan = structurer.structure_plan(patient_id, request.clinical_note)
+        
+        # Save as DRAFT in DB
+        if parsed_plan and "treatment_plan" in parsed_plan:
+            meds = parsed_plan["treatment_plan"].get("medications", [])
+            med_str = ", ".join([f"{m.get('drug_name', '')} {m.get('dose_amount', '')}{m.get('dose_unit', '')}" for m in meds])
+            
+            draft_plan = TreatmentPlan(
+                patient_id=patient_id,
+                appointment_id=request.appointment_id,
+                regimen_name=parsed_plan["treatment_plan"].get("regimen_name", "AI Suggested Regimen"),
+                description=f"Intent: {parsed_plan['treatment_plan'].get('intent', 'unknown')}. Medications: {med_str}",
+                cycles=parsed_plan["treatment_plan"].get("number_of_cycles", 6),
+                status="DRAFT"
+            )
+            db.add(draft_plan)
+            db.commit()
+            
     except Exception as e:
         print(f"Error structuring plan: {e}")
     
