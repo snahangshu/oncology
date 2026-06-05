@@ -15,7 +15,9 @@ import {
   Menu,
   Shield,
   Clock,
-  UserPlus
+  UserPlus,
+  FlaskConical,
+  Upload
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { Button } from './ui/button';
@@ -73,6 +75,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     ],
     PATIENT: [
       { name: 'My Dashboard', href: '/patient', icon: LayoutDashboard },
+      { name: 'Appointments', href: '/patient/appointments', icon: Calendar },
+      { name: 'Medical History', href: '/patient/medical-history', icon: FileText },
+      { name: 'Treatment Plans', href: '/patient/treatment-plan', icon: Heart },
+      { name: 'Lab Results', href: '/patient/lab-results', icon: FlaskConical },
+      { name: 'Documents', href: '/patient/documents', icon: Upload },
     ],
   };
 

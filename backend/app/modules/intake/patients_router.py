@@ -245,7 +245,8 @@ def get_patient_dashboard(
             "status": appt.status,
             "start_time": appt.start_time.isoformat() if appt.start_time else None,
             "end_time": appt.end_time.isoformat() if appt.end_time else None,
-            "type": appt.appointment_type if hasattr(appt, 'appointment_type') else "Consultation"
+            "type": appt.specialty if hasattr(appt, 'specialty') else "Consultation",
+            "prescription_notes": appt.prescription_notes
         })
 
     return {
@@ -379,6 +380,29 @@ def request_refill(
         
     # In a real system, we'd log this in a MedicationRefill table.
     return {"status": "success", "message": f"Refill request for {medication_name} sent to your provider."}
+
+class AppointmentCompleteRequest(BaseModel):
+    prescription_notes: Optional[str] = None
+
+@router.put("/{patient_id}/appointments/{appt_id}/complete")
+def complete_appointment(
+    patient_id: int,
+    appt_id: int,
+    request: AppointmentCompleteRequest,
+    db: Session = Depends(get_db)
+):
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+        
+    appt = db.query(Appointment).filter(Appointment.id == appt_id, Appointment.patient_id == patient_id).first()
+    if not appt:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+        
+    appt.status = "Completed"
+    appt.prescription_notes = request.prescription_notes
+    db.commit()
+    return {"status": "success", "message": "Appointment marked as completed."}
 
 class SurvivorshipRequest(BaseModel):
     language: str
