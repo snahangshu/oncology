@@ -86,9 +86,16 @@ def generate_brief(patient_id: int, request: BriefRequest, db: Session = Depends
 
 @router.post("/{patient_id}/structure-plan", status_code=status.HTTP_200_OK)
 def structure_plan(patient_id: int, request: PlanRequest):
-    """Trigger the TreatmentPlanStructurer to structure an oncologist's decision."""
-    from app.workers.tasks.clinical_analysis import structure_treatment_plan
-    task = structure_treatment_plan.delay(patient_id, request.clinical_note)
+    """Trigger the TreatmentPlanStructurer and MedicalCodingAgent."""
+    from app.modules.ai.classifiers.treatment_plan_structurer import TreatmentPlanStructurer
+    structurer = TreatmentPlanStructurer()
+    
+    # Structure treatment plan synchronously so doctor can review
+    parsed_plan = {}
+    try:
+        parsed_plan = structurer.structure_plan(patient_id, request.clinical_note)
+    except Exception as e:
+        print(f"Error structuring plan: {e}")
     
     from app.modules.ai.classifiers.medical_coding import MedicalCodingAgent
     agent = MedicalCodingAgent()
@@ -96,7 +103,7 @@ def structure_plan(patient_id: int, request: PlanRequest):
     
     return {
         "status": "success", 
-        "task_id": task.id,
+        "treatment_plan": parsed_plan,
         "coding_analysis": coding_result
     }
 

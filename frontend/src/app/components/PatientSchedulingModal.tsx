@@ -78,7 +78,7 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-3xl bg-slate-900 border-slate-700/50 shadow-2xl overflow-hidden p-0">
+      <DialogContent className="max-w-4xl w-[95vw] bg-slate-900 border-slate-700/50 shadow-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 custom-scrollbar">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-violet-500" />
         
         <DialogHeader className="p-6 pb-2">
@@ -92,28 +92,10 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
         </DialogHeader>
 
         <div className="p-6 pt-2">
-          <Tabs value={bookingType} onValueChange={(v: any) => {
-            setBookingType(v);
-            setSelectedSlot(null);
-          }}>
-            <TabsList className="grid w-full grid-cols-2 bg-slate-950/50 p-1 mb-6 rounded-xl border border-slate-800">
-              <TabsTrigger 
-                value="consultation" 
-                className="text-slate-400 hover:text-slate-200 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 data-[state=active]:shadow-lg rounded-lg transition-all"
-              >
-                <Activity className="w-4 h-4 mr-2" />
-                Doctor Consultation
-              </TabsTrigger>
-              <TabsTrigger 
-                value="infusion"
-                className="text-slate-400 hover:text-slate-200 data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-400 data-[state=active]:shadow-lg rounded-lg transition-all"
-              >
-                <Activity className="w-4 h-4 mr-2" />
-                Infusion Therapy
-              </TabsTrigger>
-            </TabsList>
+            {/* The Infusion Therapy tab has been strictly removed from patient self-scheduling.
+                 Infusions can only be scheduled by the clinical AI after doctor clearance. */}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[350px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[350px]">
               {/* Left Column: Calendar */}
               <div className="bg-slate-950/30 rounded-xl border border-slate-800 p-2 flex justify-center items-start">
                 <CalendarComponent
@@ -221,7 +203,6 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
               )}
               </div>
             </div>
-          </Tabs>
 
           <div className="mt-6 flex flex-col gap-4 pt-4 border-t border-slate-800">
             <div className="flex items-center gap-2">

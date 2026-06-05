@@ -239,12 +239,27 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
             "created_at": alert.created_at.isoformat() if alert.created_at else None
         })
 
+    from app.modules.intake.models import TreatmentPlan
+    all_plans = db.query(TreatmentPlan).all()
+    plans_result = []
+    for plan in all_plans:
+        pat = db.query(Patient).filter(Patient.id == plan.patient_id).first()
+        plans_result.append({
+            "id": plan.id,
+            "patient": f"{pat.first_name} {pat.last_name}" if pat else "Unknown",
+            "regimen": plan.regimen_name,
+            "totalCycles": plan.cycles,
+            "start": plan.start_date.isoformat() if plan.start_date else datetime.utcnow().date().isoformat(),
+            "status": plan.status.replace('_', ' ')
+        })
+
     return {
         "doctor_id": doctor.id,
         "today_appointments": result,
         "upcoming_appointments": upcoming_result,
         "queue_size": len([a for a in result if a['status'] in ['waiting', 'confirmed']]),
-        "clinical_alerts": alerts_result
+        "clinical_alerts": alerts_result,
+        "treatment_plans": plans_result
     }
 
 @router.get("/receptionist", dependencies=[Depends(require_role([Role.RECEPTIONIST]))])

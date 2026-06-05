@@ -88,6 +88,26 @@ class SchedulingService:
                             i += 1
                             continue
                         
+                        # Double-booking check: Does the doctor have an appointment here?
+                        existing_doc_appt = self.db.query(Appointment).filter(
+                            Appointment.doctor_id == doc_id,
+                            Appointment.start_time < full_end,
+                            Appointment.end_time > full_start
+                        ).first()
+                        if existing_doc_appt:
+                            i += 1
+                            continue
+
+                        # Double-booking check: Does the patient have an appointment here?
+                        existing_pat_appt = self.db.query(Appointment).filter(
+                            Appointment.patient_id == query.patient_id,
+                            Appointment.start_time < full_end,
+                            Appointment.end_time > full_start
+                        ).first()
+                        if existing_pat_appt:
+                            i += 1
+                            continue
+                        
                         doctor_specialty = doc_slots[i].specialty
                         
                         # Fetch doctor from DB to get details for scoring and options
