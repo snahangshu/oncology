@@ -3,7 +3,10 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db
 from app.modules.infusion.schemas import ScheduleProposal, OverrideRequest, OverrideResponse
 from app.modules.infusion.service import InfusionService
-
+from app.modules.intake.models import TreatmentPlan
+from app.modules.scheduling.models import Appointment, SlotAvailability, InfusionChair
+from datetime import datetime, timedelta
+from fastapi import HTTPException
 router = APIRouter()
 from pydantic import BaseModel
 from fastapi import status
@@ -66,4 +69,92 @@ def inventory_forecast(db: Session = Depends(get_db)):
             {"drug": "Taxol (Paclitaxel)", "needed_7_days": 8, "needed_14_days": 18, "needed_30_days": 35, "current_stock": 15},
             {"drug": "Avastin (Bevacizumab)", "needed_7_days": 5, "needed_14_days": 12, "needed_30_days": 22, "current_stock": 4},
         ]
+    }
+
+@router.get("/today")
+def get_todays_infusions(db: Session = Depends(get_db)):
+    """Dashboard view for nurses: Active chairs and today's infusions."""
+    today = datetime.utcnow().date()
+    # Mocking for MVP: return chairs and some appointments
+    chairs = db.query(InfusionChair).all()
+    if not chairs:
+        # Create some default chairs
+        for i in range(1, 6):
+            c = InfusionChair(chair_number=f"Chair {i}")
+            db.add(c)
+        db.commit()
+        chairs = db.query(InfusionChair).all()
+
+    appointments = db.query(Appointment).filter(
+        Appointment.specialty == "Infusion",
+        Appointment.start_time >= datetime.combine(today, datetime.min.time())
+    ).all()
+
+    return {
+        "chairs": [{"id": c.id, "number": c.chair_number, "status": c.status} for c in chairs],
+        "appointments": [
+            {
+                "id": a.id,
+                "patient_id": a.patient_id,
+                "start_time": a.start_time,
+                "end_time": a.end_time,
+                "status": a.status,
+            } for a in appointments
+        ]
+    }
+
+@router.get("/clearance-queue")
+def get_clearance_queue(db: Session = Depends(get_db)):
+    """Queue of Treatment Plans waiting for Auth or Labs."""
+    plans = db.query(TreatmentPlan).filter(
+        TreatmentPlan.status.in_(["PENDING_AUTH", "PENDING_LABS", "Planned"])
+    ).all()
+    
+    return [
+        {
+            "id": p.id,
+            "patient_id": p.patient_id,
+            "regimen": p.regimen_name,
+            "status": p.status,
+            "duration_minutes": p.duration_minutes or 240,
+            "current_cycle": p.current_cycle or 1,
+            "total_cycles": p.cycles or 1,
+        } for p in plans
+    ]
+
+@router.post("/clear/{plan_id}")
+def clear_for_scheduling(plan_id: int, db: Session = Depends(get_db)):
+    """Doctor clears plan. AI Scheduling Engine takes over."""
+    plan = db.query(TreatmentPlan).filter(TreatmentPlan.id == plan_id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+
+    plan.status = "CLEARED_FOR_SCHEDULING"
+    
+    # AI Scheduler Logic (MVP: find next available 10 AM slot)
+    duration = plan.duration_minutes or 240
+    start_time = datetime.utcnow().replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=2)
+    end_time = start_time + timedelta(minutes=duration)
+    
+    # Create Appointment
+    appt = Appointment(
+        patient_id=plan.patient_id,
+        start_time=start_time,
+        end_time=end_time,
+        status="Confirmed",
+        specialty="Infusion",
+        prescription_notes=f"Auto-scheduled Cycle {plan.current_cycle or 1} of {plan.cycles or 1}"
+    )
+    db.add(appt)
+    
+    # Update plan status
+    plan.status = "SCHEDULED"
+    
+    db.commit()
+    
+    return {
+        "message": "Cleared and scheduled successfully",
+        "appointment_id": appt.id,
+        "scheduled_time": start_time,
+        "chair": "Chair 4" # Hardcoded for MVP simplicity
     }

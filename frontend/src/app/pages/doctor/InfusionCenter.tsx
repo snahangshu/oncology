@@ -1,26 +1,50 @@
-import { Droplet, CheckCircle, Clock, AlertTriangle, PlayCircle, ShieldCheck, User } from 'lucide-react';
+import { Droplet, CheckCircle, Clock, AlertTriangle, PlayCircle, ShieldCheck, User, CalendarCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
-
-import { useState } from 'react';
-
-// State interface
-interface Infusion {
-  id: number;
-  patient: string;
-  regimen: string;
-  chair: string;
-  time: string;
-  duration: string;
-  status: string;
-  progress: number;
-  verification: string;
-  alert?: string;
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../../shared/api';
+import { toast } from 'sonner';
 
 export default function InfusionCenter() {
-  const [infusions, setInfusions] = useState<Infusion[]>([]);
+  const queryClient = useQueryClient();
+
+  const { data: todayData, isLoading: todayLoading } = useQuery({
+    queryKey: ['infusion_today'],
+    queryFn: async () => {
+      const res = await api.get('/infusion/today');
+      return res.data;
+    }
+  });
+
+  const { data: clearanceQueue, isLoading: queueLoading } = useQuery({
+    queryKey: ['infusion_clearance_queue'],
+    queryFn: async () => {
+      const res = await api.get('/infusion/clearance-queue');
+      return res.data;
+    }
+  });
+
+  const clearMutation = useMutation({
+    mutationFn: async (planId: number) => {
+      const res = await api.post(`/infusion/clear/${planId}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Treatment Plan Cleared & Scheduled!");
+      queryClient.invalidateQueries({ queryKey: ['infusion_clearance_queue'] });
+      queryClient.invalidateQueries({ queryKey: ['infusion_today'] });
+    },
+    onError: () => {
+      toast.error("Failed to clear plan for scheduling.");
+    }
+  });
+
+  const chairs = todayData?.chairs || [];
+  const activeAppointments = todayData?.appointments || [];
+  const pendingPlans = clearanceQueue || [];
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       {/* Header Area */}
@@ -29,178 +53,186 @@ export default function InfusionCenter() {
           <h1 className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent mb-2 text-3xl font-bold tracking-tight">
             Infusion Center
           </h1>
-          <p className="text-slate-400">Live monitoring of today's chemotherapy and immunotherapy sessions</p>
+          <p className="text-slate-400">Manage daily infusions and clinical clearance workflows</p>
         </div>
       </div>
 
-      {/* Top Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400">
-                <Droplet className="w-4 h-4" />
-              </div>
-              <p className="text-sm text-slate-400 uppercase tracking-wider font-bold">Total Today</p>
-            </div>
-            <h2 className="text-3xl font-bold text-white">0</h2>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-900/50 backdrop-blur-xl border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                <PlayCircle className="w-4 h-4" />
-              </div>
-              <p className="text-sm text-emerald-400 uppercase tracking-wider font-bold">In Progress</p>
-            </div>
-            <h2 className="text-3xl font-bold text-white">0</h2>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400">
-                <CheckCircle className="w-4 h-4" />
-              </div>
-              <p className="text-sm text-slate-400 uppercase tracking-wider font-bold">Completed</p>
-            </div>
-            <h2 className="text-3xl font-bold text-white">0</h2>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-900/50 backdrop-blur-xl border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-400">
-                <AlertTriangle className="w-4 h-4" />
-              </div>
-              <p className="text-sm text-rose-400 uppercase tracking-wider font-bold">Delayed</p>
-            </div>
-            <h2 className="text-3xl font-bold text-white">0</h2>
-          </CardContent>
-        </Card>
-      </div>
+      <Tabs defaultValue="today" className="w-full">
+        <TabsList className="bg-slate-900 border border-slate-700/50 mb-6 p-1">
+          <TabsTrigger value="today" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 text-slate-400">
+            Today's Infusions
+          </TabsTrigger>
+          <TabsTrigger value="clearance" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-slate-400 flex items-center gap-2">
+            Clearance Queue
+            {pendingPlans.length > 0 && (
+              <span className="bg-amber-500 text-slate-950 text-xs font-bold px-2 py-0.5 rounded-full">{pendingPlans.length}</span>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Main Board */}
-      <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
-        <CardHeader className="border-b border-slate-800/50 bg-slate-900/20">
-          <CardTitle className="text-white text-lg flex items-center gap-2">
-            <Droplet className="w-5 h-5 text-cyan-400" />
-            Active Infusion Board
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-900/80 border-b border-slate-700/50">
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Patient & Regimen</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Schedule & Chair</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Drug Verification</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status & Progress</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/50">
-                {infusions.length > 0 ? (
-                  infusions.map((infusion, idx) => (
-                    <tr 
-                      key={infusion.id} 
-                      className="hover:bg-slate-800/40 transition-colors group animate-in slide-in-from-left duration-500"
-                      style={{ animationDelay: `${idx * 100}ms` }}
-                    >
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold shrink-0">
-                             <User className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="text-white font-bold group-hover:text-cyan-400 transition-colors">{infusion.patient}</p>
-                            <p className="text-sm text-cyan-400 font-medium">{infusion.regimen}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          <span className="text-white font-medium">{infusion.time}</span>
-                          <span className="text-xs text-slate-500">({infusion.duration})</span>
-                        </div>
-                        <Badge variant="outline" className="border-slate-600 bg-slate-800 text-slate-300 text-xs">
-                          {infusion.chair}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          {infusion.verification === 'Verified' ? (
-                            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                          ) : infusion.verification === 'Awaiting Pharmacy' ? (
-                            <AlertTriangle className="w-4 h-4 text-rose-400 animate-pulse" />
-                          ) : (
-                            <Clock className="w-4 h-4 text-amber-400" />
-                          )}
-                          <span className={`text-sm font-medium ${
-                            infusion.verification === 'Verified' ? 'text-emerald-400' :
-                            infusion.verification === 'Awaiting Pharmacy' ? 'text-rose-400' : 'text-amber-400'
-                          }`}>
-                            {infusion.verification}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="space-y-2 max-w-[200px]">
-                          <div className="flex items-center justify-between">
-                            <Badge variant="outline" className={`
-                              ${infusion.status === 'In Progress' ? 'border-cyan-500/50 text-cyan-400 bg-cyan-500/10' : ''}
-                              ${infusion.status === 'Completed' ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10' : ''}
-                              ${infusion.status === 'Scheduled' ? 'border-slate-500/50 text-slate-400 bg-slate-500/10' : ''}
-                              ${infusion.status === 'Delayed' ? 'border-rose-500/50 text-rose-400 bg-rose-500/10 animate-pulse' : ''}
-                            `}>
-                              {infusion.status}
-                            </Badge>
-                            {infusion.status === 'In Progress' && (
-                               <span className="text-xs font-bold text-cyan-400">{infusion.progress}%</span>
-                            )}
-                          </div>
-                          {infusion.status === 'In Progress' && (
-                            <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                              <div className="h-full bg-cyan-500 rounded-full relative" style={{ width: `${infusion.progress}%` }}>
-                                 <div className="absolute top-0 right-0 bottom-0 left-0 bg-white/20 animate-pulse"></div>
+        <TabsContent value="today" className="space-y-6 outline-none">
+          {/* Top Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                    <Droplet className="w-4 h-4" />
+                  </div>
+                  <p className="text-sm text-slate-400 uppercase tracking-wider font-bold">Total Scheduled</p>
+                </div>
+                <h2 className="text-3xl font-bold text-white">{activeAppointments.length}</h2>
+              </CardContent>
+            </Card>
+            <Card className="bg-slate-900/50 backdrop-blur-xl border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                    <PlayCircle className="w-4 h-4" />
+                  </div>
+                  <p className="text-sm text-emerald-400 uppercase tracking-wider font-bold">Active Chairs</p>
+                </div>
+                <h2 className="text-3xl font-bold text-white">{chairs.filter((c: any) => c.status === 'In-Use').length} / {chairs.length}</h2>
+              </CardContent>
+            </Card>
+            <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  <p className="text-sm text-slate-400 uppercase tracking-wider font-bold">Completed</p>
+                </div>
+                <h2 className="text-3xl font-bold text-white">{activeAppointments.filter((a: any) => a.status === 'Completed').length}</h2>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Board */}
+          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-slate-800/50 bg-slate-900/20">
+              <CardTitle className="text-white text-lg flex items-center gap-2">
+                <Droplet className="w-5 h-5 text-cyan-400" />
+                Active Infusion Board
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-900/80 border-b border-slate-700/50">
+                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Patient ID</th>
+                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Schedule</th>
+                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/50">
+                    {todayLoading ? (
+                      <tr><td colSpan={3} className="p-8 text-center text-slate-400">Loading...</td></tr>
+                    ) : activeAppointments.length > 0 ? (
+                      activeAppointments.map((appt: any, idx: number) => (
+                        <tr 
+                          key={appt.id} 
+                          className="hover:bg-slate-800/40 transition-colors group"
+                        >
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold shrink-0">
+                                 <User className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <p className="text-white font-bold">Patient #{appt.patient_id}</p>
                               </div>
                             </div>
-                          )}
-                          {infusion.alert && (
-                            <p className="text-xs text-rose-400 mt-1">{infusion.alert}</p>
-                          )}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Clock className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="text-white font-medium">{new Date(appt.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <Badge variant="outline" className="border-cyan-500/50 text-cyan-400 bg-cyan-500/10">
+                              {appt.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={3} className="p-12 text-center">
+                          <p className="text-slate-500">No active infusions for today.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="clearance" className="outline-none">
+          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-slate-800/50 bg-slate-900/20">
+              <CardTitle className="text-white text-lg flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-amber-400" />
+                Clinical Clearance Queue
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {queueLoading ? (
+                  <p className="text-slate-400 text-center py-8">Loading queue...</p>
+                ) : pendingPlans.length > 0 ? (
+                  pendingPlans.map((plan: any) => (
+                    <div key={plan.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/50 hover:border-amber-500/30 transition-colors gap-4">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-slate-800 rounded-xl border border-slate-700 text-center">
+                          <AlertTriangle className="w-6 h-6 text-amber-400 mx-auto mb-1" />
                         </div>
-                      </td>
-                      <td className="p-4 text-right">
-                        <Button size="sm" variant="outline" className="border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:border-slate-500">
-                          View Chart
-                        </Button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="p-12 text-center">
-                      <div className="flex flex-col items-center justify-center space-y-4">
-                        <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500">
-                           <Droplet className="w-8 h-8" />
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-lg font-medium text-slate-300">No active infusions</p>
-                          <p className="text-sm text-slate-500 max-w-sm mx-auto">There are currently no patients checked into the infusion center.</p>
+                        <div>
+                          <h4 className="text-white font-bold text-lg">Patient #{plan.patient_id} - {plan.regimen}</h4>
+                          <div className="flex gap-4 mt-2">
+                            <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300">
+                              Cycle {plan.current_cycle} of {plan.total_cycles}
+                            </Badge>
+                            <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300">
+                              <Clock className="w-3 h-3 mr-1" /> {plan.duration_minutes} mins
+                            </Badge>
+                            <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-400 uppercase">
+                              {plan.status.replace('_', ' ')}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
-                    </td>
-                  </tr>
+                      <div className="flex items-center gap-3">
+                        <Button variant="outline" className="border-slate-600 bg-slate-800 text-slate-300 hover:text-white">
+                          Review Labs
+                        </Button>
+                        <Button 
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20"
+                          onClick={() => clearMutation.mutate(plan.id)}
+                          disabled={clearMutation.isPending}
+                        >
+                          <CalendarCheck className="w-4 h-4 mr-2" />
+                          Clear & Schedule
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <CheckCircle className="w-12 h-12 text-emerald-500/50 mx-auto mb-4" />
+                    <h3 className="text-slate-300 font-bold text-lg">Queue is Empty</h3>
+                    <p className="text-slate-500">All treatment plans have been cleared for scheduling.</p>
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

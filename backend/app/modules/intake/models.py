@@ -140,12 +140,32 @@ class TreatmentPlan(Base, TimestampMixin):
     description: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
     start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="Planned")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="PENDING_AUTH")
     cycles: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     current_cycle: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    duration_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     # Relationships
     patient: Mapped["Patient"] = relationship("Patient", back_populates="treatment_plans")
+    treatment_cycles: Mapped[List["TreatmentCycle"]] = relationship("TreatmentCycle", back_populates="treatment_plan", cascade="all, delete-orphan", order_by="TreatmentCycle.cycle_number")
+
+class TreatmentCycle(Base, TimestampMixin):
+    __tablename__ = "treatment_cycles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    treatment_plan_id: Mapped[int] = mapped_column(ForeignKey("treatment_plans.id", ondelete="CASCADE"), nullable=False)
+    cycle_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    scheduled_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    actual_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="PLANNED", nullable=False)
+    dose_status: Mapped[str] = mapped_column(String(50), default="FULL_DOSE", nullable=False)
+    chair_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # Soft link to chair
+    appointment_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # Soft link to appointment
+    doctor_clearance: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+
+    # Relationships
+    treatment_plan: Mapped["TreatmentPlan"] = relationship("TreatmentPlan", back_populates="treatment_cycles")
 
 class LabResult(Base, TimestampMixin):
     __tablename__ = "lab_results"
