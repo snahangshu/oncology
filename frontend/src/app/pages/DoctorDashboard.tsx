@@ -63,6 +63,7 @@ export default function DoctorDashboard() {
   const [notes, setNotes] = useState('');
   const [previewDoc, setPreviewDoc] = useState<{name: string, url: string} | null>(null);
   const [codingResult, setCodingResult] = useState<any>(null);
+  const [editablePlan, setEditablePlan] = useState<{ regimen_name: string, description: string, cycles: number } | null>(null);
   const [showCodingModal, setShowCodingModal] = useState(false);
   const navigate = useNavigate();
 
@@ -153,14 +154,22 @@ export default function DoctorDashboard() {
       
       if (res.data.coding_analysis) {
         setCodingResult(res.data.coding_analysis);
-        setShowCodingModal(true);
       }
       
+      if (res.data.treatment_plan) {
+        const meds = res.data.treatment_plan.medications || [];
+        const med_str = meds.map((m: any) => `${m.drug_name || ''} ${m.dose_amount || ''}${m.dose_unit || ''}`).join(', ');
+        
+        setEditablePlan({
+          regimen_name: res.data.treatment_plan.regimen_name || "AI Suggested Regimen",
+          description: `Intent: ${res.data.treatment_plan.intent || 'unknown'}. Medications: ${med_str}`,
+          cycles: res.data.treatment_plan.number_of_cycles || 6
+        });
+      }
+      
+      setShowCodingModal(true);
       toast.success('Consultation complete! AI structured the treatment plan.', { id: 'plan-toast' });
       setIsStructuringPlan(false);
-      setDiagnosis('');
-      setPrescription('');
-      setNotes('');
     } catch (err) {
       toast.error('Failed to structure treatment plan', { id: 'plan-toast' });
       setIsStructuringPlan(false);
@@ -833,7 +842,7 @@ export default function DoctorDashboard() {
       
       {/* Medical Coding Modal */}
       <Dialog open={showCodingModal} onOpenChange={setShowCodingModal}>
-        <DialogContent className="max-w-2xl bg-slate-900 border-slate-700">
+        <DialogContent className="max-w-2xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-400" />
@@ -882,13 +891,69 @@ export default function DoctorDashboard() {
               </div>
             )}
             
+            {editablePlan && (
+              <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700 mt-4 space-y-4">
+                <h4 className="text-white font-medium flex items-center gap-2 mb-2">
+                  <Pill className="w-4 h-4 text-violet-400" />
+                  Proposed Treatment Plan
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-400 text-xs uppercase tracking-wider">Regimen Name</Label>
+                    <Input 
+                      className="bg-slate-900 border-slate-700 text-slate-200" 
+                      value={editablePlan.regimen_name}
+                      onChange={(e) => setEditablePlan({ ...editablePlan, regimen_name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-400 text-xs uppercase tracking-wider">Total Cycles</Label>
+                    <Input 
+                      type="number"
+                      className="bg-slate-900 border-slate-700 text-slate-200" 
+                      value={editablePlan.cycles}
+                      onChange={(e) => setEditablePlan({ ...editablePlan, cycles: parseInt(e.target.value) || 1 })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-400 text-xs uppercase tracking-wider">Plan Description & Medications</Label>
+                  <Textarea 
+                    className="bg-slate-900 border-slate-700 text-slate-200 min-h-[80px]" 
+                    value={editablePlan.description}
+                    onChange={(e) => setEditablePlan({ ...editablePlan, description: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+            
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
               <Button variant="outline" className="border-slate-700 text-slate-300" onClick={() => setShowCodingModal(false)}>
                 Review Notes
               </Button>
-              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => {
-                toast.success("Codes approved and submitted for billing.");
-                setShowCodingModal(false);
+              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={async () => {
+                try {
+                  await api.put(`/patients/${selectedPatient?.patientId}/appointments/${selectedPatient?.id}/complete`, {
+                    notes: notes,
+                    diagnosis: diagnosis,
+                    regimen_name: editablePlan?.regimen_name,
+                    plan_description: editablePlan?.description,
+                    cycles: editablePlan?.cycles
+                  });
+                  toast.success("Codes approved and submitted for billing. Appointment completed!");
+                  
+                  // Instantly remove the completed appointment from the queue
+                  setAppointmentsList((prev) => prev.filter(a => a.id !== selectedPatient?.id));
+                  
+                  setShowCodingModal(false);
+                  setSelectedPatient(null);
+                  setDiagnosis('');
+                  setPrescription('');
+                  setNotes('');
+                  setEditablePlan(null);
+                } catch (error) {
+                  toast.error("Failed to complete appointment");
+                }
               }}>
                 Approve & Submit
               </Button>

@@ -38,7 +38,7 @@ class MedicalCodingAgent:
             system=self.system_prompt,
             messages=messages,
             temperature=0.0,
-            max_tokens=800
+            max_tokens=2500
         )
 
         try:

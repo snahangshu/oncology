@@ -382,7 +382,11 @@ def request_refill(
     return {"status": "success", "message": f"Refill request for {medication_name} sent to your provider."}
 
 class AppointmentCompleteRequest(BaseModel):
-    prescription_notes: Optional[str] = None
+    notes: Optional[str] = None
+    diagnosis: Optional[str] = None
+    regimen_name: Optional[str] = None
+    plan_description: Optional[str] = None
+    cycles: Optional[int] = None
 
 @router.put("/{patient_id}/appointments/{appt_id}/complete")
 def complete_appointment(
@@ -400,7 +404,26 @@ def complete_appointment(
         raise HTTPException(status_code=404, detail="Appointment not found")
         
     appt.status = "Completed"
-    appt.prescription_notes = request.prescription_notes
+    appt.prescription_notes = request.notes
+    
+    if request.diagnosis:
+        patient.primary_diagnosis = request.diagnosis
+        
+    if request.regimen_name:
+        try:
+            from app.modules.intake.models import TreatmentPlan
+            
+            tp = TreatmentPlan(
+                patient_id=patient_id,
+                regimen_name=request.regimen_name,
+                description=request.plan_description,
+                cycles=request.cycles or 6,
+                status="Active"
+            )
+            db.add(tp)
+        except Exception as e:
+            print(f"Error generating treatment plan: {e}")
+
     db.commit()
     return {"status": "success", "message": "Appointment marked as completed."}
 

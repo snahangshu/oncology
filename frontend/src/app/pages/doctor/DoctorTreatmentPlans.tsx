@@ -14,11 +14,15 @@ export default function DoctorTreatmentPlans() {
   const [expandedPlanId, setExpandedPlanId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
-  // For the MVP, we will mock the list of patients, but fetch real cycles if available.
-  const [mockPlans] = useState([
-    { id: 1, patient: "John Doe", regimen: "AC-T", totalCycles: 8, start: "2026-05-10", status: "In Progress" },
-    { id: 2, patient: "Sarah Jenkins", regimen: "Pembrolizumab", totalCycles: 12, start: "2026-06-01", status: "Planned" }
-  ]);
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
+    queryKey: ['doctor_dashboard'],
+    queryFn: async () => {
+      const res = await api.get('/dashboards/doctor');
+      return res.data;
+    }
+  });
+
+  const plansList = dashboardData?.treatment_plans || [];
 
   const { data: cyclesData, isLoading: cyclesLoading } = useQuery({
     queryKey: ['plan_cycles', expandedPlanId],
@@ -71,7 +75,13 @@ export default function DoctorTreatmentPlans() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {mockPlans.map((plan) => (
+        {dashboardLoading && <p className="text-slate-400">Loading plans...</p>}
+        {plansList.length === 0 && !dashboardLoading && (
+          <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-slate-800">
+            <p className="text-slate-400">No active treatment plans found for your patients.</p>
+          </div>
+        )}
+        {plansList.map((plan: any) => (
           <Card 
             key={plan.id} 
             className="bg-slate-900/80 border-slate-700/50 backdrop-blur-xl shadow-xl overflow-hidden"
