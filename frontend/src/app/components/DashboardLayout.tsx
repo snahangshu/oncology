@@ -19,10 +19,11 @@ import {
   FlaskConical,
   Upload
 } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate, Outlet } from 'react-router';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useState } from 'react';
+import VoiceAssistantWidget from './VoiceAssistantWidget';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -182,8 +183,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* pt-20 on mobile to push content below the floating hamburger menu. pt-4/8 on desktop. */}
         <div className="p-4 pt-20 lg:p-8 lg:pt-8">
           {children}
+          <Outlet />
         </div>
       </main>
+
+      {/* Voice Assistant Widget floating on all screens */}
+      <VoiceAssistantWidget />
     </div>
   );
 }
