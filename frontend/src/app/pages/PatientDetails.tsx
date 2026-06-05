@@ -213,7 +213,7 @@ export default function PatientDetails() {
         </TabsContent>
 
         <TabsContent value="appointments" className="outline-none">
-          <AppointmentsTab appointments={dashboard.appointments} />
+          <AppointmentsTab appointments={dashboard.appointments} patientId={patientId!} role={role} />
         </TabsContent>
 
         <TabsContent value="treatmentplans" className="outline-none">
@@ -587,7 +587,31 @@ function DocumentUploader({ patientId, docType, label, files, canDelete, onSucce
   );
 }
 
-function AppointmentsTab({ appointments }: { appointments: any[] }) {
+function AppointmentsTab({ appointments, patientId, role }: { appointments: any[], patientId: string, role: string }) {
+  const queryClient = useQueryClient();
+  const [completingAppt, setCompletingAppt] = useState<number | null>(null);
+  const [prescriptionNotes, setPrescriptionNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const canComplete = role === 'DOCTOR' || role === 'ADMIN';
+
+  const handleComplete = async (apptId: number) => {
+    setIsSubmitting(true);
+    try {
+      await api.put(`/intake/${patientId}/appointments/${apptId}/complete`, {
+        prescription_notes: prescriptionNotes
+      });
+      toast.success("Appointment completed and prescription saved!");
+      setCompletingAppt(null);
+      setPrescriptionNotes('');
+      queryClient.invalidateQueries({ queryKey: ['patient_dashboard', patientId] });
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || "Failed to complete appointment");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!appointments || appointments.length === 0) {
     return (
       <Card className="bg-slate-900/50 border-slate-700/50 p-12 text-center">
@@ -604,24 +628,66 @@ function AppointmentsTab({ appointments }: { appointments: any[] }) {
       <CardContent className="p-6">
         <div className="space-y-4">
           {appointments.map((appt) => (
-            <div key={appt.id} className="flex items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/50 hover:border-cyan-500/50 transition-colors">
-              <div className="flex items-start gap-4">
+            <div key={appt.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/50 hover:border-cyan-500/50 transition-colors gap-4">
+              <div className="flex items-start gap-4 flex-1">
                  <div className="p-3 bg-slate-800 rounded-xl border border-slate-700 text-center min-w-[70px]">
                    <p className="text-xs text-slate-400 uppercase font-bold">{new Date(appt.start_time).toLocaleString('default', { month: 'short' })}</p>
                    <p className="text-2xl text-white font-bold">{new Date(appt.start_time).getDate()}</p>
                  </div>
-                 <div>
+                 <div className="flex-1">
                    <h4 className="text-white font-bold text-lg">{appt.type}</h4>
                    <p className="text-slate-400 text-sm mt-1 flex items-center gap-2">
                      <Clock className="w-3.5 h-3.5" />
                      {new Date(appt.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                    </p>
+                   {appt.prescription_notes && (
+                     <div className="mt-3 p-3 rounded-md bg-slate-900/80 border border-slate-700/50 text-sm text-slate-300">
+                       <strong className="text-cyan-400 flex items-center gap-2 mb-1"><Pill className="w-4 h-4" /> Prescription / Notes</strong>
+                       {appt.prescription_notes}
+                     </div>
+                   )}
                  </div>
               </div>
-              <div className="text-right">
-                 <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold border bg-slate-800 border-slate-700 text-slate-300">
+              <div className="flex flex-col items-end gap-3 shrink-0">
+                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${appt.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 border-slate-700 text-slate-300'}`}>
                    {appt.status}
                  </span>
+                 {canComplete && appt.status !== 'Completed' && (
+                   <Dialog open={completingAppt === appt.id} onOpenChange={(open) => {
+                     if (open) {
+                       setCompletingAppt(appt.id);
+                       setPrescriptionNotes('');
+                     } else {
+                       setCompletingAppt(null);
+                     }
+                   }}>
+                     <Button size="sm" onClick={() => setCompletingAppt(appt.id)} className="bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2">
+                       <CheckCircle2 className="w-4 h-4" /> Complete
+                     </Button>
+                     <DialogContent className="bg-slate-900 border-slate-700/50">
+                        <DialogHeader>
+                          <DialogTitle className="text-white">Complete Appointment</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 pt-4">
+                          <p className="text-slate-400 text-sm">Add any prescription notes or clinical remarks before marking this appointment as complete.</p>
+                          <textarea
+                            value={prescriptionNotes}
+                            onChange={(e) => setPrescriptionNotes(e.target.value)}
+                            placeholder="Enter prescriptions (e.g. Ondansetron 8mg bid prn)..."
+                            className="w-full h-32 rounded-md bg-slate-950 border border-slate-800 text-white p-3 text-sm focus:border-cyan-500/50 outline-none resize-none"
+                          />
+                          <Button 
+                            onClick={() => handleComplete(appt.id)} 
+                            disabled={isSubmitting}
+                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+                          >
+                            {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                            Mark Complete & Save
+                          </Button>
+                        </div>
+                     </DialogContent>
+                   </Dialog>
+                 )}
               </div>
             </div>
           ))}

@@ -53,6 +53,12 @@ class Patient(Base, TimestampMixin):
     oncology_intake: Mapped[Optional["OncologyIntake"]] = relationship(
         "OncologyIntake", back_populates="patient", cascade="all, delete-orphan", uselist=False
     )
+    treatment_plans: Mapped[List["TreatmentPlan"]] = relationship(
+        "TreatmentPlan", back_populates="patient", cascade="all, delete-orphan"
+    )
+    lab_results: Mapped[List["LabResult"]] = relationship(
+        "LabResult", back_populates="patient", cascade="all, delete-orphan"
+    )
 
 class InsuranceRecord(Base, TimestampMixin):
     __tablename__ = "insurance_records"
@@ -124,3 +130,34 @@ class OncologyIntake(Base, TimestampMixin):
     # Relationships
     patient: Mapped["Patient"] = relationship("Patient", back_populates="oncology_intake")
     documents: Mapped[List["UploadedDocument"]] = relationship("UploadedDocument", back_populates="oncology_intake", cascade="all, delete-orphan")
+
+class TreatmentPlan(Base, TimestampMixin):
+    __tablename__ = "treatment_plans"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    regimen_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="Planned")
+    cycles: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    current_cycle: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    # Relationships
+    patient: Mapped["Patient"] = relationship("Patient", back_populates="treatment_plans")
+
+class LabResult(Base, TimestampMixin):
+    __tablename__ = "lab_results"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    test_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    result_value: Mapped[str] = mapped_column(String(50), nullable=False)
+    unit: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    reference_range: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="Normal") # Normal, High, Low
+    date_collected: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+
+    # Relationships
+    patient: Mapped["Patient"] = relationship("Patient", back_populates="lab_results")

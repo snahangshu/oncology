@@ -31,6 +31,11 @@ import CheckInWaitingRoom from './pages/receptionist/CheckInWaitingRoom';
 import InsuranceAuth from './pages/receptionist/InsuranceAuth';
 import NurseDashboard from './pages/NurseDashboard';
 import PatientDashboard from './pages/PatientDashboard';
+import PatientAppointments from './pages/patient/PatientAppointments';
+import PatientMedicalHistory from './pages/patient/PatientMedicalHistory';
+import PatientTreatmentPlans from './pages/patient/PatientTreatmentPlans';
+import PatientLabResults from './pages/patient/PatientLabResults';
+import PatientDocuments from './pages/patient/PatientDocuments';
 import PatientDetails from './pages/PatientDetails';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -334,6 +339,46 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <PatientDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/appointments"
+            element={
+              <ProtectedRoute>
+                <PatientAppointments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/medical-history"
+            element={
+              <ProtectedRoute>
+                <PatientMedicalHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/treatment-plan"
+            element={
+              <ProtectedRoute>
+                <PatientTreatmentPlans />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/lab-results"
+            element={
+              <ProtectedRoute>
+                <PatientLabResults />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patient/documents"
+            element={
+              <ProtectedRoute>
+                <PatientDocuments />
               </ProtectedRoute>
             }
           />

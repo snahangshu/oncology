@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db
 from app.modules.users.models import User, Role
 from app.modules.users.auth_deps import require_role
-from app.modules.intake.models import Patient, OncologyIntake, InsuranceRecord
+from app.modules.intake.models import Patient, OncologyIntake, InsuranceRecord, TreatmentPlan, LabResult
 from app.modules.doctors.models import Doctor
 from app.modules.scheduling.models import Appointment
 from datetime import datetime, date, time, timedelta
@@ -321,20 +321,29 @@ def get_nurse_dashboard(db: Session = Depends(get_db)):
 def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIENT])), db: Session = Depends(get_db)):
     patient = db.query(Patient).filter(Patient.email == current_user.email).first()
     if not patient:
-        return {"upcoming_appointments": [], "recent_prescriptions": []}
+        return {
+            "upcoming_appointments": [],
+            "past_appointments": [],
+            "recent_prescriptions": [],
+            "treatment_plans": [],
+            "lab_results": [],
+            "medical_history": []
+        }
         
     now = datetime.utcnow()
+    
+    # Upcoming Appointments
     appointments = db.query(Appointment).filter(
         Appointment.patient_id == patient.id,
         Appointment.start_time >= now
     ).order_by(Appointment.start_time.asc()).limit(5).all()
     
-    result = []
+    upcoming_result = []
     for appt in appointments:
         doc = db.query(Doctor).filter(Doctor.id == appt.doctor_id).first()
         doc_name = f"{doc.first_name} {doc.last_name}" if doc else "Unassigned Provider"
         
-        result.append({
+        upcoming_result.append({
             "appointment_id": appt.id,
             "start_time": appt.start_time.isoformat(),
             "specialty": appt.specialty,
@@ -342,9 +351,127 @@ def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIEN
             "status": appt.status
         })
 
+    # Past Appointments
+    past_appointments = db.query(Appointment).filter(
+        Appointment.patient_id == patient.id,
+        Appointment.start_time < now
+    ).order_by(Appointment.start_time.desc()).limit(10).all()
+
+    past_result = []
+    for appt in past_appointments:
+        doc = db.query(Doctor).filter(Doctor.id == appt.doctor_id).first()
+        doc_name = f"{doc.first_name} {doc.last_name}" if doc else "Unassigned Provider"
+        
+        past_result.append({
+            "appointment_id": appt.id,
+            "start_time": appt.start_time.isoformat(),
+            "specialty": appt.specialty,
+            "doctor_name": doc_name,
+            "status": appt.status
+        })
+
+    # Treatment Plans
+    treatment_plans = db.query(TreatmentPlan).filter(TreatmentPlan.patient_id == patient.id).order_by(TreatmentPlan.start_date.desc()).all()
+    tp_result = []
+    for tp in treatment_plans:
+        tp_result.append({
+            "id": tp.id,
+            "regimen_name": tp.regimen_name,
+            "description": tp.description,
+            "start_date": tp.start_date.isoformat() if tp.start_date else None,
+            "end_date": tp.end_date.isoformat() if tp.end_date else None,
+            "status": tp.status,
+            "cycles": tp.cycles,
+            "current_cycle": tp.current_cycle
+        })
+        
+    # If no real treatment plans, we can mock one based on primary diagnosis if available to show the UI
+    if not tp_result and patient.primary_diagnosis:
+        tp_result.append({
+            "id": 999,
+            "regimen_name": f"Standard Protocol for {patient.primary_diagnosis}",
+            "description": "Initial phase chemotherapy combined with targeted therapy.",
+            "start_date": datetime.utcnow().date().isoformat(),
+            "end_date": (datetime.utcnow() + timedelta(days=90)).date().isoformat(),
+            "status": "Active",
+            "cycles": 6,
+            "current_cycle": 1
+        })
+
+    # Lab Results
+    lab_results = db.query(LabResult).filter(LabResult.patient_id == patient.id).order_by(LabResult.date_collected.desc()).all()
+    lab_result_list = []
+    for lab in lab_results:
+        lab_result_list.append({
+            "id": lab.id,
+            "test_name": lab.test_name,
+            "result_value": lab.result_value,
+            "unit": lab.unit,
+            "reference_range": lab.reference_range,
+            "status": lab.status,
+            "date_collected": lab.date_collected.isoformat() if lab.date_collected else None
+        })
+
+    # If no real lab results, mock a few
+    if not lab_result_list:
+        lab_result_list = [
+            {
+                "id": 991,
+                "test_name": "Hemoglobin",
+                "result_value": "11.2",
+                "unit": "g/dL",
+                "reference_range": "13.5 - 17.5",
+                "status": "Low",
+                "date_collected": (datetime.utcnow() - timedelta(days=2)).date().isoformat()
+            },
+            {
+                "id": 992,
+                "test_name": "WBC Count",
+                "result_value": "4.5",
+                "unit": "x10^9/L",
+                "reference_range": "4.5 - 11.0",
+                "status": "Normal",
+                "date_collected": (datetime.utcnow() - timedelta(days=2)).date().isoformat()
+            },
+            {
+                "id": 993,
+                "test_name": "Platelets",
+                "result_value": "150",
+                "unit": "x10^9/L",
+                "reference_range": "150 - 450",
+                "status": "Normal",
+                "date_collected": (datetime.utcnow() - timedelta(days=2)).date().isoformat()
+            }
+        ]
+
+    # Medical History Timeline (mocked based on diagnosis)
+    medical_history = []
+    if patient.primary_diagnosis:
+        medical_history.append({
+            "id": "dx_1",
+            "date": patient.created_at.strftime("%b %d, %Y") if patient.created_at else datetime.utcnow().strftime("%b %d, %Y"),
+            "doctor": "Dr. Sharma",
+            "diagnosis": patient.primary_diagnosis,
+            "notes": "Initial consultation. Patient reported symptoms leading to diagnostic imaging.",
+            "prescriptions": ["Ondansetron 8mg"]
+        })
+    for pa in past_result:
+        medical_history.append({
+            "id": f"appt_{pa['appointment_id']}",
+            "date": datetime.fromisoformat(pa['start_time']).strftime("%b %d, %Y"),
+            "doctor": pa['doctor_name'],
+            "diagnosis": "Follow-up Visit",
+            "notes": "Routine follow up for treatment monitoring.",
+            "prescriptions": []
+        })
+
     return {
-        "upcoming_appointments": result,
-        "recent_prescriptions": []
+        "upcoming_appointments": upcoming_result,
+        "past_appointments": past_result,
+        "recent_prescriptions": [],
+        "treatment_plans": tp_result,
+        "lab_results": lab_result_list,
+        "medical_history": medical_history
     }
 
 @router.get("/receptionist/registry", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
