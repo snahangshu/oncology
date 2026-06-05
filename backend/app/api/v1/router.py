@@ -9,6 +9,7 @@ from app.modules.users.staff_router import router as staff_router
 from app.api.v1.dashboards import router as dashboards_router
 
 from app.modules.intake.patients_router import router as patients_router
+from app.modules.intake.treatment_router import router as treatment_router
 
 api_router = APIRouter()
 
@@ -22,3 +23,4 @@ api_router.include_router(doctors_router, prefix="/doctors", tags=["Doctors"])
 api_router.include_router(users_router, prefix="/users", tags=["Users"])
 api_router.include_router(staff_router, prefix="/staff", tags=["Staff"])
 api_router.include_router(dashboards_router, prefix="/dashboards", tags=["Dashboards"])
+api_router.include_router(treatment_router, prefix="/treatment-plans", tags=["Treatment Plans"])

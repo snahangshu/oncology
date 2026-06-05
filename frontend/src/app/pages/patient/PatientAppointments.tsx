@@ -25,14 +25,15 @@ export default function PatientAppointments() {
         const response = await api.get('/dashboards/patient');
         const data = response.data;
         
-        const formatAppointment = (apt: any) => ({
-          id: apt.appointment_id,
-          date: new Date(apt.start_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
-          time: new Date(apt.start_time).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
-          doctor: apt.doctor_name,
-          type: `${apt.specialty || 'Oncology'} Consultation`,
-          status: apt.status.charAt(0).toUpperCase() + apt.status.slice(1),
-        });
+          const formatAppointment = (apt: any) => ({
+            id: apt.appointment_id,
+            date: new Date(apt.start_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }),
+            time: new Date(apt.start_time).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+            doctor: apt.doctor_name,
+            type: `${apt.specialty || 'Oncology'} Consultation`,
+            status: apt.status.charAt(0).toUpperCase() + apt.status.slice(1),
+            notes: apt.prescription_notes,
+          });
 
         if (data.upcoming_appointments && data.upcoming_appointments.length > 0) {
           setAppointmentsList(data.upcoming_appointments.map(formatAppointment));
@@ -87,6 +88,11 @@ export default function PatientAppointments() {
                       <h4 className="text-white mb-1">{apt.type}</h4>
                       <p className="text-slate-400 text-sm">{apt.doctor}</p>
                       <p className="text-cyan-400 text-sm mt-2">{apt.date} at {apt.time}</p>
+                      {apt.notes && (
+                        <p className="text-emerald-400 text-xs mt-2 bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
+                          <strong>Note:</strong> {apt.notes}
+                        </p>
+                      )}
                     </div>
                     <Badge variant="outline" className="border-emerald-500/50 text-emerald-400 bg-emerald-500/10">
                       {apt.status}
