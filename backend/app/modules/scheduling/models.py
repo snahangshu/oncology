@@ -17,6 +17,7 @@ class Appointment(Base, TimestampMixin):
         Integer, ForeignKey("doctors.id", ondelete="SET NULL"), nullable=True
     )
     fhir_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    prescription_notes: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
 
     # Relationships
     patient: Mapped["Patient"] = relationship("Patient", back_populates="appointments")
