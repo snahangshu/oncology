@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Phone, X } from 'lucide-react';
-import { api } from '../../shared/api';
+import { api } from '../shared/api';
 import { toast } from 'sonner';
 
 export default function VoiceAssistantWidget() {
