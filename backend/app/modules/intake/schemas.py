@@ -81,3 +81,30 @@ class UrgencyClassificationResponse(BaseModel):
     confidence_score: float = Field(..., ge=0.0, le=1.0)
     reasoning: Optional[str] = None
 
+class TreatmentPlanResponse(BaseModel):
+    id: int
+    patient_id: int
+    regimen_name: str
+    description: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    status: str
+    cycles: Optional[int] = None
+    current_cycle: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+class LabResultResponse(BaseModel):
+    id: int
+    patient_id: int
+    test_name: str
+    result_value: str
+    unit: Optional[str] = None
+    reference_range: Optional[str] = None
+    status: str
+    date_collected: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
