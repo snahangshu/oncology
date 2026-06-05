@@ -150,7 +150,8 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
     appointments = db.query(Appointment).filter(
         Appointment.doctor_id == doctor.id,
         Appointment.start_time >= today_start,
-        Appointment.start_time <= today_end
+        Appointment.start_time <= today_end,
+        Appointment.status != 'Completed'
     ).order_by(Appointment.start_time.asc()).all()
     
     result = []
