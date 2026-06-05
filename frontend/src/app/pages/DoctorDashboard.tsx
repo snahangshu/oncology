@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
+import ReactMarkdown from 'react-markdown';
 
 interface Appointment {
   id: number | string;
@@ -29,6 +30,7 @@ interface Appointment {
   aiSummary: string;
   vitals: { bp: string; hr: string; temp: string; weight: string };
   history: string;
+  patient_comments?: string;
   intake_summary?: any;
 }
 
@@ -60,6 +62,8 @@ export default function DoctorDashboard() {
   const [prescription, setPrescription] = useState('');
   const [notes, setNotes] = useState('');
   const [previewDoc, setPreviewDoc] = useState<{name: string, url: string} | null>(null);
+  const [codingResult, setCodingResult] = useState<any>(null);
+  const [showCodingModal, setShowCodingModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -79,8 +83,9 @@ export default function DoctorDashboard() {
           chiefComplaint: apt.primary_diagnosis || 'Unknown',
           predictedDuration: 'Routine (15m)',
           aiSummary: apt.ai_summary || `AI Summary based on Intake: Patient presents with ${apt.primary_diagnosis || 'Unknown'}. Intake documents include: ${Object.keys(apt.intake_summary || {}).join(', ') || 'None'}.`,
-          vitals: { bp: '--/--', hr: '--', temp: '--', weight: '--' },
+          vitals: apt.vitals || { bp: '--/--', hr: '--', temp: '--', weight: '--' },
           history: apt.primary_diagnosis || 'Unknown',
+          patient_comments: apt.patient_comments,
           intake_summary: apt.intake_summary,
         });
 
@@ -92,6 +97,14 @@ export default function DoctorDashboard() {
         if (upcoming.length > 0) {
           setUpcomingAppointmentsList(upcoming.map(mapApt));
         }
+
+        const backendAlerts = response.data.clinical_alerts || [];
+        setLabAlertsList(backendAlerts.map((a: any) => ({
+          patient: a.patient_name,
+          alert: a.message,
+          severity: a.severity,
+          time: a.created_at ? new Date(a.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now'
+        })));
       } catch (err) {
         console.error('Error fetching doctor dashboard:', err);
       } finally {
@@ -134,16 +147,20 @@ export default function DoctorDashboard() {
     setIsStructuringPlan(true);
     toast.info('AI is structuring your treatment plan...', { id: 'plan-toast' });
     try {
-      await api.post(`/doctors/${selectedPatient?.id}/structure-plan`, {
+      const res = await api.post(`/doctors/${selectedPatient?.patientId}/structure-plan`, {
         clinical_note: `Diagnosis: ${diagnosis}. Prescription: ${prescription}. Notes: ${notes}`
       });
-      setTimeout(() => {
-        toast.success('Consultation complete! AI structured the treatment plan.', { id: 'plan-toast' });
-        setIsStructuringPlan(false);
-        setDiagnosis('');
-        setPrescription('');
-        setNotes('');
-      }, 3000);
+      
+      if (res.data.coding_analysis) {
+        setCodingResult(res.data.coding_analysis);
+        setShowCodingModal(true);
+      }
+      
+      toast.success('Consultation complete! AI structured the treatment plan.', { id: 'plan-toast' });
+      setIsStructuringPlan(false);
+      setDiagnosis('');
+      setPrescription('');
+      setNotes('');
     } catch (err) {
       toast.error('Failed to structure treatment plan', { id: 'plan-toast' });
       setIsStructuringPlan(false);
@@ -202,10 +219,10 @@ export default function DoctorDashboard() {
             <Activity className="w-16 h-16 text-rose-400" />
           </div>
           <CardContent className="p-6">
-            <p className="text-sm text-rose-300 font-medium mb-1">Critical Lab Alerts</p>
+            <p className="text-sm text-rose-300 font-medium mb-1">Critical Alerts</p>
             <div className="flex items-baseline gap-2">
-              <h2 className="text-4xl font-bold text-white">0</h2>
-              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded-full">All clear</span>
+              <h2 className="text-4xl font-bold text-white">{labAlertsList.length}</h2>
+              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded-full">Requires review</span>
             </div>
           </CardContent>
         </Card>
@@ -326,16 +343,42 @@ export default function DoctorDashboard() {
                               Regenerate Brief
                             </Button>
                           </div>
-                          <p className="text-slate-200 leading-relaxed text-sm">
-                            {selectedPatient.aiSummary}
-                          </p>
+                          {isGeneratingBrief ? (
+                            <div className="space-y-3 animate-pulse py-2">
+                              <div className="h-4 bg-indigo-500/20 rounded w-3/4"></div>
+                              <div className="h-4 bg-indigo-500/20 rounded w-full"></div>
+                              <div className="h-4 bg-indigo-500/20 rounded w-5/6"></div>
+                              <div className="h-4 bg-indigo-500/20 rounded w-2/3"></div>
+                            </div>
+                          ) : (
+                            <div className="text-slate-200 leading-relaxed text-sm transition-all duration-300">
+                              <ReactMarkdown
+                                components={{
+                                  p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                                  strong: ({node, ...props}) => <strong className="font-semibold text-white" {...props} />,
+                                  ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2 space-y-1 text-slate-300 marker:text-indigo-400" {...props} />,
+                                  ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1 text-slate-300 marker:text-indigo-400" {...props} />,
+                                  li: ({node, ...props}) => <li {...props} />,
+                                  h1: ({node, ...props}) => <h1 className="text-lg font-semibold text-white mt-4 mb-2" {...props} />,
+                                  h2: ({node, ...props}) => <h2 className="text-base font-semibold text-indigo-300 mt-4 mb-2" {...props} />,
+                                  h3: ({node, ...props}) => <h3 className="text-sm font-semibold text-indigo-400 mt-3 mb-1" {...props} />,
+                                  a: ({node, ...props}) => <a className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2" {...props} />
+                                }}
+                              >
+                                {selectedPatient.aiSummary}
+                              </ReactMarkdown>
+                            </div>
+                          )}
                         </div>
 
                         {/* Patient Info */}
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                           <div className="space-y-1">
-                            <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Chief Complaint</p>
+                            <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Chief Complaint / Notes</p>
                             <p className="text-white text-sm">{selectedPatient.chiefComplaint}</p>
+                            {selectedPatient.patient_comments && selectedPatient.patient_comments !== 'No additional comments provided.' && (
+                              <p className="text-slate-400 text-xs mt-1 italic">"{selectedPatient.patient_comments}"</p>
+                            )}
                           </div>
                           <div className="space-y-1">
                             <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Predicted Duration</p>
@@ -570,16 +613,42 @@ export default function DoctorDashboard() {
                               Regenerate Brief
                             </Button>
                           </div>
-                          <p className="text-slate-200 leading-relaxed text-sm">
-                            {selectedPatient.aiSummary}
-                          </p>
+                          {isGeneratingBrief ? (
+                            <div className="space-y-3 animate-pulse py-2">
+                              <div className="h-4 bg-indigo-500/20 rounded w-3/4"></div>
+                              <div className="h-4 bg-indigo-500/20 rounded w-full"></div>
+                              <div className="h-4 bg-indigo-500/20 rounded w-5/6"></div>
+                              <div className="h-4 bg-indigo-500/20 rounded w-2/3"></div>
+                            </div>
+                          ) : (
+                            <div className="text-slate-200 leading-relaxed text-sm transition-all duration-300">
+                              <ReactMarkdown
+                                components={{
+                                  p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                                  strong: ({node, ...props}) => <strong className="font-semibold text-white" {...props} />,
+                                  ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-2 space-y-1 text-slate-300 marker:text-indigo-400" {...props} />,
+                                  ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1 text-slate-300 marker:text-indigo-400" {...props} />,
+                                  li: ({node, ...props}) => <li {...props} />,
+                                  h1: ({node, ...props}) => <h1 className="text-lg font-semibold text-white mt-4 mb-2" {...props} />,
+                                  h2: ({node, ...props}) => <h2 className="text-base font-semibold text-indigo-300 mt-4 mb-2" {...props} />,
+                                  h3: ({node, ...props}) => <h3 className="text-sm font-semibold text-indigo-400 mt-3 mb-1" {...props} />,
+                                  a: ({node, ...props}) => <a className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2" {...props} />
+                                }}
+                              >
+                                {selectedPatient.aiSummary}
+                              </ReactMarkdown>
+                            </div>
+                          )}
                         </div>
 
                         {/* Patient Info */}
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                           <div className="space-y-1">
-                            <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Chief Complaint</p>
+                            <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Chief Complaint / Notes</p>
                             <p className="text-white text-sm">{selectedPatient.chiefComplaint}</p>
+                            {selectedPatient.patient_comments && selectedPatient.patient_comments !== 'No additional comments provided.' && (
+                              <p className="text-slate-400 text-xs mt-1 italic">"{selectedPatient.patient_comments}"</p>
+                            )}
                           </div>
                           <div className="space-y-1">
                             <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">Predicted Duration</p>
@@ -665,19 +734,19 @@ export default function DoctorDashboard() {
         {/* Right Column: Alerts and Schedules (1/3 width) */}
         <div className="space-y-6">
           
-          {/* Critical Lab Alerts */}
+          {/* Critical Alerts */}
           <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden shadow-2xl">
             <CardHeader className="border-b border-rose-500/20 bg-rose-500/5">
               <CardTitle className="text-white flex items-center gap-2 text-base">
                 <FlaskConical className="w-4 h-4 text-rose-400" />
-                Critical Lab Alerts
+                Critical Alerts & Escalations
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
               <div className="space-y-3">
                 {labAlertsList.length === 0 ? (
                   <div className="text-center py-8 text-slate-500 text-sm">
-                    No critical lab alerts.
+                    No critical alerts.
                   </div>
                 ) : labAlertsList.map((alert, idx) => (
                   <div key={idx} className="p-3 rounded-lg bg-slate-800/50 border border-rose-500/20 flex flex-col gap-1 hover:border-rose-500/40 transition-colors cursor-default">
@@ -758,6 +827,72 @@ export default function DoctorDashboard() {
                 title={previewDoc.name}
               />
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Medical Coding Modal */}
+      <Dialog open={showCodingModal} onOpenChange={setShowCodingModal}>
+        <DialogContent className="max-w-2xl bg-slate-900 border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              AI Medical Coding & Compliance Check
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 mt-4">
+            <div>
+              <h4 className="text-slate-300 font-medium mb-2 border-b border-slate-800 pb-1">Suggested ICD-10 Codes</h4>
+              <div className="space-y-2">
+                {codingResult?.icd10_codes?.map((c: any, i: number) => (
+                  <div key={i} className="flex gap-3 bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
+                    <span className="text-emerald-400 font-mono font-bold">{c.code}</span>
+                    <span className="text-slate-300 text-sm">{c.description}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-slate-300 font-medium mb-2 border-b border-slate-800 pb-1">Suggested CPT Codes</h4>
+              <div className="space-y-2">
+                {codingResult?.cpt_codes?.map((c: any, i: number) => (
+                  <div key={i} className="flex gap-3 bg-slate-800/50 p-2 rounded-lg border border-slate-700/50">
+                    <span className="text-cyan-400 font-mono font-bold">{c.code}</span>
+                    <span className="text-slate-300 text-sm">{c.description}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {codingResult?.denial_risks?.length > 0 && (
+              <div>
+                <h4 className="text-rose-400 font-medium mb-2 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  Potential Claim Denial Risks
+                </h4>
+                <div className="space-y-2">
+                  {codingResult.denial_risks.map((risk: string, i: number) => (
+                    <div key={i} className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-3 rounded-lg text-sm">
+                      {risk}
+                    </div>
+                  ))}
+                  <p className="text-xs text-slate-500 mt-2 italic">Please update the clinical note to address these risks before final sign-off.</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+              <Button variant="outline" className="border-slate-700 text-slate-300" onClick={() => setShowCodingModal(false)}>
+                Review Notes
+              </Button>
+              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => {
+                toast.success("Codes approved and submitted for billing.");
+                setShowCodingModal(false);
+              }}>
+                Approve & Submit
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

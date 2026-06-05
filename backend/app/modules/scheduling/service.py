@@ -22,11 +22,20 @@ class SchedulingService:
         start = query.preferred_start_date or datetime.utcnow()
         end = query.preferred_end_date or (start + timedelta(days=7))
 
-        duration_minutes = 60
-        if query.appointment_type == "follow-up":
-            duration_minutes = 15
-        elif query.appointment_type == "infusion":
-            duration_minutes = 30
+        from app.modules.intake.models import Patient
+        patient = self.db.query(Patient).filter(Patient.id == query.patient_id).first()
+        primary_diagnosis = getattr(patient, 'primary_diagnosis', "") if patient else ""
+        urgency_level = getattr(patient, 'urgency_level', "ROUTINE") if patient else "ROUTINE"
+        patient_comments = getattr(patient, 'patient_comments', "") if patient else ""
+
+        from app.modules.ai.classifiers.duration_predictor import DurationPredictor
+        predictor = DurationPredictor()
+        prediction = predictor.predict_duration(
+            primary_diagnosis=primary_diagnosis,
+            patient_comments=patient_comments,
+            appointment_type=query.appointment_type
+        )
+        duration_minutes = prediction.get("recommended_duration_minutes", 60)
             
         required_chunks = duration_minutes // 15
 
@@ -40,11 +49,6 @@ class SchedulingService:
         end_date = end.date()
         
         slot_id_counter = 1
-        
-        from app.modules.intake.models import Patient
-        patient = self.db.query(Patient).filter(Patient.id == query.patient_id).first()
-        primary_diagnosis = getattr(patient, 'primary_diagnosis', "") if patient else ""
-        urgency_level = getattr(patient, 'urgency_level', "ROUTINE") if patient else "ROUTINE"
         
         while current_date <= end_date:
             avail = doc_service.get_availability_for_date(current_date, query.appointment_type)
@@ -86,19 +90,24 @@ class SchedulingService:
                         
                         doctor_specialty = doc_slots[i].specialty
                         
+                        # Fetch doctor from DB to get details for scoring and options
+                        doctor_obj = doc_service.doctor_repo.get(doc_id)
+                        disease_expertise = [d.disease_type for d in doctor_obj.disease_expertise] if doctor_obj else []
+                        treatment_expertise = [t.treatment_type for t in doctor_obj.treatment_expertise] if doctor_obj else []
+                        exp = getattr(doctor_obj, 'experience_years', None) if doctor_obj else None
+                        qual = getattr(doctor_obj, 'qualifications', None) if doctor_obj else None
+                        
                         score, reasoning = scorer.score_slot(
                             patient_id=query.patient_id, 
                             slot_start_time=full_start, 
                             specialty=query.specialty,
                             urgency_level=urgency_level,
                             primary_diagnosis=primary_diagnosis,
-                            doctor_specialty=doctor_specialty
+                            doctor_specialty=doctor_specialty,
+                            doctor_id=doc_id,
+                            disease_expertise=disease_expertise,
+                            treatment_expertise=treatment_expertise
                         )
-                        
-                        # Fetch doctor from DB to get details
-                        doctor_obj = doc_service.doctor_repo.get(doc_id)
-                        exp = getattr(doctor_obj, 'experience_years', None) if doctor_obj else None
-                        qual = getattr(doctor_obj, 'qualifications', None) if doctor_obj else None
 
 
                         options.append(

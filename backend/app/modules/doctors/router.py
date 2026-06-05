@@ -39,17 +39,26 @@ def generate_brief(patient_id: int, request: BriefRequest, db: Session = Depends
     clinical_history = request.clinical_history
     imaging_reports = request.imaging_reports
     
+    docs = []
+    from app.modules.intake.models import UploadedDocument
+    uploaded_docs = db.query(UploadedDocument).filter(UploadedDocument.patient_id == patient_id).all()
+    
+    for d in uploaded_docs:
+        if d.extracted_text:
+            docs.append(f"{d.document_type.value}:\n{d.extracted_text}")
+
     if intake:
-        docs = []
-        if intake.pathology_report:
+        if intake.pathology_report and not uploaded_docs:
             docs.append("PATHOLOGY REPORT:\n" + (json.dumps(intake.pathology_report, indent=2) if isinstance(intake.pathology_report, dict) else str(intake.pathology_report)))
-        if intake.referral_letter:
+        if intake.referral_letter and not uploaded_docs:
             docs.append("REFERRAL LETTER:\n" + (json.dumps(intake.referral_letter, indent=2) if isinstance(intake.referral_letter, dict) else str(intake.referral_letter)))
-        if docs:
-            clinical_history = clinical_history + "\n\n--- UPLOADED DOCUMENTS ---\n" + "\n\n".join(docs)
-            
-        if intake.imaging_report:
-            imaging_reports = json.dumps(intake.imaging_report, indent=2) if isinstance(intake.imaging_report, dict) else str(intake.imaging_report)
+
+    if docs:
+        clinical_history = clinical_history + "\n\n--- UPLOADED DOCUMENTS ---\n" + "\n\n".join(docs)
+        
+    imaging_reports = "Standard Imaging"
+    if intake and intake.imaging_report:
+        imaging_reports = json.dumps(intake.imaging_report, indent=2) if isinstance(intake.imaging_report, dict) else str(intake.imaging_report)
 
     task = generate_pre_consult_brief.delay(
         patient_id, request.patient_name, diagnosis,
@@ -58,8 +67,15 @@ def generate_brief(patient_id: int, request: BriefRequest, db: Session = Depends
     
     # In eager mode, we can get the result immediately
     summary = ""
-    if hasattr(task, 'result') and isinstance(task.result, dict) and 'brief' in task.result:
-        summary = task.result['brief']
+    if hasattr(task, 'result') and isinstance(task.result, dict):
+        parsed = task.result
+        parts = []
+        if parsed.get('chief_complaint'): parts.append(f"**Chief Complaint:** {parsed['chief_complaint']}")
+        if parsed.get('history_summary'): parts.append(f"**History:** {parsed['history_summary']}")
+        if parsed.get('recent_labs_summary'): parts.append(f"**Labs:** {parsed['recent_labs_summary']}")
+        if parsed.get('imaging_summary'): parts.append(f"**Imaging:** {parsed['imaging_summary']}")
+        if parsed.get('critical_alerts'): parts.append(f"**Critical Alerts:** {', '.join(parsed['critical_alerts'])}")
+        summary = "\n\n".join(parts)
         from app.modules.intake.models import OncologyIntake
         intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == patient_id).first()
         if intake:
@@ -68,12 +84,21 @@ def generate_brief(patient_id: int, request: BriefRequest, db: Session = Depends
             
     return {"status": "success", "task_id": task.id, "summary": summary}
 
-@router.post("/{patient_id}/structure-plan", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/{patient_id}/structure-plan", status_code=status.HTTP_200_OK)
 def structure_plan(patient_id: int, request: PlanRequest):
     """Trigger the TreatmentPlanStructurer to structure an oncologist's decision."""
     from app.workers.tasks.clinical_analysis import structure_treatment_plan
     task = structure_treatment_plan.delay(patient_id, request.clinical_note)
-    return {"status": "processing", "task_id": task.id}
+    
+    from app.modules.ai.classifiers.medical_coding import MedicalCodingAgent
+    agent = MedicalCodingAgent()
+    coding_result = agent.process_consultation(request.clinical_note)
+    
+    return {
+        "status": "success", 
+        "task_id": task.id,
+        "coding_analysis": coding_result
+    }
 
 
 # ── Doctor CRUD ──────────────────────────────────────────────────
@@ -101,7 +126,7 @@ def update_doctor_profile(
         
     current_user.verification_status = VerificationStatus.UNDER_REVIEW
     
-    from app.modules.users.credential_models import StaffDocument, DocumentStatus
+    from app.modules.users.credential_models import StaffDocument, DocumentStatus, DocumentType
     
     # Delete old documents to prevent duplicates on re-upload
     db.query(StaffDocument).filter(StaffDocument.user_id == current_user.id).delete()
@@ -109,7 +134,7 @@ def update_doctor_profile(
     if request.get("license_file"):
         doc1 = StaffDocument(
             user_id=current_user.id,
-            document_type="Medical License",
+            document_type=DocumentType.MEDICAL_LICENSE,
             file_url=request.get("license_file"),
             status=DocumentStatus.PENDING_REVIEW
         )
@@ -118,7 +143,7 @@ def update_doctor_profile(
     if request.get("board_file"):
         doc2 = StaffDocument(
             user_id=current_user.id,
-            document_type="Board Certification",
+            document_type=DocumentType.BOARD_CERTIFICATION,
             file_url=request.get("board_file"),
             status=DocumentStatus.PENDING_REVIEW
         )

@@ -87,6 +87,9 @@ class UploadedDocument(Base, TimestampMixin):
     original_name: Mapped[str] = mapped_column(String(255), nullable=False)
     uploaded_by: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # User ID
 
+    from sqlalchemy import Text
+    extracted_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     status: Mapped[str] = mapped_column(String(50), default="uploaded", nullable=False)
 
     # Relationships

@@ -41,7 +41,6 @@ export default function Login() {
         id: String(profile.id),
         name: profile.full_name,
         email: profile.email,
-        email: profile.email,
         role: profile.role,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
         verificationStatus: profile.verification_status,

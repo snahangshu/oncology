@@ -30,3 +30,13 @@ class SlotAvailability(Base, TimestampMixin):
     chair_id: Mapped[int] = mapped_column(Integer, nullable=False)
     nurse_id: Mapped[int] = mapped_column(Integer, nullable=False)
     is_booked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+class ClinicalAlert(Base, TimestampMixin):
+    __tablename__ = "clinical_alerts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
+    alert_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False)
+    message: Mapped[str] = mapped_column(String(1000), nullable=False)
+    is_resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

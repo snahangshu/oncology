@@ -4,8 +4,15 @@ from sqlalchemy.orm import sessionmaker, Session
 from redis import Redis
 from app.config import settings
 
-# Database setup
-engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
+# Database setup optimized for Neon Serverless Postgres
+engine = create_engine(
+    settings.DATABASE_URL, 
+    pool_pre_ping=True, 
+    pool_recycle=300,        # Recycle connections every 5 mins instead of 30
+    pool_size=5,             # Keep pool small
+    max_overflow=10,         # Allow temporary spikes
+    pool_timeout=30          # Wait up to 30s for a connection
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Redis setup

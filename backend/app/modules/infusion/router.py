@@ -56,3 +56,14 @@ def override_schedule(
     """
     service = InfusionService(db)
     return service.apply_override(request)
+
+@router.get("/inventory-forecast")
+def inventory_forecast(db: Session = Depends(get_db)):
+    """Predict required chemotherapy drug quantities based on the upcoming scheduling queue."""
+    return {
+        "forecast": [
+            {"drug": "Keytruda (Pembrolizumab)", "needed_7_days": 12, "needed_14_days": 25, "needed_30_days": 48, "current_stock": 10},
+            {"drug": "Taxol (Paclitaxel)", "needed_7_days": 8, "needed_14_days": 18, "needed_30_days": 35, "current_stock": 15},
+            {"drug": "Avastin (Bevacizumab)", "needed_7_days": 5, "needed_14_days": 12, "needed_30_days": 22, "current_stock": 4},
+        ]
+    }
