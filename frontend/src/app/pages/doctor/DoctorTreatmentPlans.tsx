@@ -247,7 +247,7 @@ export default function DoctorTreatmentPlans() {
                                 </div>
                                 
                                 {/* Actions */}
-                                {isNext && (
+                                {(isNext || isDelayed) && (
                                   <div className="flex gap-2">
                                     <Button 
                                       size="sm" 
