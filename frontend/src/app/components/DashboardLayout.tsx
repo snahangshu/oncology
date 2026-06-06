@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { useAppDispatch, useAppSelector } from '../store';
+import { useQuery } from '@tanstack/react-query';
 import { logout } from '../store/authSlice';
 import { api } from '../shared/api';
 import {
@@ -86,6 +87,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navItems = (user && user.role) ? (navigationByRole[user.role] || []) : [];
 
+  const { data: dashboardData } = useQuery({
+    queryKey: ['dashboard_layout_data', user?.role],
+    queryFn: async () => {
+      if (user?.role === 'NURSE') return (await api.get('/dashboards/nurse')).data;
+      if (user?.role === 'RECEPTIONIST') return (await api.get('/dashboards/receptionist')).data;
+      return null;
+    },
+    enabled: !!user && (user.role === 'NURSE' || user.role === 'RECEPTIONIST'),
+    refetchInterval: 30000
+  });
+
+  const stuckCount = dashboardData?.stuck_patients_count || 0;
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Mobile Backdrop Overlay */}
@@ -129,9 +143,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <item.icon
                     className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}`}
                   />
-                  <span className={isActive ? 'font-medium' : ''}>
+                  <span className={`flex-1 ${isActive ? 'font-medium' : ''}`}>
                     {item.name}
                   </span>
+                  {stuckCount > 0 && (user?.role === 'NURSE' && item.name === 'Dashboard' || user?.role === 'RECEPTIONIST' && item.name === 'Patient Registry') && (
+                    <span className="bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                      {stuckCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
