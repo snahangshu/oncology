@@ -51,7 +51,7 @@ export function PatientAssistantChat({ patientId }: { patientId: number }) {
 
       {isOpen && (
         <Card className="fixed bottom-6 right-6 w-80 md:w-96 h-[500px] flex flex-col bg-white border-slate-200 shadow-2xl z-50 animate-in slide-in-from-bottom-5">
-          <CardHeader className="p-4 border-b border-slate-800 bg-white flex flex-row items-center justify-between">
+          <CardHeader className="p-4 border-b border-slate-200 bg-white flex flex-row items-center justify-between">
             <CardTitle className="text-slate-900 text-base flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-cyan-400" />
               Clinical Assistant
@@ -69,14 +69,14 @@ export function PatientAssistantChat({ patientId }: { patientId: number }) {
               )}
               {history.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-cyan-600 text-slate-900 rounded-br-sm' : 'bg-slate-100 text-slate-200 rounded-bl-sm'}`}>
+                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-cyan-600 text-white rounded-br-sm' : 'bg-slate-100 text-slate-800 rounded-bl-sm'}`}>
                     {msg.content}
                   </div>
                 </div>
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-slate-100 text-slate-200 p-3 rounded-2xl rounded-bl-sm flex gap-1">
+                  <div className="bg-slate-100 text-slate-800 p-3 rounded-2xl rounded-bl-sm flex gap-1">
                     <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce"></span>
                     <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce delay-75"></span>
                     <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce delay-150"></span>
@@ -85,7 +85,7 @@ export function PatientAssistantChat({ patientId }: { patientId: number }) {
               )}
               <div ref={messagesEndRef} />
             </div>
-            <div className="p-3 bg-white border-t border-slate-800">
+            <div className="p-3 bg-white border-t border-slate-200">
               <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-center gap-2">
                 <input
                   type="text"
@@ -95,7 +95,7 @@ export function PatientAssistantChat({ patientId }: { patientId: number }) {
                   className="flex-1 bg-slate-100 border-slate-200 text-sm text-slate-900 rounded-full px-4 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-500"
                 />
                 <Button type="submit" disabled={isLoading || !message.trim()} size="icon" className="h-9 w-9 rounded-full bg-cyan-600 hover:bg-cyan-700">
-                  <Send className="w-4 h-4 text-slate-900" />
+                  <Send className="w-4 h-4 text-white" />
                 </Button>
               </form>
             </div>
