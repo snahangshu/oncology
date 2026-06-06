@@ -828,7 +828,7 @@ export default function DoctorDashboard() {
       {/* Document Preview Dialog */}
       <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
         <DialogContent className="max-w-6xl w-[90vw] h-[90vh] bg-white border-slate-200 p-0 flex flex-col z-[100]">
-          <DialogHeader className="p-4 border-b border-slate-800 bg-white shrink-0">
+          <DialogHeader className="p-4 border-b border-slate-200 bg-white shrink-0">
             <DialogTitle className="text-slate-900 capitalize flex items-center gap-2">
               <FileText className="w-5 h-5 text-emerald-400" />
               {previewDoc?.name}
@@ -857,7 +857,7 @@ export default function DoctorDashboard() {
           </DialogHeader>
           <div className="space-y-6 mt-4">
             <div>
-              <h4 className="text-slate-600 font-medium mb-2 border-b border-slate-800 pb-1">Suggested ICD-10 Codes</h4>
+              <h4 className="text-slate-600 font-medium mb-2 border-b border-slate-200 pb-1">Suggested ICD-10 Codes</h4>
               <div className="space-y-2">
                 {codingResult?.icd10_codes?.map((c: any, i: number) => (
                   <div key={i} className="flex gap-3 bg-slate-100 p-2 rounded-lg border border-slate-200">
@@ -869,7 +869,7 @@ export default function DoctorDashboard() {
             </div>
             
             <div>
-              <h4 className="text-slate-600 font-medium mb-2 border-b border-slate-800 pb-1">Suggested CPT Codes</h4>
+              <h4 className="text-slate-600 font-medium mb-2 border-b border-slate-200 pb-1">Suggested CPT Codes</h4>
               <div className="space-y-2">
                 {codingResult?.cpt_codes?.map((c: any, i: number) => (
                   <div key={i} className="flex gap-3 bg-slate-100 p-2 rounded-lg border border-slate-200">
@@ -933,7 +933,7 @@ export default function DoctorDashboard() {
               </div>
             )}
             
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
               <Button variant="outline" className="border-slate-200 text-slate-600" onClick={() => setShowCodingModal(false)}>
                 Review Notes
               </Button>

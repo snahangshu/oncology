@@ -61,13 +61,13 @@ export default function PatientAppointments() {
         <h1 className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-400 bg-clip-text text-transparent mb-2 text-2xl font-bold">
           My Appointments
         </h1>
-        <p className="text-slate-400">View your upcoming and past medical appointments</p>
+        <p className="text-slate-500">View your upcoming and past medical appointments</p>
       </div>
 
       <div className="space-y-6">
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 shadow-sm rounded-2xl overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-slate-900 flex items-center gap-2">
               <Clock className="w-5 h-5 text-cyan-400" />
               Upcoming Appointments
             </CardTitle>
@@ -75,18 +75,18 @@ export default function PatientAppointments() {
           <CardContent>
             <div className="space-y-3">
               {isLoading ? (
-                <div className="text-slate-400 text-center py-8">
+                <div className="text-slate-500 text-center py-8">
                   <Loader2 className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-2" />
                   Loading appointments...
                 </div>
               ) : appointmentsList.length === 0 ? (
-                <div className="text-slate-400 text-center py-8">No upcoming appointments found.</div>
+                <div className="text-slate-500 text-center py-8">No upcoming appointments found.</div>
               ) : appointmentsList.map((apt, index) => (
-                <div key={apt.id} className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-cyan-500/50 transition-all">
+                <div key={apt.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 shadow-sm hover:border-cyan-500/50 transition-all">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-white mb-1">{apt.type}</h4>
-                      <p className="text-slate-400 text-sm">{apt.doctor}</p>
+                      <h4 className="text-slate-900 mb-1">{apt.type}</h4>
+                      <p className="text-slate-500 text-sm">{apt.doctor}</p>
                       <p className="text-cyan-400 text-sm mt-2">{apt.date} at {apt.time}</p>
                       {apt.notes && (
                         <p className="text-emerald-400 text-xs mt-2 bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
@@ -104,28 +104,28 @@ export default function PatientAppointments() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 shadow-sm rounded-2xl overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-slate-400" />
+            <CardTitle className="text-slate-900 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-slate-500" />
               Past Appointments
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {isLoading ? (
-                <div className="text-slate-400 text-center py-8">Loading...</div>
+                <div className="text-slate-500 text-center py-8">Loading...</div>
               ) : pastAppointmentsList.length === 0 ? (
-                <div className="text-slate-400 text-center py-8">No past appointments found.</div>
+                <div className="text-slate-500 text-center py-8">No past appointments found.</div>
               ) : pastAppointmentsList.map((apt, index) => (
-                <div key={apt.id} className="p-4 rounded-xl bg-slate-900/30 border border-slate-800 transition-all opacity-80 hover:opacity-100">
+                <div key={apt.id} className="p-4 rounded-xl bg-white border border-slate-200 transition-all opacity-80 hover:opacity-100">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-slate-300 mb-1">{apt.type}</h4>
+                      <h4 className="text-slate-700 mb-1">{apt.type}</h4>
                       <p className="text-slate-500 text-sm">{apt.doctor}</p>
-                      <p className="text-slate-400 text-sm mt-2">{apt.date} at {apt.time}</p>
+                      <p className="text-slate-500 text-sm mt-2">{apt.date} at {apt.time}</p>
                     </div>
-                    <Badge variant="outline" className="border-slate-500/50 text-slate-400 bg-slate-500/10">
+                    <Badge variant="outline" className="border-slate-500/50 text-slate-500 bg-slate-500/10">
                       {apt.status}
                     </Badge>
                   </div>

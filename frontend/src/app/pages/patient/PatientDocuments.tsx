@@ -47,28 +47,28 @@ function PatientTimeSeriesUploadZone({ docType, label, uploadedFiles, onUploadSu
   });
   const hasFiles = uploadedFiles && uploadedFiles.length > 0;
   return (
-    <Card className={`border-dashed border transition-all duration-300 ${isDragActive ? 'bg-violet-950/30 border-violet-400' : 'bg-slate-900/30 border-slate-700/30 hover:border-slate-500/50'}`}>
+    <Card className={`border-dashed border transition-all duration-300 ${isDragActive ? 'bg-violet-950/30 border-violet-400' : 'bg-white border-slate-200 shadow-sm hover:border-slate-500/50'}`}>
       <CardContent className="p-0">
         <div {...getRootProps()} className="cursor-pointer p-4 flex items-center justify-between group">
           <input {...getInputProps()} />
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-slate-800/80 rounded-lg group-hover:bg-violet-900/50 transition-colors">
-               {isUploading ? <Loader2 className="w-5 h-5 text-violet-400 animate-spin" /> : <FileUp className={`w-5 h-5 ${isDragActive ? 'text-violet-400' : 'text-slate-400'}`} />}
+             <div className="p-2 bg-slate-50/80 rounded-lg group-hover:bg-violet-900/50 transition-colors">
+               {isUploading ? <Loader2 className="w-5 h-5 text-violet-400 animate-spin" /> : <FileUp className={`w-5 h-5 ${isDragActive ? 'text-violet-400' : 'text-slate-500'}`} />}
              </div>
              <div>
                <p className="text-sm font-bold text-slate-200 group-hover:text-violet-300 transition-colors">{label}</p>
                <p className="text-xs text-slate-500 mt-0.5">{isDragActive ? "Drop here!" : "Click to add"}</p>
              </div>
           </div>
-          {hasFiles && <div className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-bold text-slate-300 border border-slate-700">{uploadedFiles.length}</div>}
+          {hasFiles && <div className="px-2 py-0.5 rounded-full bg-slate-50 text-xs font-bold text-slate-700 border border-slate-200">{uploadedFiles.length}</div>}
         </div>
         {hasFiles && (
-          <div className="bg-slate-950/50 p-3 max-h-[150px] overflow-y-auto border-t border-slate-800 space-y-2">
+          <div className="bg-slate-950/50 p-3 max-h-[150px] overflow-y-auto border-t border-slate-200 space-y-2">
             {uploadedFiles.map((file: any) => (
-              <a key={file.id} href={file.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded-md bg-slate-900 border border-slate-800 hover:border-violet-500/30 transition-colors group/link">
+              <a key={file.id} href={file.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded-md bg-white border border-slate-200 hover:border-violet-500/30 transition-colors group/link">
                 <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-slate-300 truncate group-hover/link:text-violet-300 transition-colors">{file.original_name}</p>
+                  <p className="text-xs text-slate-700 truncate group-hover/link:text-violet-300 transition-colors">{file.original_name}</p>
                   <p className="text-[10px] text-slate-500 mt-0.5">{new Date(file.uploaded_at).toLocaleDateString()}</p>
                 </div>
               </a>
@@ -105,19 +105,19 @@ export default function PatientDocuments() {
         <h1 className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-400 bg-clip-text text-transparent mb-2 text-2xl font-bold">
           Medical Documents
         </h1>
-        <p className="text-slate-400">Upload requested documents to complete your intake and prepare for consultation</p>
+        <p className="text-slate-500">Upload requested documents to complete your intake and prepare for consultation</p>
       </div>
 
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
+      <Card className="bg-white/80 backdrop-blur-xl border-slate-200 shadow-sm rounded-2xl overflow-hidden">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-slate-900 flex items-center gap-2">
             <Upload className="w-5 h-5 text-emerald-400" />
             Medical Document Portal
           </CardTitle>
         </CardHeader>
         <CardContent>
           {intakeLoading || docsLoading ? (
-            <div className="text-slate-400 text-center py-8">
+            <div className="text-slate-500 text-center py-8">
               <Loader2 className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-2" />
               Loading your document checklist...
             </div>
@@ -126,7 +126,7 @@ export default function PatientDocuments() {
           ) : (
             <div className="space-y-8">
               <div className="space-y-4">
-                <h3 className="text-white font-bold border-b border-slate-700/50 pb-2">Required Intake Documents</h3>
+                <h3 className="text-slate-900 font-bold border-b border-slate-200/50 pb-2">Required Intake Documents</h3>
                 <PatientIntakeWizard 
                   intake={intake} 
                   allDocs={allDocs} 
@@ -138,8 +138,8 @@ export default function PatientDocuments() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-white font-bold border-b border-slate-700/50 pb-2 pt-4">Additional Clinical Documents</h3>
-                <p className="text-sm text-slate-400 mb-4">You may upload historic labs, notes, or imaging requested by your doctor here.</p>
+                <h3 className="text-slate-900 font-bold border-b border-slate-200/50 pb-2 pt-4">Additional Clinical Documents</h3>
+                <p className="text-sm text-slate-500 mb-4">You may upload historic labs, notes, or imaging requested by your doctor here.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {[...PHASE_2_DOCS, ...PHASE_3_DOCS].map(doc => {
                     const phase2Docs = allDocs['PHASE_2'] || [];

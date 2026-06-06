@@ -74,7 +74,7 @@ export default function IntakeDashboard() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
             Patient Intake & Triage
           </h1>
-          <p className="text-slate-400 mt-1">Comprehensive document management for Patient #{patientId}</p>
+          <p className="text-slate-500 mt-1">Comprehensive document management for Patient #{patientId}</p>
         </div>
         <div className="flex gap-3">
           <div className={`px-4 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2 ${
@@ -103,11 +103,11 @@ export default function IntakeDashboard() {
           {/* Phase 1 */}
           <section className="space-y-4">
             <div>
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                 <span className="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm border border-cyan-500/30">1</span>
                 Phase 1: Intake & Triage
               </h2>
-              <p className="text-slate-400 text-sm ml-10">Mandatory documents required to complete the patient's initial intake.</p>
+              <p className="text-slate-500 text-sm ml-10">Mandatory documents required to complete the patient's initial intake.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {PHASE_1_DOCS.map(doc => {
@@ -134,14 +134,14 @@ export default function IntakeDashboard() {
           </section>
 
           {/* Phase 2 */}
-          <section className="space-y-4 pt-4 border-t border-slate-700/50">
+          <section className="space-y-4 pt-4 border-t border-slate-200/50">
             <div className="flex justify-between items-end">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                   <span className="w-8 h-8 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center text-sm border border-violet-500/30">2</span>
                   Phase 2: Consultation
                 </h2>
-                <p className="text-slate-400 text-sm ml-10">Optional for initial intake. Time-series data used for safe chemotherapy prescribing.</p>
+                <p className="text-slate-500 text-sm ml-10">Optional for initial intake. Time-series data used for safe chemotherapy prescribing.</p>
               </div>
               <div className="hidden sm:flex items-center gap-2 text-xs text-violet-400 bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">
                 <Bot className="w-4 h-4" /> Used by: Pre-Consult & Drug Safety AI Agents
@@ -166,14 +166,14 @@ export default function IntakeDashboard() {
           </section>
 
           {/* Phase 3 */}
-          <section className="space-y-4 pt-4 border-t border-slate-700/50">
+          <section className="space-y-4 pt-4 border-t border-slate-200/50">
             <div className="flex justify-between items-end">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                   <span className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-sm border border-rose-500/30">3</span>
                   Phase 3: Treatment & Infusion
                 </h2>
-                <p className="text-slate-400 text-sm ml-10">Clinical notes and historic records used to monitor toxicity and plan cycles.</p>
+                <p className="text-slate-500 text-sm ml-10">Clinical notes and historic records used to monitor toxicity and plan cycles.</p>
               </div>
               <div className="hidden sm:flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">
                 <Bot className="w-4 h-4" /> Used by: Treatment Structurer & Toxicity Agents
@@ -201,9 +201,9 @@ export default function IntakeDashboard() {
 
         {/* Right Column: Progress Tracker (Locked to Phase 1 only) */}
         <div className="space-y-6">
-          <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-xl sticky top-6">
+          <Card className="bg-white/50 border-slate-200/50 backdrop-blur-xl sticky top-6">
             <CardHeader>
-              <CardTitle className="text-lg text-white flex items-center gap-2">
+              <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-cyan-400" />
                 Intake Status
               </CardTitle>
@@ -212,10 +212,10 @@ export default function IntakeDashboard() {
               
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-300">Phase 1 Completion</span>
+                  <span className="text-slate-700">Phase 1 Completion</span>
                   <span className="text-cyan-400 font-bold">{intake.completion_percentage}%</span>
                 </div>
-                <Progress value={intake.completion_percentage} className="h-2 bg-slate-800" />
+                <Progress value={intake.completion_percentage} className="h-2 bg-slate-50" />
               </div>
 
               <div className="space-y-3">
@@ -228,7 +228,7 @@ export default function IntakeDashboard() {
                       ) : (
                         <XCircle className="w-5 h-5 text-rose-400 shrink-0 opacity-50" />
                       )}
-                      <span className={isUploaded ? "text-slate-300" : "text-slate-500 line-through"}>
+                      <span className={isUploaded ? "text-slate-700" : "text-slate-500 line-through"}>
                         {doc.label}
                       </span>
                     </div>
@@ -317,7 +317,7 @@ function DocumentUploadZone({ patientId, docType, label, existingData, uploadedF
         ? (isDeferred ? 'bg-amber-950/20 border-amber-500/30' : 'bg-emerald-950/20 border-emerald-500/30')
         : isDragActive 
           ? 'bg-cyan-950/30 border-cyan-400' 
-          : 'bg-slate-900/50 border-slate-700/50 hover:border-slate-500'
+          : 'bg-white/50 border-slate-200/50 hover:border-slate-500'
     }`}>
       <CardContent className="p-4 relative">
         {existingData && !isDeferred ? (
@@ -341,8 +341,8 @@ function DocumentUploadZone({ patientId, docType, label, existingData, uploadedF
             {isUploading ? (
               <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
             ) : (
-              <div className="p-3 bg-slate-800/80 rounded-full group-hover:bg-cyan-950/50 transition-colors">
-                <FileUp className={`w-8 h-8 ${isDragActive ? 'text-cyan-400' : 'text-slate-400'}`} />
+              <div className="p-3 bg-slate-50/80 rounded-full group-hover:bg-cyan-950/50 transition-colors">
+                <FileUp className={`w-8 h-8 ${isDragActive ? 'text-cyan-400' : 'text-slate-500'}`} />
               </div>
             )}
             <div>
@@ -362,7 +362,7 @@ function DocumentUploadZone({ patientId, docType, label, existingData, uploadedF
            <div className="mt-4 pt-4 border-t border-emerald-500/30 space-y-2">
              <p className="text-xs text-emerald-400/70 font-bold">History ({uploadedFiles.length})</p>
              {uploadedFiles.slice(1).map((f: any) => (
-                <a key={f.id} href={f.file_url} target="_blank" rel="noreferrer" className="block text-xs text-slate-400 hover:text-cyan-400 truncate">
+                <a key={f.id} href={f.file_url} target="_blank" rel="noreferrer" className="block text-xs text-slate-500 hover:text-cyan-400 truncate">
                   • {f.original_name}
                 </a>
              ))}
@@ -376,7 +376,7 @@ function DocumentUploadZone({ patientId, docType, label, existingData, uploadedF
               variant="outline" 
               size="sm" 
               onClick={handleDefer}
-              className="text-xs bg-slate-800/80 border-slate-700/50 hover:bg-slate-700 text-slate-300 h-7 px-2"
+              className="text-xs bg-slate-50/80 border-slate-200/50 hover:bg-slate-700 text-slate-700 h-7 px-2"
             >
               Defer
             </Button>
@@ -430,7 +430,7 @@ function TimeSeriesUploadZone({ patientId, docType, label, uploadedFiles, onUplo
     <Card className={`border-dashed border transition-all duration-300 ${
       isDragActive 
         ? 'bg-violet-950/30 border-violet-400' 
-        : 'bg-slate-900/30 border-slate-700/30 hover:border-slate-500/50'
+        : 'bg-white border-slate-200 shadow-sm hover:border-slate-500/50'
     }`}>
       <CardContent className="p-0">
         
@@ -438,8 +438,8 @@ function TimeSeriesUploadZone({ patientId, docType, label, uploadedFiles, onUplo
         <div {...getRootProps()} className="cursor-pointer p-4 flex items-center justify-between group">
           <input {...getInputProps()} />
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-slate-800/80 rounded-lg group-hover:bg-violet-900/50 transition-colors">
-               {isUploading ? <Loader2 className="w-5 h-5 text-violet-400 animate-spin" /> : <FileUp className={`w-5 h-5 ${isDragActive ? 'text-violet-400' : 'text-slate-400'}`} />}
+             <div className="p-2 bg-slate-50/80 rounded-lg group-hover:bg-violet-900/50 transition-colors">
+               {isUploading ? <Loader2 className="w-5 h-5 text-violet-400 animate-spin" /> : <FileUp className={`w-5 h-5 ${isDragActive ? 'text-violet-400' : 'text-slate-500'}`} />}
              </div>
              <div>
                <p className="text-sm font-bold text-slate-200 group-hover:text-violet-300 transition-colors">{label}</p>
@@ -447,7 +447,7 @@ function TimeSeriesUploadZone({ patientId, docType, label, uploadedFiles, onUplo
              </div>
           </div>
           {hasFiles && (
-            <div className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-bold text-slate-300 border border-slate-700">
+            <div className="px-2 py-0.5 rounded-full bg-slate-50 text-xs font-bold text-slate-700 border border-slate-200">
               {uploadedFiles.length}
             </div>
           )}
@@ -455,18 +455,18 @@ function TimeSeriesUploadZone({ patientId, docType, label, uploadedFiles, onUplo
 
         {/* Bottom List of Files */}
         {hasFiles && (
-          <div className="bg-slate-950/50 p-3 max-h-[150px] overflow-y-auto border-t border-slate-800 space-y-2">
+          <div className="bg-slate-950/50 p-3 max-h-[150px] overflow-y-auto border-t border-slate-200 space-y-2">
             {uploadedFiles.map((file: any) => (
               <a 
                 key={file.id} 
                 href={file.file_url} 
                 target="_blank" 
                 rel="noreferrer" 
-                className="flex items-center gap-2 p-2 rounded-md bg-slate-900 border border-slate-800 hover:border-violet-500/30 transition-colors group/link"
+                className="flex items-center gap-2 p-2 rounded-md bg-white border border-slate-200 hover:border-violet-500/30 transition-colors group/link"
               >
                 <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-slate-300 truncate group-hover/link:text-violet-300 transition-colors">
+                  <p className="text-xs text-slate-700 truncate group-hover/link:text-violet-300 transition-colors">
                     {file.original_name}
                   </p>
                   <p className="text-[10px] text-slate-500 mt-0.5">

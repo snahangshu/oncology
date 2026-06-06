@@ -100,7 +100,7 @@ export default function DoctorTreatmentPlans() {
       <div className="grid grid-cols-1 gap-6">
         {dashboardLoading && <p className="text-slate-500">Loading plans...</p>}
         {plansList.length === 0 && !dashboardLoading && (
-          <div className="text-center py-12 bg-white rounded-xl border border-slate-800">
+          <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
             <p className="text-slate-500">No active treatment plans found for your patients.</p>
           </div>
         )}
@@ -137,7 +137,7 @@ export default function DoctorTreatmentPlans() {
 
             {/* EXPANDED JOURNEY VIEW */}
             {expandedPlanId === plan.id && (
-              <div className="border-t border-slate-800 bg-slate-950/50 p-6 animate-in slide-in-from-top-4 duration-300">
+              <div className="border-t border-slate-200 bg-slate-950/50 p-6 animate-in slide-in-from-top-4 duration-300">
                 <div className="mb-8 flex items-center justify-between">
                   <h4 className="text-lg font-bold text-slate-200">Treatment Journey Map</h4>
                   {(!cyclesData || cyclesData.cycles.length === 0) && !cyclesLoading && (
@@ -156,12 +156,12 @@ export default function DoctorTreatmentPlans() {
                 ) : cyclesData && cyclesData.cycles && cyclesData.cycles.length > 0 ? (
                   <div className="space-y-6">
                     {/* Summary Bar */}
-                    <div className="flex gap-6 mb-6 p-4 rounded-xl bg-white border border-slate-800">
-                      <div className="flex-1 text-center border-r border-slate-800">
+                    <div className="flex gap-6 mb-6 p-4 rounded-xl bg-white border border-slate-200">
+                      <div className="flex-1 text-center border-r border-slate-200">
                         <p className="text-slate-500 text-xs uppercase mb-1">Completed</p>
                         <p className="text-2xl font-bold text-emerald-400">{cyclesData.plan.completed_cycles}</p>
                       </div>
-                      <div className="flex-1 text-center border-r border-slate-800">
+                      <div className="flex-1 text-center border-r border-slate-200">
                         <p className="text-slate-500 text-xs uppercase mb-1">Upcoming</p>
                         <p className="text-2xl font-bold text-cyan-400">{cyclesData.plan.upcoming_cycles}</p>
                       </div>
@@ -290,7 +290,7 @@ export default function DoctorTreatmentPlans() {
       </div>
 
       <Dialog open={delayModalOpen} onOpenChange={setDelayModalOpen}>
-        <DialogContent className="bg-white border-slate-800 text-slate-200 sm:max-w-[425px]">
+        <DialogContent className="bg-white border-slate-200 text-slate-200 sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="text-xl text-rose-400 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" /> Delay Cycle
@@ -308,7 +308,7 @@ export default function DoctorTreatmentPlans() {
                 max="60"
                 value={delayDays}
                 onChange={(e) => setDelayDays(parseInt(e.target.value))}
-                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
+                className="flex h-10 w-full rounded-md border border-slate-200 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -317,7 +317,7 @@ export default function DoctorTreatmentPlans() {
                 value={delayReason}
                 onChange={(e) => setDelayReason(e.target.value)}
                 placeholder="e.g. Low neutrophils"
-                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
+                className="flex h-10 w-full rounded-md border border-slate-200 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
               />
             </div>
           </div>

@@ -138,7 +138,7 @@ export default function NurseDashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -152,7 +152,7 @@ export default function NurseDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -166,7 +166,7 @@ export default function NurseDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-violet-500/30 transition-all">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-violet-500/30 transition-all">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -182,7 +182,7 @@ export default function NurseDashboard() {
       </div>
 
       {/* Vitals Queue */}
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
+      <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
         <CardHeader>
           <CardTitle className="text-slate-900 flex items-center gap-2">
             <Heart className="w-5 h-5 text-emerald-400" />

@@ -247,7 +247,7 @@ export default function ReceptionistDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Waiting Room Queue */}
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
           <CardHeader>
             <CardTitle className="text-slate-900 flex items-center gap-2">
               <Users className="w-5 h-5 text-cyan-400" />
@@ -298,7 +298,7 @@ export default function ReceptionistDashboard() {
         </Card>
 
         {/* Appointment Calendar */}
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
           <CardHeader>
             <CardTitle className="text-slate-900 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-emerald-400" />
@@ -326,7 +326,7 @@ export default function ReceptionistDashboard() {
       </div>
 
       {/* Today's Appointments */}
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
+      <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-slate-900 flex items-center gap-2">
@@ -389,7 +389,7 @@ export default function ReceptionistDashboard() {
       </Card>
 
       {/* Upcoming Appointments */}
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden mt-6">
+      <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden mt-6">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-slate-900 flex items-center gap-2">

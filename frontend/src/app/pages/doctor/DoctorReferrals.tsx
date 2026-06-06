@@ -26,7 +26,7 @@ export default function DoctorReferrals() {
           <h1 className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-2 text-3xl font-bold tracking-tight">
             Referrals & New Cases
           </h1>
-          <p className="text-slate-400">Manage incoming oncology referrals and intake tracking</p>
+          <p className="text-slate-500">Manage incoming oncology referrals and intake tracking</p>
         </div>
       </div>
 
@@ -39,10 +39,10 @@ export default function DoctorReferrals() {
           <CardContent className="p-8">
             <p className="text-violet-300 font-medium mb-2 uppercase tracking-widest text-xs">Total New Cases This Week</p>
             <div className="flex items-baseline gap-3">
-              <h2 className="text-6xl font-bold text-white">0</h2>
+              <h2 className="text-6xl font-bold text-slate-900">0</h2>
               <span className="text-sm text-slate-500 font-medium">No new cases</span>
             </div>
-            <p className="text-slate-400 mt-4 text-sm max-w-[80%]">New oncology referrals requiring initial review and treatment planning.</p>
+            <p className="text-slate-500 mt-4 text-sm max-w-[80%]">New oncology referrals requiring initial review and treatment planning.</p>
           </CardContent>
         </Card>
 
@@ -53,10 +53,10 @@ export default function DoctorReferrals() {
           <CardContent className="p-8">
             <p className="text-rose-300 font-medium mb-2 uppercase tracking-widest text-xs">Action Required Today</p>
             <div className="flex items-baseline gap-3">
-              <h2 className="text-6xl font-bold text-white">0</h2>
-              <span className="text-sm text-slate-500 font-medium bg-slate-800 px-2 py-1 rounded-full">All clear</span>
+              <h2 className="text-6xl font-bold text-slate-900">0</h2>
+              <span className="text-sm text-slate-500 font-medium bg-slate-50 px-2 py-1 rounded-full">All clear</span>
             </div>
-            <p className="text-slate-400 mt-4 text-sm max-w-[80%]">Cases flagged as critical or high urgency that need immediate attention.</p>
+            <p className="text-slate-500 mt-4 text-sm max-w-[80%]">Cases flagged as critical or high urgency that need immediate attention.</p>
           </CardContent>
         </Card>
       </div>
@@ -70,22 +70,22 @@ export default function DoctorReferrals() {
           { label: 'Awaiting Imaging', count: 0, icon: ImageIcon, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
           { label: 'Awaiting Insurance', count: 0, icon: ShieldAlert, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
         ].map((stat, idx) => (
-          <Card key={idx} className={`bg-slate-900/50 backdrop-blur-xl border ${stat.border} hover:scale-105 transition-transform cursor-pointer`}>
+          <Card key={idx} className={`bg-white/50 backdrop-blur-xl border ${stat.border} hover:scale-105 transition-transform cursor-pointer`}>
             <CardContent className="p-4 flex flex-col items-center justify-center text-center">
               <div className={`w-10 h-10 rounded-full ${stat.bg} ${stat.color} flex items-center justify-center mb-3`}>
                 <stat.icon className="w-5 h-5" />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-1">{stat.count}</h3>
-              <p className="text-xs text-slate-400 uppercase tracking-wider font-medium">{stat.label}</p>
+              <h3 className="text-2xl font-bold text-slate-900 mb-1">{stat.count}</h3>
+              <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">{stat.label}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Referrals List */}
-      <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
-        <CardHeader className="border-b border-slate-800/50 bg-slate-900/20">
-          <CardTitle className="text-white text-lg">Recent Referrals</CardTitle>
+      <Card className="bg-white/50 border-slate-200 shadow-sm backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+        <CardHeader className="border-b border-slate-200/50 bg-white/20">
+          <CardTitle className="text-slate-900 text-lg">Recent Referrals</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y divide-slate-800/50">
@@ -93,16 +93,16 @@ export default function DoctorReferrals() {
               referrals.map((ref, idx) => (
                 <div 
                   key={ref.id} 
-                  className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-800/40 transition-colors group animate-in slide-in-from-bottom-4 duration-500"
+                  className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/40 transition-colors group animate-in slide-in-from-bottom-4 duration-500"
                   style={{ animationDelay: `${idx * 100}ms` }}
                 >
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-700 font-bold shrink-0">
                       {ref.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-white font-bold text-lg">{ref.name}</h4>
+                        <h4 className="text-slate-900 font-bold text-lg">{ref.name}</h4>
                         {ref.urgency === 'Critical' && <Badge variant="outline" className="border-rose-500/50 text-rose-400 bg-rose-500/10 text-[10px] animate-pulse">Critical</Badge>}
                         {ref.urgency === 'High' && <Badge variant="outline" className="border-orange-500/50 text-orange-400 bg-orange-500/10 text-[10px]">High</Badge>}
                       </div>
@@ -122,7 +122,7 @@ export default function DoctorReferrals() {
                       {ref.status}
                     </Badge>
                     
-                    <Button size="sm" variant="outline" className="border-slate-700 hover:border-cyan-500 hover:text-cyan-400 bg-slate-800 transition-colors">
+                    <Button size="sm" variant="outline" className="border-slate-200 hover:border-cyan-500 hover:text-cyan-400 bg-slate-50 transition-colors">
                       Review Case <ArrowRight className="w-3.5 h-3.5 ml-2" />
                     </Button>
                   </div>
@@ -130,10 +130,10 @@ export default function DoctorReferrals() {
               ))
             ) : (
               <div className="flex flex-col items-center justify-center p-12 text-center">
-                <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 mb-4">
+                <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 mb-4">
                   <FileText className="w-8 h-8" />
                 </div>
-                <p className="text-lg font-medium text-slate-300">No recent referrals</p>
+                <p className="text-lg font-medium text-slate-700">No recent referrals</p>
                 <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">There are no new cases requiring your attention at this time.</p>
               </div>
             )}

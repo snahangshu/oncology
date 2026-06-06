@@ -51,16 +51,16 @@ export default function AppointmentScheduling() {
         <h1 className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-400 bg-clip-text text-transparent text-3xl font-bold mb-2">
           Appointment Scheduling
         </h1>
-        <p className="text-slate-400">Intelligent scheduling with AI-driven recommendations</p>
+        <p className="text-slate-500">Intelligent scheduling with AI-driven recommendations</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column: Form */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
+          <Card className="bg-white/50 backdrop-blur-xl border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-slate-900 flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-cyan-400" />
                 Create Appointment
               </CardTitle>
@@ -69,12 +69,12 @@ export default function AppointmentScheduling() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label className="text-slate-300">Select Patient</Label>
+                  <Label className="text-slate-700">Select Patient</Label>
                   <Select>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700/30 text-white">
+                    <SelectTrigger className="bg-slate-50/50 border-slate-200 shadow-sm text-slate-900">
                       <SelectValue placeholder="Search patient..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700/30">
+                    <SelectContent className="bg-white border-slate-200 shadow-sm">
                       {patients.map(p => (
                         <SelectItem key={p.id} value={p.id}>{p.name} ({p.mrn})</SelectItem>
                       ))}
@@ -83,12 +83,12 @@ export default function AppointmentScheduling() {
                   </Select>
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-slate-300">Appointment Type</Label>
+                  <Label className="text-slate-700">Appointment Type</Label>
                   <Select>
-                    <SelectTrigger className="bg-slate-800/50 border-slate-700/30 text-white">
+                    <SelectTrigger className="bg-slate-50/50 border-slate-200 shadow-sm text-slate-900">
                       <SelectValue placeholder="Select type..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700/30">
+                    <SelectContent className="bg-white border-slate-200 shadow-sm">
                       <SelectItem value="initial-consult">Initial Consult</SelectItem>
                       <SelectItem value="follow-up">Follow-Up</SelectItem>
                       <SelectItem value="infusion">Infusion Session</SelectItem>
@@ -99,10 +99,10 @@ export default function AppointmentScheduling() {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-slate-300">Diagnosis / Reason for Visit</Label>
+                <Label className="text-slate-700">Diagnosis / Reason for Visit</Label>
                 <Input 
                   placeholder="e.g. Stage III Breast Cancer"
-                  className="bg-slate-800/50 border-slate-700/30 text-white"
+                  className="bg-slate-50/50 border-slate-200 shadow-sm text-slate-900"
                   defaultValue="Stage III Breast Cancer"
                 />
               </div>
@@ -111,7 +111,7 @@ export default function AppointmentScheduling() {
                 <Button 
                   onClick={handleSimulateAi}
                   disabled={isAiAnalyzing || showAiRecommendations}
-                  className="w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white border-0 shadow-lg shadow-violet-500/20"
+                  className="w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-slate-900 border-0 shadow-lg shadow-violet-500/20"
                 >
                   {isAiAnalyzing ? (
                     <span className="flex items-center gap-2">
@@ -150,36 +150,36 @@ export default function AppointmentScheduling() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-slate-900/60 border border-violet-500/20 rounded-xl p-4">
-                      <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <div className="bg-white/60 border border-violet-500/20 rounded-xl p-4">
+                      <div className="flex items-center gap-2 text-slate-500 mb-2">
                         <User className="w-4 h-4 text-cyan-400" />
                         <span className="text-sm font-medium">Recommended Doctor</span>
                       </div>
-                      <p className="text-white font-medium text-lg">Dr. Patel</p>
+                      <p className="text-slate-900 font-medium text-lg">Dr. Patel</p>
                       <p className="text-xs text-slate-500 mt-1">Specialist: Breast Oncology</p>
                     </div>
 
-                    <div className="bg-slate-900/60 border border-violet-500/20 rounded-xl p-4">
-                      <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <div className="bg-white/60 border border-violet-500/20 rounded-xl p-4">
+                      <div className="flex items-center gap-2 text-slate-500 mb-2">
                         <Clock className="w-4 h-4 text-emerald-400" />
                         <span className="text-sm font-medium">Suggested Duration</span>
                       </div>
-                      <p className="text-white font-medium text-lg">45 Minutes</p>
+                      <p className="text-slate-900 font-medium text-lg">45 Minutes</p>
                       <p className="text-xs text-slate-500 mt-1">Standard for Stage III Initial</p>
                     </div>
 
-                    <div className="bg-slate-900/60 border border-violet-500/20 rounded-xl p-4">
-                      <div className="flex items-center gap-2 text-slate-400 mb-2">
+                    <div className="bg-white/60 border border-violet-500/20 rounded-xl p-4">
+                      <div className="flex items-center gap-2 text-slate-500 mb-2">
                         <CalendarIcon className="w-4 h-4 text-fuchsia-400" />
                         <span className="text-sm font-medium">Next Available</span>
                       </div>
-                      <p className="text-white font-medium text-lg">10:30 AM</p>
+                      <p className="text-slate-900 font-medium text-lg">10:30 AM</p>
                       <p className="text-xs text-slate-500 mt-1">Tomorrow (Jun 11)</p>
                     </div>
                   </div>
 
                   <div className="mt-6 flex justify-end">
-                    <Button className="bg-violet-500 hover:bg-violet-600 text-white shadow-lg shadow-violet-500/20">
+                    <Button className="bg-violet-500 hover:bg-violet-600 text-slate-900 shadow-lg shadow-violet-500/20">
                       Apply Recommendations
                     </Button>
                   </div>
@@ -191,53 +191,53 @@ export default function AppointmentScheduling() {
 
         {/* Right Column: Mini Calendar & Availability */}
         <div className="space-y-6">
-          <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
+          <Card className="bg-white/50 backdrop-blur-xl border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white text-lg">Calendar</CardTitle>
+              <CardTitle className="text-slate-900 text-lg">Calendar</CardTitle>
             </CardHeader>
             <CardContent>
               <Calendar
                 mode="single"
                 selected={date}
                 onSelect={setDate}
-                className="rounded-xl border border-slate-700/30 bg-slate-800/30"
+                className="rounded-xl border border-slate-200 shadow-sm bg-slate-50"
               />
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
+          <Card className="bg-white/50 backdrop-blur-xl border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white text-lg">Doctor Availability</CardTitle>
+              <CardTitle className="text-slate-900 text-lg">Doctor Availability</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 border border-slate-700/30">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                   <div>
-                    <p className="text-sm text-white font-medium">Dr. Sharma</p>
-                    <p className="text-xs text-slate-400">Available</p>
+                    <p className="text-sm text-slate-900 font-medium">Dr. Sharma</p>
+                    <p className="text-xs text-slate-500">Available</p>
                   </div>
                 </div>
                 <span className="text-xs text-emerald-400">3 slots</span>
               </div>
               
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 border border-slate-700/30">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
                   <div>
-                    <p className="text-sm text-white font-medium">Dr. Patel</p>
-                    <p className="text-xs text-slate-400">In Consultation</p>
+                    <p className="text-sm text-slate-900 font-medium">Dr. Patel</p>
+                    <p className="text-xs text-slate-500">In Consultation</p>
                   </div>
                 </div>
                 <span className="text-xs text-slate-500">Free at 11:30 AM</span>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 border border-slate-700/30">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200 shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
                   <div>
-                    <p className="text-sm text-white font-medium">Dr. Singh</p>
-                    <p className="text-xs text-slate-400">Off Today</p>
+                    <p className="text-sm text-slate-900 font-medium">Dr. Singh</p>
+                    <p className="text-xs text-slate-500">Off Today</p>
                   </div>
                 </div>
                 <span className="text-xs text-slate-500">0 slots</span>

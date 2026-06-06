@@ -304,26 +304,26 @@ export default function DoctorSchedule() {
           <h1 className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-2 text-3xl font-bold tracking-tight">
             Schedule & Availability
           </h1>
-          <p className="text-slate-400">Manage your shifts, time off, and protected emergency blocks</p>
+          <p className="text-slate-500">Manage your shifts, time off, and protected emergency blocks</p>
         </div>
       </div>
 
       {/* Calendar Controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/50 p-4 rounded-2xl border border-slate-700/50 backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/50 p-4 rounded-2xl border border-slate-200/50 backdrop-blur-xl">
         <div className="flex items-center gap-4">
-          <Button onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))} variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700">
+          <Button onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))} variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-200 bg-slate-50 text-slate-700 hover:text-slate-900 hover:bg-slate-700">
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-white font-bold text-lg min-w-[140px] text-center">
+          <h2 className="text-slate-900 font-bold text-lg min-w-[140px] text-center">
             {currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
           </h2>
-          <Button onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))} variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-700 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700">
+          <Button onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))} variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-200 bg-slate-50 text-slate-700 hover:text-slate-900 hover:bg-slate-700">
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
 
         <Tabs value={view} onValueChange={setView} className="w-full sm:w-auto">
-          <TabsList className="bg-slate-800/50 border border-slate-700/50">
+          <TabsList className="bg-slate-50/50 border border-slate-200/50">
             <TabsTrigger value="day" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 px-6">Day</TabsTrigger>
             <TabsTrigger value="week" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 px-6">Week</TabsTrigger>
             <TabsTrigger value="month" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 px-6">Month</TabsTrigger>
@@ -334,10 +334,10 @@ export default function DoctorSchedule() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Left Column: Management Configuration */}
         <div className="space-y-6 lg:col-span-1">
-          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl">
+          <Card className="bg-white/50 border-slate-200 shadow-sm backdrop-blur-xl shadow-2xl rounded-2xl">
              <Tabs defaultValue="schedule" className="w-full">
-               <CardHeader className="pb-0 border-b border-slate-800/50">
-                  <TabsList className="w-full bg-slate-800/50 border border-slate-700/50 grid grid-cols-3 mb-3">
+               <CardHeader className="pb-0 border-b border-slate-200/50">
+                  <TabsList className="w-full bg-slate-50/50 border border-slate-200/50 grid grid-cols-3 mb-3">
                     <TabsTrigger value="schedule" className="text-xs data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300">Shifts</TabsTrigger>
                     <TabsTrigger value="timeoff" className="text-xs data-[state=active]:bg-violet-500/20 data-[state=active]:text-violet-300">Time Off</TabsTrigger>
                     <TabsTrigger value="emergency" className="text-xs data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-300">Protected</TabsTrigger>
@@ -348,51 +348,51 @@ export default function DoctorSchedule() {
                   {/* Shifts Tab */}
                   <TabsContent value="schedule" className="space-y-4 animate-in fade-in zoom-in-95 mt-0">
                     <div className="space-y-1 mb-4">
-                       <h3 className="text-sm font-bold text-white flex items-center gap-2"><Clock className="w-4 h-4 text-cyan-400"/> Shift Generator</h3>
-                       <p className="text-xs text-slate-400">Generate recurring availability shifts.</p>
+                       <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2"><Clock className="w-4 h-4 text-cyan-400"/> Shift Generator</h3>
+                       <p className="text-xs text-slate-500">Generate recurring availability shifts.</p>
                     </div>
 
                     <div className="space-y-3">
                        <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1">
-                             <Label className="text-xs text-slate-400">Shift Start</Label>
-                             <Input type="time" value={shiftStart} onChange={e=>setShiftStart(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                             <Label className="text-xs text-slate-500">Shift Start</Label>
+                             <Input type="time" value={shiftStart} onChange={e=>setShiftStart(e.target.value)} className="bg-slate-50 border-slate-200 h-8 text-sm" />
                           </div>
                           <div className="space-y-1">
-                             <Label className="text-xs text-slate-400">Shift End</Label>
-                             <Input type="time" value={shiftEnd} onChange={e=>setShiftEnd(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                             <Label className="text-xs text-slate-500">Shift End</Label>
+                             <Input type="time" value={shiftEnd} onChange={e=>setShiftEnd(e.target.value)} className="bg-slate-50 border-slate-200 h-8 text-sm" />
                           </div>
                        </div>
                        <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1">
-                             <Label className="text-xs text-slate-400">Lunch Start</Label>
-                             <Input type="time" value={lunchStart} onChange={e=>setLunchStart(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                             <Label className="text-xs text-slate-500">Lunch Start</Label>
+                             <Input type="time" value={lunchStart} onChange={e=>setLunchStart(e.target.value)} className="bg-slate-50 border-slate-200 h-8 text-sm" />
                           </div>
                           <div className="space-y-1">
-                             <Label className="text-xs text-slate-400">Lunch End</Label>
-                             <Input type="time" value={lunchEnd} onChange={e=>setLunchEnd(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                             <Label className="text-xs text-slate-500">Lunch End</Label>
+                             <Input type="time" value={lunchEnd} onChange={e=>setLunchEnd(e.target.value)} className="bg-slate-50 border-slate-200 h-8 text-sm" />
                           </div>
                        </div>
                        
                        <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1">
-                             <Label className="text-xs text-slate-400">Valid From (Optional)</Label>
-                             <Input type="date" value={shiftStartDate} onChange={e=>setShiftStartDate(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm text-slate-300" />
+                             <Label className="text-xs text-slate-500">Valid From (Optional)</Label>
+                             <Input type="date" value={shiftStartDate} onChange={e=>setShiftStartDate(e.target.value)} className="bg-slate-50 border-slate-200 h-8 text-sm text-slate-700" />
                           </div>
                           <div className="space-y-1">
-                             <Label className="text-xs text-slate-400">Valid Until (Optional)</Label>
-                             <Input type="date" value={shiftEndDate} onChange={e=>setShiftEndDate(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm text-slate-300" />
+                             <Label className="text-xs text-slate-500">Valid Until (Optional)</Label>
+                             <Input type="date" value={shiftEndDate} onChange={e=>setShiftEndDate(e.target.value)} className="bg-slate-50 border-slate-200 h-8 text-sm text-slate-700" />
                           </div>
                        </div>
                        
                        <div className="pt-2">
-                          <Label className="text-xs text-slate-400 mb-2 block">Days of Week</Label>
+                          <Label className="text-xs text-slate-500 mb-2 block">Days of Week</Label>
                           <div className="flex flex-wrap gap-1">
                             {['Su','Mo','Tu','We','Th','Fr','Sa'].map((d, i) => (
                                <Badge 
                                  key={d} 
                                  variant={selectedDays.includes(i) ? "default" : "outline"}
-                                 className={`cursor-pointer ${selectedDays.includes(i) ? 'bg-cyan-600 hover:bg-cyan-500' : 'border-slate-700 text-slate-400 hover:text-white'}`}
+                                 className={`cursor-pointer ${selectedDays.includes(i) ? 'bg-cyan-600 hover:bg-cyan-500' : 'border-slate-200 text-slate-500 hover:text-slate-900'}`}
                                  onClick={() => toggleDay(i)}
                                >
                                  {d}
@@ -401,7 +401,7 @@ export default function DoctorSchedule() {
                           </div>
                        </div>
 
-                       <Button onClick={handleGenerateShift} className="w-full bg-cyan-600 hover:bg-cyan-500 text-white mt-2 h-8 text-xs">
+                       <Button onClick={handleGenerateShift} className="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-900 mt-2 h-8 text-xs">
                           Generate Shift
                        </Button>
                     </div>
@@ -410,17 +410,17 @@ export default function DoctorSchedule() {
                   {/* Time Off Tab */}
                   <TabsContent value="timeoff" className="space-y-4 animate-in fade-in zoom-in-95 mt-0">
                     <div className="space-y-1 mb-4">
-                       <h3 className="text-sm font-bold text-white flex items-center gap-2"><CalendarRange className="w-4 h-4 text-violet-400"/> Time Off</h3>
-                       <p className="text-xs text-slate-400">Manage vacations and leaves. Overlays on shifts.</p>
+                       <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2"><CalendarRange className="w-4 h-4 text-violet-400"/> Time Off</h3>
+                       <p className="text-xs text-slate-500">Manage vacations and leaves. Overlays on shifts.</p>
                     </div>
 
                     <div className="space-y-3">
                        <div className="space-y-1">
-                          <Label className="text-xs text-slate-400">Reason / Type</Label>
+                          <Label className="text-xs text-slate-500">Reason / Type</Label>
                           <select 
                             value={timeOffReason} 
                             onChange={e=>setTimeOffReason(e.target.value)}
-                            className="w-full flex h-8 w-full items-center justify-between rounded-md border border-slate-700 bg-slate-800 px-3 py-1 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                            className="w-full flex h-8 w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
                           >
                              <option>Vacation</option>
                              <option>Conference</option>
@@ -430,14 +430,14 @@ export default function DoctorSchedule() {
                           </select>
                        </div>
                        <div className="space-y-1">
-                          <Label className="text-xs text-slate-400">Start Date & Time</Label>
-                          <Input type="datetime-local" value={timeOffStart} onChange={e=>setTimeOffStart(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                          <Label className="text-xs text-slate-500">Start Date & Time</Label>
+                          <Input type="datetime-local" value={timeOffStart} onChange={e=>setTimeOffStart(e.target.value)} className="bg-slate-50 border-slate-200 h-8 text-sm" />
                        </div>
                        <div className="space-y-1">
-                          <Label className="text-xs text-slate-400">End Date & Time</Label>
-                          <Input type="datetime-local" value={timeOffEnd} onChange={e=>setTimeOffEnd(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                          <Label className="text-xs text-slate-500">End Date & Time</Label>
+                          <Input type="datetime-local" value={timeOffEnd} onChange={e=>setTimeOffEnd(e.target.value)} className="bg-slate-50 border-slate-200 h-8 text-sm" />
                        </div>
-                       <Button onClick={handleAddTimeOff} className="w-full bg-violet-600 hover:bg-violet-500 text-white mt-2 h-8 text-xs">
+                       <Button onClick={handleAddTimeOff} className="w-full bg-violet-600 hover:bg-violet-500 text-slate-900 mt-2 h-8 text-xs">
                           Add Time Off
                        </Button>
                     </div>
@@ -446,18 +446,18 @@ export default function DoctorSchedule() {
                   {/* Emergency Blocks Tab */}
                   <TabsContent value="emergency" className="space-y-4 animate-in fade-in zoom-in-95 mt-0">
                     <div className="space-y-1 mb-4">
-                       <h3 className="text-sm font-bold text-white flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-rose-400"/> Protected Slots</h3>
-                       <p className="text-xs text-slate-400">Reserve slots for emergencies. Hidden from normal availability.</p>
+                       <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-rose-400"/> Protected Slots</h3>
+                       <p className="text-xs text-slate-500">Reserve slots for emergencies. Hidden from normal availability.</p>
                     </div>
 
                     <div className="space-y-3">
                        <div className="space-y-1">
-                          <Label className="text-xs text-slate-400">Reserved Time Slot</Label>
-                          <Input type="time" value={emergencyTime} onChange={e=>setEmergencyTime(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                          <Label className="text-xs text-slate-500">Reserved Time Slot</Label>
+                          <Input type="time" value={emergencyTime} onChange={e=>setEmergencyTime(e.target.value)} className="bg-slate-50 border-slate-200 h-8 text-sm" />
                        </div>
                        <div className="space-y-1">
-                          <Label className="text-xs text-slate-400">Description</Label>
-                          <Input placeholder="e.g. Leukemia ER" value={emergencyDesc} onChange={e=>setEmergencyDesc(e.target.value)} className="bg-slate-800 border-slate-700 h-8 text-sm" />
+                          <Label className="text-xs text-slate-500">Description</Label>
+                          <Input placeholder="e.g. Leukemia ER" value={emergencyDesc} onChange={e=>setEmergencyDesc(e.target.value)} className="bg-slate-50 border-slate-200 h-8 text-sm" />
                        </div>
                        <Button onClick={handleAddEmergencyBlock} className="w-full bg-rose-600 hover:bg-rose-500 text-white mt-2 h-8 text-xs">
                           Reserve Protected Block
@@ -472,7 +472,7 @@ export default function DoctorSchedule() {
 
         {/* Right Column: Timeline View */}
         <div className="lg:col-span-3">
-          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden min-h-[600px]">
+          <Card className="bg-white/50 border-slate-200 shadow-sm backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden min-h-[600px]">
             <div className="flex flex-col h-full">
               {/* Day Timeline Header */}
               <div className="grid grid-cols-1 divide-y divide-slate-800/50">
@@ -484,7 +484,7 @@ export default function DoctorSchedule() {
                       violet: 'border-violet-500/30 bg-violet-500/10 text-violet-400',
                       emerald: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
                       rose: 'border-rose-500/50 bg-rose-500/10 text-rose-400',
-                      slate: 'border-slate-600/30 bg-slate-800/50 text-slate-400',
+                      slate: 'border-slate-600/30 bg-slate-50/50 text-slate-500',
                     };
 
                     const iconMap: any = {
@@ -500,11 +500,11 @@ export default function DoctorSchedule() {
                     return (
                       <div 
                         key={event.id} 
-                        className="p-4 flex gap-6 hover:bg-slate-800/30 transition-colors group animate-in slide-in-from-right duration-500"
+                        className="p-4 flex gap-6 hover:bg-slate-50 transition-colors group animate-in slide-in-from-right duration-500"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div className="w-24 shrink-0 text-right">
-                          <span className="text-white font-medium block">{event.time}</span>
+                          <span className="text-slate-900 font-medium block">{event.time}</span>
                           <span className="text-xs text-slate-500">{event.duration}</span>
                         </div>
                         <div className="flex-1">
@@ -539,7 +539,7 @@ export default function DoctorSchedule() {
                                       <Video className="w-4 h-4" />
                                     </Button>
                                   )}
-                                  <Button size="sm" variant="outline" className="h-8 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
+                                  <Button size="sm" variant="outline" className="h-8 text-xs border-slate-600 text-slate-700 hover:bg-slate-700 hover:text-slate-900">
                                     Reschedule
                                   </Button>
                                   <Button size="sm" variant="outline" className="h-8 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10">
@@ -555,10 +555,10 @@ export default function DoctorSchedule() {
                   })
                 ) : (
                   <div className="flex flex-col items-center justify-center p-12 h-full text-center min-h-[400px]">
-                    <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 mb-4">
+                    <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 mb-4">
                       <Calendar className="w-8 h-8" />
                     </div>
-                    <p className="text-lg font-medium text-slate-300">No events scheduled</p>
+                    <p className="text-lg font-medium text-slate-700">No events scheduled</p>
                     <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">Your calendar is clear for this selected view.</p>
                   </div>
                 )}
