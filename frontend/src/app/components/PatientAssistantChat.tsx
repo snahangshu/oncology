@@ -60,37 +60,37 @@ export function PatientAssistantChat({ patientId, autoOpen = false }: { patientI
         onClick={() => setIsOpen(true)}
         className={`fixed bottom-6 right-6 h-14 w-14 rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-600 hover:to-cyan-600 shadow-lg shadow-violet-500/30 transition-transform z-40 ${isOpen ? 'scale-0' : 'scale-100'}`}
       >
-        <MessageSquare className="w-6 h-6 text-white" />
+        <MessageSquare className="w-6 h-6 text-slate-900" />
       </Button>
 
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-80 md:w-96 h-[500px] flex flex-col bg-slate-900 border-slate-700 shadow-2xl z-50 animate-in slide-in-from-bottom-5">
-          <CardHeader className="p-4 border-b border-slate-800 bg-slate-900/50 flex flex-row items-center justify-between">
-            <CardTitle className="text-white text-base flex items-center gap-2">
+        <Card className="fixed bottom-6 right-6 w-80 md:w-96 h-[500px] flex flex-col bg-white border-slate-200 shadow-2xl z-50 animate-in slide-in-from-bottom-5">
+          <CardHeader className="p-4 border-b border-slate-800 bg-white flex flex-row items-center justify-between">
+            <CardTitle className="text-slate-900 text-base flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-cyan-400" />
               Clinical Assistant
             </CardTitle>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white" onClick={() => setIsOpen(false)}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900" onClick={() => setIsOpen(false)}>
               <X className="w-4 h-4" />
             </Button>
           </CardHeader>
           <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {history.length === 0 && (
-                <div className="text-center text-sm text-slate-400 mt-4">
+                <div className="text-center text-sm text-slate-500 mt-4">
                   Hello! I'm your AI Clinical Assistant. How can I help you today? You can ask questions, check symptoms, or request medication refills.
                 </div>
               )}
               {history.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-cyan-600 text-white rounded-br-sm' : 'bg-slate-800 text-slate-200 rounded-bl-sm'}`}>
+                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-cyan-600 text-slate-900 rounded-br-sm' : 'bg-slate-100 text-slate-200 rounded-bl-sm'}`}>
                     {msg.content}
                   </div>
                 </div>
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-slate-800 text-slate-200 p-3 rounded-2xl rounded-bl-sm flex gap-1">
+                  <div className="bg-slate-100 text-slate-200 p-3 rounded-2xl rounded-bl-sm flex gap-1">
                     <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce"></span>
                     <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce delay-75"></span>
                     <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce delay-150"></span>
@@ -122,7 +122,7 @@ export function PatientAssistantChat({ patientId, autoOpen = false }: { patientI
                   placeholder="Type a message..."
                   value={message}
                   onChange={e => setMessage(e.target.value)}
-                  className="flex-1 bg-slate-800 border-slate-700 text-sm text-white rounded-full px-4 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  className="flex-1 bg-slate-100 border-slate-200 text-sm text-slate-900 rounded-full px-4 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-500"
                 />
                 <Button type="submit" disabled={isLoading || (!message.trim() && !file)} size="icon" className="h-9 w-9 rounded-full bg-cyan-600 hover:bg-cyan-700">
                   <Send className="w-4 h-4 text-white" />

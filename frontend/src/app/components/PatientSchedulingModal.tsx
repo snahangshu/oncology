@@ -72,21 +72,21 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white">
+          <Button className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-900">
             <Calendar className="w-4 h-4 mr-2" />
             Schedule Now
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl w-[95vw] bg-slate-900 border-slate-700/50 shadow-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 custom-scrollbar">
+      <DialogContent className="max-w-4xl w-[95vw] bg-white border-slate-200 shadow-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 custom-scrollbar">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-violet-500" />
         
         <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="text-2xl text-white flex items-center gap-2">
+          <DialogTitle className="text-2xl text-slate-900 flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-emerald-400" />
             Smart Appointment Scheduling
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-slate-500">
             Select the type of appointment you need. Our AI automatically surfaces the most suitable slots based on your clinical urgency and resource availability.
           </DialogDescription>
         </DialogHeader>
@@ -102,11 +102,11 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  className="bg-transparent border-none text-white rounded-lg p-3"
+                  className="bg-transparent border-none text-slate-900 rounded-lg p-3"
                   classNames={{
-                    day_selected: "bg-emerald-500 text-white hover:bg-emerald-600 focus:bg-emerald-600",
-                    day_today: "bg-slate-800 text-emerald-400",
-                    nav_button: "border border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700 hover:text-white w-7 h-7 flex items-center justify-center rounded-md",
+                    day_selected: "bg-emerald-500 text-slate-900 hover:bg-emerald-600 focus:bg-emerald-600",
+                    day_today: "bg-slate-100 text-emerald-400",
+                    nav_button: "border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-700 hover:text-slate-900 w-7 h-7 flex items-center justify-center rounded-md",
                   }}
                 />
               </div>
@@ -135,16 +135,16 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
                         onClick={() => setSelectedSlot(slot)}
                         className={`p-4 rounded-xl border-2 cursor-pointer transition-all animate-in zoom-in-95 duration-300 ${
                           isSelected 
-                            ? 'bg-slate-800/80 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' 
+                            ? 'bg-slate-100/80 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' 
                             : isHighPriority
-                              ? 'bg-slate-900/40 border-rose-500/30 hover:border-rose-500/50'
-                              : 'bg-slate-900/40 border-slate-700/50 hover:border-cyan-500/50'
+                              ? 'bg-white/40 border-rose-500/30 hover:border-rose-500/50'
+                              : 'bg-white/40 border-slate-200 hover:border-cyan-500/50'
                         }`}
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
-                            <Calendar className={`w-4 h-4 ${isSelected ? 'text-emerald-400' : 'text-slate-400'}`} />
+                            <Calendar className={`w-4 h-4 ${isSelected ? 'text-emerald-400' : 'text-slate-500'}`} />
                             <span className="text-slate-200 font-medium">
                               {new Date(slot.start_time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                             </span>
@@ -163,26 +163,26 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
                         
                         <div className="flex items-center gap-2 mb-3">
                           <Clock className="w-4 h-4 text-cyan-400" />
-                          <span className="text-slate-300">
+                          <span className="text-slate-600">
                             {new Date(slot.start_time).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                         
-                        <div className="flex flex-col gap-1 border-t border-slate-700/50 pt-2 mt-2">
+                        <div className="flex flex-col gap-1 border-t border-slate-200 pt-2 mt-2">
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-slate-300 font-medium">{slot.doctor_name || "Assigned Provider"}</span>
+                            <span className="text-slate-600 font-medium">{slot.doctor_name || "Assigned Provider"}</span>
                             {isSelected && <CheckCircle2 className="w-5 h-5 text-emerald-400 animate-in zoom-in" />}
                           </div>
                           {(slot.qualifications || slot.experience_years) && (
                             <div className="flex flex-col gap-1 mt-1">
                               {slot.qualifications && (
-                                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                <div className="flex items-center gap-1.5 text-xs text-slate-500">
                                   <Award className="w-3.5 h-3.5 text-violet-400" />
                                   <span className="truncate">{slot.qualifications}</span>
                                 </div>
                               )}
                               {slot.experience_years && (
-                                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                <div className="flex items-center gap-1.5 text-xs text-slate-500">
                                   <Stethoscope className="w-3.5 h-3.5 text-cyan-400" />
                                   <span>{slot.experience_years} Years Experience</span>
                                 </div>
@@ -197,7 +197,7 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
               ) : (
                 <div className="flex flex-col items-center justify-center h-full min-h-[250px] space-y-4 bg-slate-950/30 rounded-xl border border-dashed border-slate-800 p-6 text-center">
                   <AlertCircle className="w-10 h-10 text-slate-600" />
-                  <p className="text-slate-400">No suitable slots found for this date.</p>
+                  <p className="text-slate-500">No suitable slots found for this date.</p>
                   <p className="text-xs text-slate-500 mt-2">Try selecting a different date from the calendar or wait for our AI to suggest nearby openings.</p>
                 </div>
               )}
@@ -211,20 +211,20 @@ export function PatientSchedulingModal({ patientId, trigger }: PatientScheduling
                 id="force-overbook"
                 checked={forceOverbook}
                 onChange={(e) => setForceOverbook(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-rose-500 focus:ring-rose-500/50"
+                className="w-4 h-4 rounded border-slate-200 bg-white text-rose-500 focus:ring-rose-500/50"
               />
-              <label htmlFor="force-overbook" className="text-sm text-slate-400">
+              <label htmlFor="force-overbook" className="text-sm text-slate-500">
                 <span className="text-rose-400 font-medium">Admin Override:</span> Force Overbook this slot (Bypass overlap checks)
               </label>
             </div>
             <div className="flex justify-end gap-3">
-              <Button variant="ghost" onClick={() => setOpen(false)} className="text-slate-400 hover:text-white">
+              <Button variant="ghost" onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-900">
                 Cancel
               </Button>
             <Button 
               disabled={!selectedSlot || confirmMutation.isPending}
               onClick={handleConfirm}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white min-w-[140px]"
+              className="bg-emerald-500 hover:bg-emerald-600 text-slate-900 min-w-[140px]"
             >
               {confirmMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               {confirmMutation.isPending ? "Confirming..." : "Confirm Booking"}

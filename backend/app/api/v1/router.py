@@ -13,6 +13,7 @@ from app.modules.intake.treatment_router import router as treatment_router
 
 from app.modules.ai.voice_router import router as voice_router
 from app.modules.infusion.journey_router import router as journey_router
+from app.api.v1.ws import router as ws_router
 
 api_router = APIRouter()
 
@@ -29,3 +30,4 @@ api_router.include_router(voice_router, prefix="/ai", tags=["ai"])
 api_router.include_router(journey_router, prefix="/journey", tags=["infusion", "journey"])
 api_router.include_router(dashboards_router, prefix="/dashboards", tags=["Dashboards"])
 api_router.include_router(treatment_router, prefix="/treatment-plans", tags=["Treatment Plans"])
+api_router.include_router(ws_router, prefix="/ws", tags=["Websockets"])

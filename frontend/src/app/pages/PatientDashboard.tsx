@@ -93,15 +93,15 @@ export default function PatientDashboard() {
     <div className="space-y-8 animate-in fade-in duration-500 relative pb-16">
       {/* Header */}
       <div>
-        <h1 className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-400 bg-clip-text text-transparent mb-2 text-3xl font-bold">
+        <h1 className="bg-gradient-to-r from-blue-600 via-emerald-600 to-violet-600 bg-clip-text text-transparent mb-2 text-3xl font-bold">
           Welcome Back!
         </h1>
-        <p className="text-slate-400">Manage your health journey with ease</p>
+        <p className="text-slate-500">Manage your health journey with ease</p>
       </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all hover:shadow-lg hover:shadow-cyan-500/10">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-blue-500/50 transition-all shadow-xl shadow-slate-200/50 hover:shadow-blue-500/10">
           <CardContent className="p-6 h-full flex flex-col justify-between">
             {isLoading ? (
                <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-cyan-500" /></div>
@@ -109,52 +109,52 @@ export default function PatientDashboard() {
               <>
                 <div>
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 shadow-lg">
-                      <Calendar className="w-6 h-6 text-white" />
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 shadow-lg text-white">
+                      <Calendar className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-white">Next Appointment</h3>
-                      <p className="text-slate-400 text-sm">{nextAppointment.date} at {nextAppointment.time}</p>
+                      <h3 className="text-slate-900">Next Appointment</h3>
+                      <p className="text-slate-500 text-sm">{nextAppointment.date} at {nextAppointment.time}</p>
                     </div>
                   </div>
                   <Separator className="bg-slate-700/30 mb-4" />
                   <div className="space-y-2 mb-4">
-                    <p className="text-slate-300">{nextAppointment.doctor}</p>
-                    <p className="text-slate-400 text-sm">{nextAppointment.type}</p>
+                    <p className="text-slate-600">{nextAppointment.doctor}</p>
+                    <p className="text-slate-500 text-sm">{nextAppointment.type}</p>
                   </div>
                 </div>
                 <div className="flex gap-3 mt-auto">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button className="w-full bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-white">
+                      <Button className="flex-1 bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white">
                         View Details
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-slate-900 border-slate-700/30">
+                    <DialogContent className="bg-white border-slate-200">
                       <DialogHeader>
-                        <DialogTitle className="text-white flex items-center gap-2">
+                        <DialogTitle className="text-slate-900 flex items-center gap-2">
                           <Calendar className="w-5 h-5 text-cyan-400" />
                           Appointment Details
                         </DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 mt-4">
                         <div>
-                          <Label className="text-slate-400 text-sm">Doctor</Label>
-                          <p className="text-white mt-1">{nextAppointment.doctor}</p>
+                          <Label className="text-slate-500 text-sm">Doctor</Label>
+                          <p className="text-slate-900 mt-1">{nextAppointment.doctor}</p>
                         </div>
                         <Separator className="bg-slate-700/30" />
                         <div>
-                          <Label className="text-slate-400 text-sm">Date & Time</Label>
-                          <p className="text-white mt-1">{nextAppointment.date} at {nextAppointment.time}</p>
+                          <Label className="text-slate-500 text-sm">Date & Time</Label>
+                          <p className="text-slate-900 mt-1">{nextAppointment.date} at {nextAppointment.time}</p>
                         </div>
                         <Separator className="bg-slate-700/30" />
                         <div>
-                          <Label className="text-slate-400 text-sm">Type</Label>
-                          <p className="text-white mt-1">{nextAppointment.type}</p>
+                          <Label className="text-slate-500 text-sm">Type</Label>
+                          <p className="text-slate-900 mt-1">{nextAppointment.type}</p>
                         </div>
                         <Separator className="bg-slate-700/30" />
                         <div>
-                          <Label className="text-slate-400 text-sm">Status</Label>
+                          <Label className="text-slate-500 text-sm">Status</Label>
                           <Badge variant="outline" className="mt-1 border-cyan-500/50 text-cyan-400 bg-cyan-500/10">
                             {nextAppointment.status}
                           </Badge>
@@ -162,7 +162,7 @@ export default function PatientDashboard() {
                       </div>
                     </DialogContent>
                   </Dialog>
-                  <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800" asChild>
+                  <Button variant="outline" className="flex-1 border-slate-200 text-slate-600 hover:bg-slate-100" asChild>
                     <Link to="/patient/appointments">View All</Link>
                   </Button>
                 </div>
@@ -170,26 +170,26 @@ export default function PatientDashboard() {
             ) : (
               <div className="flex flex-col items-center justify-center py-6 h-full space-y-4">
                 <Calendar className="w-8 h-8 text-slate-600" />
-                <p className="text-slate-400 text-sm text-center">No upcoming appointments scheduled.</p>
+                <p className="text-slate-500 text-sm text-center">No upcoming appointments scheduled.</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden hover:border-emerald-500/50 transition-all hover:shadow-lg hover:shadow-emerald-500/10">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-emerald-500/50 transition-all shadow-xl shadow-slate-200/50 hover:shadow-emerald-500/10">
           <CardContent className="p-6 flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 shadow-lg">
-                  <Plus className="w-6 h-6 text-white" />
+                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-500 shadow-lg text-white">
+                  <Plus className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-white">Schedule Appointment</h3>
-                  <p className="text-slate-400 text-sm">Book your next visit</p>
+                  <h3 className="text-slate-900">Schedule Appointment</h3>
+                  <p className="text-slate-500 text-sm">Book your next visit</p>
                 </div>
               </div>
               <Separator className="bg-slate-700/30 mb-4" />
-              <p className="text-slate-300 text-sm mb-6">
+              <p className="text-slate-600 text-sm mb-6">
                 Need to see a doctor? Schedule a new appointment with your preferred healthcare provider.
               </p>
             </div>
@@ -202,7 +202,7 @@ export default function PatientDashboard() {
                     toast.error('Please upload all Required Intake Documents via the Documents page before scheduling an appointment.', { duration: 5000 });
                   }
                 }}
-                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white mt-auto"
+                className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white mt-auto shadow-md"
               >
                 Schedule Now
               </Button>
@@ -216,14 +216,14 @@ export default function PatientDashboard() {
       </div>
 
       {/* Clinical Profile & Symptoms */}
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden relative group">
+      <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden relative group shadow-xl shadow-slate-200/50">
         <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Activity className="w-5 h-5 text-violet-400" />
+          <CardTitle className="text-slate-900 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-violet-600" />
             Clinical Profile & Symptoms
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-slate-500">
             Update your current diagnosis and symptoms. This helps our AI perfectly predict your scheduling and resource needs before you book.
           </CardDescription>
         </CardHeader>
@@ -233,28 +233,28 @@ export default function PatientDashboard() {
           ) : (
             <div className="space-y-4 relative z-10">
               <div className="space-y-2">
-                <Label className="text-slate-300">Primary Diagnosis</Label>
+                <Label className="text-slate-600">Primary Diagnosis</Label>
                 <Input 
                   value={clinicalForm.primary_diagnosis}
                   onChange={(e) => setClinicalForm(prev => ({ ...prev, primary_diagnosis: e.target.value }))}
                   placeholder="e.g. Stage IV Lung Cancer" 
-                  className="bg-slate-800/50 border-slate-700/50 text-white focus:border-violet-500/50 focus:ring-violet-500/20" 
+                  className="bg-white border-slate-200 text-slate-900 focus:border-violet-500/50 focus:ring-violet-500/20 shadow-sm" 
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-300">Presenting Symptoms / Notes</Label>
+                <Label className="text-slate-600">Presenting Symptoms / Notes</Label>
                 <textarea 
                   value={clinicalForm.patient_comments}
                   onChange={(e) => setClinicalForm(prev => ({ ...prev, patient_comments: e.target.value }))}
                   placeholder="Describe how you are feeling, e.g. severe pain, shortness of breath..." 
-                  className="w-full min-h-[100px] rounded-md bg-slate-800/50 border border-slate-700/50 text-white p-3 text-sm focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 outline-none transition-all resize-y"
+                  className="w-full min-h-[100px] rounded-md bg-white border border-slate-200 text-slate-900 p-3 text-sm focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20 outline-none transition-all resize-y shadow-sm"
                 />
               </div>
               <div className="flex justify-end pt-2">
                 <Button 
                   onClick={() => updateClinicalMutation.mutate(clinicalForm)}
                   disabled={updateClinicalMutation.isPending}
-                  className="bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-600 hover:to-cyan-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_25px_rgba(139,92,246,0.4)] transition-all"
+                  className="bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all"
                 >
                   {updateClinicalMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
                   Save Clinical Profile
