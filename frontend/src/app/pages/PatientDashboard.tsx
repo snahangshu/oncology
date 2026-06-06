@@ -109,7 +109,7 @@ export default function PatientDashboard() {
               <>
                 <div>
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 shadow-lg text-white">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 shadow-lg text-slate-900">
                       <Calendar className="w-6 h-6" />
                     </div>
                     <div>
@@ -126,7 +126,7 @@ export default function PatientDashboard() {
                 <div className="flex gap-3 mt-auto">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button className="flex-1 bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white">
+                      <Button className="flex-1 bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-slate-900">
                         View Details
                       </Button>
                     </DialogTrigger>
@@ -180,7 +180,7 @@ export default function PatientDashboard() {
           <CardContent className="p-6 flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center gap-4 mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-500 shadow-lg text-white">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-500 shadow-lg text-slate-900">
                   <Plus className="w-6 h-6" />
                 </div>
                 <div>
@@ -202,7 +202,7 @@ export default function PatientDashboard() {
                     toast.error('Please upload all Required Intake Documents via the Documents page before scheduling an appointment.', { duration: 5000 });
                   }
                 }}
-                className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white mt-auto shadow-md"
+                className="w-full bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-slate-900 mt-auto shadow-md"
               >
                 Schedule Now
               </Button>
@@ -254,7 +254,7 @@ export default function PatientDashboard() {
                 <Button 
                   onClick={() => updateClinicalMutation.mutate(clinicalForm)}
                   disabled={updateClinicalMutation.isPending}
-                  className="bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-white shadow-md hover:shadow-lg transition-all"
+                  className="bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700 text-slate-900 shadow-md hover:shadow-lg transition-all"
                 >
                   {updateClinicalMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
                   Save Clinical Profile

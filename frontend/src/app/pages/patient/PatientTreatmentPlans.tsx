@@ -76,7 +76,7 @@ function TreatmentJourneyTimeline({ planId, currentCycle, totalCycles }: { planI
               <div className="relative z-10 shrink-0">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-xl transition-all duration-300 ${
                   isCompleted ? 'bg-emerald-500 text-white scale-100' :
-                  isNext ? 'bg-cyan-500 text-white scale-110 ring-4 ring-cyan-500/20 animate-pulse' :
+                  isNext ? 'bg-cyan-500 text-slate-900 scale-110 ring-4 ring-cyan-500/20 animate-pulse' :
                   'bg-slate-200 text-slate-500 scale-90'
                 }`}>
                   {isCompleted ? <CheckCircle className="w-6 h-6" /> : <span className="font-bold">{cycle.cycle_number}</span>}
@@ -153,7 +153,7 @@ function TreatmentJourneyTimeline({ planId, currentCycle, totalCycles }: { planI
                           {cycle.ready_for_booking && !cycle.scheduled_date && (
                              <Button 
                                size="sm" 
-                               className="h-7 text-xs bg-cyan-500 hover:bg-cyan-600 text-white font-bold"
+                               className="h-7 text-xs bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-bold"
                                onClick={async () => {
                                  try {
                                    toast.info("Finding optimal infusion slot...");
@@ -258,12 +258,12 @@ export default function PatientTreatmentPlans() {
         {/* Active Treatment Plans */}
         <div className="space-y-6">
           {isLoading ? (
-            <div className="text-slate-500 text-center py-12 bg-slate-900/30 rounded-2xl border border-slate-800">
+            <div className="text-slate-500 text-center py-12 bg-white rounded-2xl border border-slate-200">
               <Loader2 className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
               Loading your treatment journey...
             </div>
           ) : treatmentPlans.length === 0 ? (
-            <div className="text-slate-500 text-center py-12 bg-slate-900/30 rounded-2xl border border-slate-800">No active treatment plans found.</div>
+            <div className="text-slate-500 text-center py-12 bg-white rounded-2xl border border-slate-200">No active treatment plans found.</div>
           ) : treatmentPlans.map((plan, i) => (
             <Card key={plan.id || i} className="bg-white/80 backdrop-blur-xl border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden mb-8">
               <CardContent className="p-8">
@@ -313,7 +313,7 @@ export default function PatientTreatmentPlans() {
                 <Button 
                   onClick={handleGeneratePlan} 
                   disabled={isGeneratingPlan || !intake}
-                  className="bg-rose-600 hover:bg-rose-500 text-slate-900 rounded-lg px-6"
+                  className="bg-rose-600 hover:bg-rose-500 text-white rounded-lg px-6"
                 >
                   {isGeneratingPlan ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Globe className="w-4 h-4 mr-2" />}
                   {isGeneratingPlan ? 'Translating...' : 'Generate Plan'}

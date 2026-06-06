@@ -87,10 +87,10 @@ export default function DoctorProfileSetup() {
         <h1 className="bg-gradient-to-r from-cyan-400 via-violet-400 to-emerald-400 bg-clip-text text-transparent mb-2 text-3xl font-bold">
           Complete Your Profile
         </h1>
-        <p className="text-slate-400">Step {step} of 4: Setup your clinical profile for AI matching.</p>
+        <p className="text-slate-500">Step {step} of 4: Setup your clinical profile for AI matching.</p>
         
         {/* Progress Bar */}
-        <div className="w-full bg-slate-800 h-2 rounded-full mt-4">
+        <div className="w-full bg-slate-50 h-2 rounded-full mt-4">
           <div 
             className="bg-cyan-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${(step / 4) * 100}%` }}
@@ -111,29 +111,29 @@ export default function DoctorProfileSetup() {
       <form onSubmit={handleSubmit} className="space-y-6">
         
         {step === 1 && (
-          <Card className="bg-slate-900/50 border-slate-700/50 animate-in slide-in-from-right-8">
+          <Card className="bg-white/50 border-slate-200/50 animate-in slide-in-from-right-8">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-slate-900 flex items-center gap-2">
                 <User className="w-5 h-5 text-cyan-400" /> Professional Details
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Clinical Role</Label>
-                <Input required name="doctor_role" value={formData.doctor_role} onChange={handleChange} placeholder="e.g. Medical Oncologist, Hematologist" className="bg-slate-950 border-slate-800" />
+                <Input required name="doctor_role" value={formData.doctor_role} onChange={handleChange} placeholder="e.g. Medical Oncologist, Hematologist" className="bg-slate-950 border-slate-200" />
               </div>
               <div className="space-y-2">
                 <Label>Primary Specialty</Label>
-                <Input required name="specialty" value={formData.specialty} onChange={handleChange} className="bg-slate-950 border-slate-800" />
+                <Input required name="specialty" value={formData.specialty} onChange={handleChange} className="bg-slate-950 border-slate-200" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>License Number</Label>
-                  <Input required name="license_number" value={formData.license_number} onChange={handleChange} className="bg-slate-950 border-slate-800" />
+                  <Input required name="license_number" value={formData.license_number} onChange={handleChange} className="bg-slate-950 border-slate-200" />
                 </div>
                 <div className="space-y-2">
                   <Label>Experience (Years)</Label>
-                  <Input required type="number" name="experience_years" value={formData.experience_years} onChange={handleChange} className="bg-slate-950 border-slate-800" />
+                  <Input required type="number" name="experience_years" value={formData.experience_years} onChange={handleChange} className="bg-slate-950 border-slate-200" />
                 </div>
               </div>
             </CardContent>
@@ -141,9 +141,9 @@ export default function DoctorProfileSetup() {
         )}
 
         {step === 2 && (
-          <Card className="bg-slate-900/50 border-slate-700/50 animate-in slide-in-from-right-8">
+          <Card className="bg-white/50 border-slate-200/50 animate-in slide-in-from-right-8">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-slate-900 flex items-center gap-2">
                 <Activity className="w-5 h-5 text-rose-400" /> Clinical Expertise
               </CardTitle>
               <CardDescription>Comma-separated values for AI routing.</CardDescription>
@@ -151,15 +151,15 @@ export default function DoctorProfileSetup() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Oncology Disease Expertise</Label>
-                <Input name="disease_expertise_oncology" value={formData.disease_expertise_oncology} onChange={handleChange} placeholder="Breast Cancer, Colon Cancer" className="bg-slate-950 border-slate-800" />
+                <Input name="disease_expertise_oncology" value={formData.disease_expertise_oncology} onChange={handleChange} placeholder="Breast Cancer, Colon Cancer" className="bg-slate-950 border-slate-200" />
               </div>
               <div className="space-y-2">
                 <Label>Hematology Disease Expertise</Label>
-                <Input name="disease_expertise_hematology" value={formData.disease_expertise_hematology} onChange={handleChange} placeholder="AML, Multiple Myeloma" className="bg-slate-950 border-slate-800" />
+                <Input name="disease_expertise_hematology" value={formData.disease_expertise_hematology} onChange={handleChange} placeholder="AML, Multiple Myeloma" className="bg-slate-950 border-slate-200" />
               </div>
               <div className="space-y-2">
                 <Label>Treatment Expertise</Label>
-                <Input name="treatment_expertise" value={formData.treatment_expertise} onChange={handleChange} placeholder="Chemotherapy, Immunotherapy" className="bg-slate-950 border-slate-800" />
+                <Input name="treatment_expertise" value={formData.treatment_expertise} onChange={handleChange} placeholder="Chemotherapy, Immunotherapy" className="bg-slate-950 border-slate-200" />
               </div>
             </CardContent>
           </Card>
@@ -167,9 +167,9 @@ export default function DoctorProfileSetup() {
 
         {step === 3 && (
           <div className="space-y-6 animate-in slide-in-from-right-8">
-            <Card className="bg-slate-900/50 border-slate-700/50">
+            <Card className="bg-white/50 border-slate-200/50">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-slate-900 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-violet-400" /> Daily Capacity Limits
                 </CardTitle>
               </CardHeader>
@@ -177,27 +177,27 @@ export default function DoctorProfileSetup() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label>Max New Consults / Day</Label>
-                    <Input required type="number" name="max_new_consults_per_day" value={formData.max_new_consults_per_day} onChange={handleChange} className="bg-slate-950 border-slate-800" />
+                    <Input required type="number" name="max_new_consults_per_day" value={formData.max_new_consults_per_day} onChange={handleChange} className="bg-slate-950 border-slate-200" />
                   </div>
                   <div className="space-y-2">
                     <Label>Max Follow-ups / Day</Label>
-                    <Input required type="number" name="max_follow_ups_per_day" value={formData.max_follow_ups_per_day} onChange={handleChange} className="bg-slate-950 border-slate-800" />
+                    <Input required type="number" name="max_follow_ups_per_day" value={formData.max_follow_ups_per_day} onChange={handleChange} className="bg-slate-950 border-slate-200" />
                   </div>
                   <div className="space-y-2">
                     <Label>Max Urgent Cases / Day</Label>
-                    <Input required type="number" name="max_urgent_cases_per_day" value={formData.max_urgent_cases_per_day} onChange={handleChange} className="bg-slate-950 border-slate-800" />
+                    <Input required type="number" name="max_urgent_cases_per_day" value={formData.max_urgent_cases_per_day} onChange={handleChange} className="bg-slate-950 border-slate-200" />
                   </div>
                   <div className="space-y-2">
                     <Label>Max Working Hours</Label>
-                    <Input required type="number" name="max_working_hours" value={formData.max_working_hours} onChange={handleChange} className="bg-slate-950 border-slate-800" />
+                    <Input required type="number" name="max_working_hours" value={formData.max_working_hours} onChange={handleChange} className="bg-slate-950 border-slate-200" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-900/50 border-slate-700/50">
+            <Card className="bg-white/50 border-slate-200/50">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-slate-900 flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-amber-400" /> AI Matching Preferences
                 </CardTitle>
               </CardHeader>
@@ -226,18 +226,18 @@ export default function DoctorProfileSetup() {
         )}
 
         {step === 4 && (
-          <Card className="bg-slate-900/50 border-slate-700/50 animate-in slide-in-from-right-8">
+          <Card className="bg-white/50 border-slate-200/50 animate-in slide-in-from-right-8">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-slate-900 flex items-center gap-2">
                 <Upload className="w-5 h-5 text-emerald-400" /> Upload Documents
               </CardTitle>
               <CardDescription>Upload your required credentials for verification.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 transition-colors rounded-xl p-8 text-center flex flex-col items-center">
+              <div className="border-2 border-dashed border-slate-200 hover:border-cyan-500/50 transition-colors rounded-xl p-8 text-center flex flex-col items-center">
                 <Upload className="w-10 h-10 text-slate-500 mb-4" />
-                <h3 className="text-white font-medium mb-1">Upload Medical License</h3>
-                <p className="text-slate-400 text-sm mb-4">PDF, JPG, PNG up to 10MB</p>
+                <h3 className="text-slate-900 font-medium mb-1">Upload Medical License</h3>
+                <p className="text-slate-500 text-sm mb-4">PDF, JPG, PNG up to 10MB</p>
                 <div className="relative">
                   <input 
                     type="file" 
@@ -260,10 +260,10 @@ export default function DoctorProfileSetup() {
                 </div>
               </div>
 
-              <div className="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 transition-colors rounded-xl p-8 text-center flex flex-col items-center">
+              <div className="border-2 border-dashed border-slate-200 hover:border-cyan-500/50 transition-colors rounded-xl p-8 text-center flex flex-col items-center">
                 <Upload className="w-10 h-10 text-slate-500 mb-4" />
-                <h3 className="text-white font-medium mb-1">Upload Board Certification</h3>
-                <p className="text-slate-400 text-sm mb-4">PDF, JPG, PNG up to 10MB</p>
+                <h3 className="text-slate-900 font-medium mb-1">Upload Board Certification</h3>
+                <p className="text-slate-500 text-sm mb-4">PDF, JPG, PNG up to 10MB</p>
                 <div className="relative">
                   <input 
                     type="file" 
@@ -289,7 +289,7 @@ export default function DoctorProfileSetup() {
           </Card>
         )}
 
-        <div className="flex justify-between border-t border-slate-800 pt-6">
+        <div className="flex justify-between border-t border-slate-200 pt-6">
           <Button 
             type="button" 
             variant="ghost" 
@@ -298,7 +298,7 @@ export default function DoctorProfileSetup() {
           >
             Back
           </Button>
-          <Button type="submit" disabled={loading} className="bg-cyan-500 hover:bg-cyan-600 text-white min-w-[150px]">
+          <Button type="submit" disabled={loading} className="bg-cyan-500 hover:bg-cyan-600 text-slate-900 min-w-[150px]">
             {loading ? "Saving..." : step === 4 ? "Submit Profile" : "Continue"}
             {!loading && step < 4 && <ChevronRight className="w-4 h-4 ml-2" />}
           </Button>

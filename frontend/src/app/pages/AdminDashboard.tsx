@@ -194,7 +194,7 @@ export default function AdminDashboard() {
         {metricsList.map((metric, index) => (
           <Card
             key={metric.title}
-            className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all hover:shadow-lg hover:shadow-cyan-500/10 animate-in slide-in-from-bottom duration-500"
+            className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all hover:shadow-lg hover:shadow-cyan-500/10 animate-in slide-in-from-bottom duration-500"
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <CardContent className="p-6">
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Manage Users Table */}
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
+      <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-slate-900 flex items-center gap-2">
             <Users className="w-5 h-5 text-cyan-400" />
@@ -354,7 +354,7 @@ export default function AdminDashboard() {
       </Card>
 
       {/* System Health Feed */}
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
+      <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
         <CardHeader>
           <CardTitle className="text-slate-900 flex items-center gap-2">
             <Activity className="w-5 h-5 text-emerald-400" />
@@ -398,7 +398,7 @@ export default function AdminDashboard() {
       </Card>
 
       {/* Drug Inventory Forecast */}
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
+      <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
         <CardHeader>
           <CardTitle className="text-slate-900 flex items-center gap-2">
             <Beaker className="w-5 h-5 text-indigo-400" />
@@ -446,7 +446,7 @@ export default function AdminDashboard() {
           </DialogHeader>
           <div className="space-y-4 mt-2 max-h-[70vh] overflow-y-auto pr-2">
             {selectedUser && (
-              <div className="p-4 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
+              <div className="p-4 bg-slate-950 rounded-lg border border-slate-200 space-y-2">
                 <p className="text-sm"><span className="text-slate-500">Email:</span> <span className="text-slate-900">{selectedUser.email || 'N/A'}</span></p>
                 <p className="text-sm"><span className="text-slate-500">Role:</span> <span className="text-slate-900">{selectedUser.role}</span></p>
                 <p className="text-sm"><span className="text-slate-500">Status:</span> <span className="text-slate-900">{selectedUser.verification_status ? selectedUser.verification_status.replace('_', ' ') : selectedUser.status}</span></p>
@@ -458,7 +458,7 @@ export default function AdminDashboard() {
               <p className="text-slate-500 text-sm italic py-2">No documents uploaded yet.</p>
             ) : (
               userDocuments.map((doc) => (
-                <div key={doc.id} className="p-4 bg-slate-950 rounded-lg border border-slate-800">
+                <div key={doc.id} className="p-4 bg-slate-950 rounded-lg border border-slate-200">
                   <div className="flex justify-between items-start mb-2">
                     <span className="font-medium text-cyan-400">{doc.document_type}</span>
                     <Badge variant="outline" className={
@@ -492,7 +492,7 @@ export default function AdminDashboard() {
           </DialogHeader>
           <div className="py-4">
             <textarea
-              className="w-full bg-slate-950 border border-slate-800 rounded-md p-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50"
+              className="w-full bg-slate-950 border border-slate-200 rounded-md p-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50"
               rows={4}
               placeholder="Reason for rejection..."
               value={rejectReason}
