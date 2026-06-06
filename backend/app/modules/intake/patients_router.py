@@ -413,14 +413,24 @@ def complete_appointment(
         try:
             from app.modules.intake.models import TreatmentPlan
             
-            tp = TreatmentPlan(
-                patient_id=patient_id,
-                regimen_name=request.regimen_name,
-                description=request.plan_description,
-                cycles=request.cycles or 6,
-                status="Active"
-            )
-            db.add(tp)
+            existing_tp = db.query(TreatmentPlan).filter(
+                TreatmentPlan.patient_id == patient_id,
+                TreatmentPlan.regimen_name == request.regimen_name
+            ).first()
+
+            if existing_tp:
+                existing_tp.description = request.plan_description
+                if request.cycles:
+                    existing_tp.cycles = request.cycles
+            else:
+                tp = TreatmentPlan(
+                    patient_id=patient_id,
+                    regimen_name=request.regimen_name,
+                    description=request.plan_description,
+                    cycles=request.cycles or 6,
+                    status="Active"
+                )
+                db.add(tp)
         except Exception as e:
             print(f"Error generating treatment plan: {e}")
 
