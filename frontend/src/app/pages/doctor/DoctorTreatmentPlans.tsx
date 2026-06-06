@@ -194,19 +194,32 @@ export default function DoctorTreatmentPlans() {
                                   </div>
                                   
                                   {/* Cycle Event Timeline (Sub-events) */}
-                                  <div className="flex flex-wrap gap-4 mt-3 text-sm">
-                                    <div className="flex items-center gap-1.5 text-slate-400">
-                                      <Beaker className="w-4 h-4 text-violet-400" />
-                                      Labs: {isCompleted ? '✓ Cleared' : 'Pending'}
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-slate-400">
-                                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                                      Clearance: {cycle.doctor_clearance ? '✓ Approved' : 'Pending'}
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-slate-400">
-                                      <FlaskConical className="w-4 h-4 text-amber-400" />
-                                      Dose: {cycle.dose_status.replace('_', ' ')}
-                                    </div>
+                                  <div className="flex flex-col gap-2 mt-3 text-sm">
+                                    {cycle.events && cycle.events.length > 0 ? (
+                                      cycle.events.map((evt: any) => (
+                                        <div key={evt.id} className="flex items-center gap-2 text-slate-400">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>
+                                          <span className="font-medium text-slate-300">{evt.event_type.replace(/_/g, ' ')}:</span>
+                                          <span>{evt.notes}</span>
+                                          <span className="text-xs text-slate-500 ml-auto">{new Date(evt.event_time).toLocaleDateString()}</span>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <div className="flex flex-wrap gap-4 mt-1 text-sm">
+                                        <div className="flex items-center gap-1.5 text-slate-400">
+                                          <Beaker className="w-4 h-4 text-violet-400" />
+                                          Labs: {isCompleted ? '✓ Cleared' : 'Pending'}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-slate-400">
+                                          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                                          Clearance: {cycle.doctor_clearance ? '✓ Approved' : 'Pending'}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-slate-400">
+                                          <FlaskConical className="w-4 h-4 text-amber-400" />
+                                          Dose: {cycle.dose_status.replace('_', ' ')}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                                 
@@ -225,6 +238,7 @@ export default function DoctorTreatmentPlans() {
                                       size="sm" 
                                       variant="outline" 
                                       className="border-rose-500/50 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                                      onClick={() => updateCycleMutation.mutate({ cycleId: cycle.id, status: "DELAYED" })}
                                     >
                                       Delay
                                     </Button>

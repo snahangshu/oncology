@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../shared/api';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../components/ui/dialog';
+import { useState } from 'react';
 
 export default function InfusionCenter() {
   const queryClient = useQueryClient();
@@ -26,18 +28,34 @@ export default function InfusionCenter() {
     }
   });
 
+  const [safetyResult, setSafetyResult] = useState<any>(null);
+  const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
+
   const clearMutation = useMutation({
     mutationFn: async (planId: number) => {
       const res = await api.post(`/infusion/clear/${planId}`);
       return res.data;
     },
     onSuccess: (data) => {
-      toast.success(data.message || "Treatment Plan Cleared & Scheduled!");
-      queryClient.invalidateQueries({ queryKey: ['infusion_clearance_queue'] });
-      queryClient.invalidateQueries({ queryKey: ['infusion_today'] });
+      setSafetyResult(data);
+      setIsSafetyModalOpen(true);
+      if (data.status !== 'BLOCKED') {
+        queryClient.invalidateQueries({ queryKey: ['infusion_clearance_queue'] });
+        queryClient.invalidateQueries({ queryKey: ['infusion_today'] });
+      }
     },
     onError: () => {
       toast.error("Failed to clear plan for scheduling.");
+    }
+  });
+
+  const updateApptStatusMutation = useMutation({
+    mutationFn: async ({ apptId, status }: { apptId: number, status: string }) => {
+      return api.put(`/infusion/appointments/${apptId}/status`, { status });
+    },
+    onSuccess: () => {
+      toast.success("Appointment status updated");
+      queryClient.invalidateQueries({ queryKey: ['infusion_today'] });
     }
   });
 
@@ -152,9 +170,17 @@ export default function InfusionCenter() {
                             </div>
                           </td>
                           <td className="p-4">
-                            <Badge variant="outline" className="border-cyan-500/50 text-cyan-400 bg-cyan-500/10">
-                              {appt.status}
-                            </Badge>
+                            <select 
+                              className="bg-slate-900 border border-slate-700 text-slate-300 rounded px-2 py-1 text-sm outline-none focus:border-cyan-500"
+                              value={appt.status}
+                              onChange={(e) => updateApptStatusMutation.mutate({ apptId: appt.id, status: e.target.value })}
+                              disabled={updateApptStatusMutation.isPending}
+                            >
+                              <option value="Scheduled">Scheduled</option>
+                              <option value="Confirmed">Confirmed</option>
+                              <option value="In Progress">In Progress</option>
+                              <option value="Completed">Completed</option>
+                            </select>
                           </td>
                         </tr>
                       ))
@@ -233,6 +259,65 @@ export default function InfusionCenter() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Safety Score Dialog */}
+      <Dialog open={isSafetyModalOpen} onOpenChange={setIsSafetyModalOpen}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <ShieldCheck className={`w-6 h-6 ${safetyResult?.status === 'BLOCKED' ? 'text-rose-500' : 'text-emerald-500'}`} />
+              Safety Check Result
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Automated safety rules evaluation for treatment progression.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {safetyResult && (
+            <div className="py-4">
+              <div className="flex justify-between items-center mb-6 p-4 rounded-xl bg-slate-950 border border-slate-800">
+                <span className="text-slate-400 font-medium">Safety Score</span>
+                <span className={`text-2xl font-bold ${safetyResult.status === 'BLOCKED' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  {safetyResult.score}
+                </span>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-2">
+                  <span className={`font-bold uppercase tracking-wider text-sm ${safetyResult.status === 'BLOCKED' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {safetyResult.status === 'BLOCKED' ? 'BLOCKED' : 'SAFE TO PROCEED'}
+                  </span>
+                </div>
+                {safetyResult.status === 'BLOCKED' && safetyResult.failed_rules?.map((rule: string, i: number) => (
+                  <div key={i} className="flex items-center gap-2 text-rose-300 text-sm">
+                    <AlertTriangle className="w-4 h-4" />
+                    Failed: {rule}
+                  </div>
+                ))}
+                {safetyResult.status !== 'BLOCKED' && (
+                  <div className="text-sm text-slate-300">
+                    <p className="mb-2">{safetyResult.message}</p>
+                    <p className="text-emerald-400 font-medium">✓ Scheduled on {safetyResult.chair}</p>
+                    <p className="text-slate-400 mt-1">
+                      Time: {new Date(safetyResult.scheduled_time).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsSafetyModalOpen(false)}
+              className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

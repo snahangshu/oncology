@@ -1,7 +1,7 @@
-from sqlalchemy import String, Integer, Date, ForeignKey, Boolean, JSON, Enum as SAEnum
+from sqlalchemy import String, Integer, Date, ForeignKey, Boolean, JSON, Enum as SAEnum, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List, Optional, Dict, Any
-from datetime import date
+from datetime import date, datetime
 from app.shared.base_model import Base, TimestampMixin
 import enum
 
@@ -155,17 +155,22 @@ class TreatmentCycle(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     treatment_plan_id: Mapped[int] = mapped_column(ForeignKey("treatment_plans.id", ondelete="CASCADE"), nullable=False)
     cycle_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    planned_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     scheduled_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     actual_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    completed_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(String(50), default="PLANNED", nullable=False)
     dose_status: Mapped[str] = mapped_column(String(50), default="FULL_DOSE", nullable=False)
     chair_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # Soft link to chair
     appointment_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # Soft link to appointment
     doctor_clearance: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     notes: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    delay_reason: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    delayed_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     # Relationships
     treatment_plan: Mapped["TreatmentPlan"] = relationship("TreatmentPlan", back_populates="treatment_cycles")
+    events: Mapped[List["TreatmentCycleEvent"]] = relationship("TreatmentCycleEvent", back_populates="treatment_cycle", cascade="all, delete-orphan", order_by="TreatmentCycleEvent.event_time")
 
 class LabResult(Base, TimestampMixin):
     __tablename__ = "lab_results"
@@ -181,3 +186,24 @@ class LabResult(Base, TimestampMixin):
 
     # Relationships
     patient: Mapped["Patient"] = relationship("Patient", back_populates="lab_results")
+
+class SafetyRule(Base, TimestampMixin):
+    __tablename__ = "safety_rules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    rule_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    weight: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
+    required: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+class TreatmentCycleEvent(Base, TimestampMixin):
+    __tablename__ = "treatment_cycle_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    cycle_id: Mapped[int] = mapped_column(ForeignKey("treatment_cycles.id", ondelete="CASCADE"), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    event_time: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+
+    # Relationships
+    treatment_cycle: Mapped["TreatmentCycle"] = relationship("TreatmentCycle", back_populates="events")

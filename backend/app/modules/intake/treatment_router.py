@@ -79,7 +79,15 @@ def get_plan_cycles(plan_id: int, db: Session = Depends(get_db)):
                 "actual_date": c.actual_date,
                 "chair_id": c.chair_id,
                 "doctor_clearance": c.doctor_clearance,
-                "notes": c.notes
+                "notes": c.notes,
+                "events": [
+                    {
+                        "id": e.id,
+                        "event_type": e.event_type,
+                        "event_time": e.event_time,
+                        "notes": e.notes
+                    } for e in c.events
+                ] if hasattr(c, 'events') else []
             } for c in cycles
         ]
     }
