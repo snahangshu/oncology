@@ -1,6 +1,6 @@
-from sqlalchemy import String, Integer, DateTime, ForeignKey, Boolean
+from sqlalchemy import String, Integer, DateTime, ForeignKey, Boolean, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 from app.shared.base_model import Base, TimestampMixin
 
@@ -49,3 +49,21 @@ class ClinicalAlert(Base, TimestampMixin):
     severity: Mapped[str] = mapped_column(String(50), nullable=False)
     message: Mapped[str] = mapped_column(String(1000), nullable=False)
     is_resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+class StaffAvailability(Base, TimestampMixin):
+    __tablename__ = "staff_availabilities"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    start_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    end_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="Available", nullable=False)
+
+class StaffCapacity(Base, TimestampMixin):
+    __tablename__ = "staff_capacities"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    max_patients_per_shift: Mapped[int] = mapped_column(Integer, default=5, nullable=False)
+    max_infusion_patients: Mapped[int] = mapped_column(Integer, default=3, nullable=False)

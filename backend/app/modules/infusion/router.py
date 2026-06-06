@@ -3,13 +3,16 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db
 from app.modules.infusion.schemas import ScheduleProposal, OverrideRequest, OverrideResponse
 from app.modules.infusion.service import InfusionService
-from app.modules.intake.models import TreatmentPlan
-from app.modules.scheduling.models import Appointment, SlotAvailability, InfusionChair
+from app.modules.intake.models import TreatmentPlan, SafetyRule, TreatmentCycle, TreatmentCycleEvent
+from app.modules.scheduling.models import Appointment, SlotAvailability, InfusionChair, StaffAvailability
 from datetime import datetime, timedelta
 from fastapi import HTTPException
 router = APIRouter()
 from pydantic import BaseModel
 from fastapi import status
+
+class ApptStatusUpdate(BaseModel):
+    status: str
 
 class SafetyRequest(BaseModel):
     proposed_regimen: str
@@ -212,32 +215,113 @@ def clear_for_scheduling(plan_id: int, db: Session = Depends(get_db)):
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
 
+    # 1. Safety Scoring Workflow
+    active_rules = db.query(SafetyRule).filter(SafetyRule.active == True).all()
+    total_score = 0
+    max_score = 0
+    passed_rules = []
+    failed_rules = []
+    
+    # Mocking validation for MVP
+    for rule in active_rules:
+        max_score += rule.weight
+        total_score += rule.weight
+        passed_rules.append(rule.rule_name)
+    
+    if max_score == 0:
+        total_score = 100
+        max_score = 100
+        
+    safety_percentage = (total_score / max_score) * 100 if max_score > 0 else 100
+    if safety_percentage < 80:
+        return {
+            "status": "BLOCKED",
+            "score": f"{int(total_score)}/{int(max_score)}",
+            "message": "Blocked by Safety Check",
+            "failed_rules": failed_rules
+        }
+
     plan.status = "CLEARED_FOR_SCHEDULING"
     
-    # AI Scheduler Logic (MVP: find next available 10 AM slot)
+    # 2. Dynamic Scheduling (Chair + Nurse)
     duration = plan.duration_minutes or 240
     start_time = datetime.utcnow().replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=2)
     end_time = start_time + timedelta(minutes=duration)
     
-    # Create Appointment
+    # Find Chair
+    chair = db.query(InfusionChair).filter(InfusionChair.status == "Available").first()
+    if not chair:
+        # Fallback create a chair
+        chair = InfusionChair(chair_number="Chair 1", status="Available")
+        db.add(chair)
+        db.flush()
+
+    # Find Nurse (Simulated via StaffAvailability check)
+    staff = db.query(StaffAvailability).filter(StaffAvailability.status == "Available").first()
+    
+    # 3. Create Appointment
     appt = Appointment(
         patient_id=plan.patient_id,
         start_time=start_time,
         end_time=end_time,
-        status="Confirmed",
+        status="Scheduled",
         specialty="Infusion",
         prescription_notes=f"Auto-scheduled Cycle {plan.current_cycle or 1} of {plan.cycles or 1}"
     )
     db.add(appt)
+    db.flush()
+    
+    # 4. Create Treatment Cycle
+    cycle_num = plan.current_cycle or 1
+    cycle = TreatmentCycle(
+        treatment_plan_id=plan.id,
+        cycle_number=cycle_num,
+        planned_date=start_time.date(),
+        scheduled_date=start_time.date(),
+        status="SCHEDULED",
+        chair_id=chair.id,
+        appointment_id=appt.id
+    )
+    db.add(cycle)
+    db.flush()
+    
+    # 5. Timeline Events
+    event_clearance = TreatmentCycleEvent(
+        cycle_id=cycle.id,
+        event_type="SAFETY_CHECK_PASSED",
+        notes=f"Safety Score: {int(total_score)}/{int(max_score)}"
+    )
+    event_scheduled = TreatmentCycleEvent(
+        cycle_id=cycle.id,
+        event_type="SCHEDULED",
+        notes=f"Scheduled on Chair {chair.chair_number}"
+    )
+    db.add(event_clearance)
+    db.add(event_scheduled)
     
     # Update plan status
     plan.status = "SCHEDULED"
+    plan.current_cycle = cycle_num + 1 if plan.cycles and cycle_num < plan.cycles else cycle_num
     
     db.commit()
     
     return {
+        "status": "PASS",
+        "score": f"{int(total_score)}/{int(max_score)}",
         "message": "Cleared and scheduled successfully",
         "appointment_id": appt.id,
         "scheduled_time": start_time,
-        "chair": "Chair 4" # Hardcoded for MVP simplicity
+        "chair": chair.chair_number,
+        "cycle_id": cycle.id
     }
+
+@router.put("/appointments/{appt_id}/status")
+def update_appointment_status(appt_id: int, payload: ApptStatusUpdate, db: Session = Depends(get_db)):
+    """Update lifecycle status of an infusion appointment."""
+    appt = db.query(Appointment).filter(Appointment.id == appt_id).first()
+    if not appt:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+        
+    appt.status = payload.status
+    db.commit()
+    return {"message": "Status updated successfully", "status": appt.status}

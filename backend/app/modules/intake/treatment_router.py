@@ -79,13 +79,20 @@ def get_plan_cycles(plan_id: int, db: Session = Depends(get_db)):
                 "actual_date": c.actual_date,
                 "chair_id": c.chair_id,
                 "doctor_clearance": c.doctor_clearance,
-                "doctor_clearance": c.doctor_clearance,
                 "notes": c.notes,
                 "appointment_id": c.appointment_id,
                 "labs_uploaded": c.labs_uploaded,
                 "ai_fit_check_passed": c.ai_fit_check_passed,
                 "pharmacy_vials_approved": c.pharmacy_vials_approved,
-                "ready_for_booking": c.ready_for_booking
+                "ready_for_booking": c.ready_for_booking,
+                "events": [
+                    {
+                        "id": e.id,
+                        "event_type": e.event_type,
+                        "event_time": e.event_time,
+                        "notes": e.notes
+                    } for e in c.events
+                ] if hasattr(c, 'events') else []
             } for c in cycles
         ]
     }
