@@ -67,7 +67,7 @@ function TreatmentJourneyTimeline({ planId, currentCycle, totalCycles }: { planI
 
         {cycles.map((cycle: any, idx: number) => {
           const isCompleted = cycle.status === 'COMPLETED';
-          const isNext = cycle.status === 'SCHEDULED' || cycle.status === 'CLEARED' || (cycle.status === 'PLANNED' && cycle.cycle_number == currentCycle);
+          const isNext = cycle.status === 'SCHEDULED' || cycle.status === 'CLEARED' || (['PLANNED', 'DELAYED'].includes(cycle.status) && cycle.cycle_number == currentCycle);
           const isPending = !isCompleted && !isNext;
 
           return (
@@ -116,13 +116,17 @@ function TreatmentJourneyTimeline({ planId, currentCycle, totalCycles }: { planI
                             <span className="text-sm text-slate-500">1. Recent Labs Uploaded</span>
                           </div>
                           {!cycle.labs_uploaded && (
-                            <Button size="sm" variant="outline" className="h-7 text-xs border-rose-500/30 text-rose-400 hover:bg-rose-500/10" onClick={async () => {
+                            <Button size="sm" className="h-7 text-xs bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-bold shadow-sm shadow-cyan-500/20 transition-all" onClick={async () => {
                               try {
                                 toast.info("Uploading labs...");
                                 // Mock upload
                                 const formData = new FormData();
-                                formData.append("file", new Blob(["mock pdf content"], {type: "application/pdf"}));
-                                await api.post(`/journey/cycle/${cycle.id}/upload-labs`, formData);
+                                formData.append("file", new Blob(["mock pdf content"], {type: "application/pdf"}), "mock_labs.pdf");
+                                await api.post(`/journey/cycle/${cycle.id}/upload-labs`, formData, {
+                                  headers: {
+                                    'Content-Type': 'multipart/form-data'
+                                  }
+                                });
                                 toast.success("Labs uploaded successfully. Running AI Fit-Check...");
                                 await api.post(`/journey/cycle/${cycle.id}/ai-fit-check`);
                                 toast.success("AI Fit-Check passed! Awaiting Pharmacy Auth.");
@@ -174,16 +178,16 @@ function TreatmentJourneyTimeline({ planId, currentCycle, totalCycles }: { planI
                     </div>
 
                     {cycle.scheduled_date && (
-                      <div className="flex flex-wrap gap-3">
-                        <Badge variant="outline" className="bg-slate-950 border-slate-200 text-slate-700 py-1.5 px-3">
+                      <div className="flex flex-wrap gap-3 mt-4">
+                        <Badge variant="outline" className="bg-white border-cyan-200 text-slate-700 py-1.5 px-3 shadow-sm">
                           <CalendarDays className="w-4 h-4 mr-2 text-cyan-400" />
                           {new Date(cycle.scheduled_date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
                         </Badge>
-                        <Badge variant="outline" className="bg-slate-950 border-slate-200 text-slate-700 py-1.5 px-3">
+                        <Badge variant="outline" className="bg-white border-cyan-200 text-slate-700 py-1.5 px-3 shadow-sm">
                           <Clock className="w-4 h-4 mr-2 text-amber-400" />
                           Arrival: 15 mins prior
                         </Badge>
-                        <Badge variant="outline" className="bg-slate-950 border-slate-200 text-slate-700 py-1.5 px-3">
+                        <Badge variant="outline" className="bg-white border-cyan-200 text-slate-700 py-1.5 px-3 shadow-sm">
                           <MapPin className="w-4 h-4 mr-2 text-rose-400" />
                           {cycle.chair_id ? `Chair ${cycle.chair_id}` : 'Infusion Center, Floor 2'}
                         </Badge>

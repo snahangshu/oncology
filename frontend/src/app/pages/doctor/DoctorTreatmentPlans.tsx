@@ -137,9 +137,12 @@ export default function DoctorTreatmentPlans() {
 
             {/* EXPANDED JOURNEY VIEW */}
             {expandedPlanId === plan.id && (
-              <div className="border-t border-slate-200 bg-slate-950/50 p-6 animate-in slide-in-from-top-4 duration-300">
+              <div className="border-t border-slate-200 bg-slate-50/50 p-6 animate-in slide-in-from-top-4 duration-300">
                 <div className="mb-8 flex items-center justify-between">
-                  <h4 className="text-lg font-bold text-slate-200">Treatment Journey Map</h4>
+                  <h4 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-cyan-400" />
+                    Treatment Journey Map
+                  </h4>
                   {(!cyclesData || cyclesData.cycles.length === 0) && !cyclesLoading && (
                     <Button 
                       onClick={() => generateCyclesMutation.mutate(plan.id)}
@@ -200,18 +203,19 @@ export default function DoctorTreatmentPlans() {
                             </div>
 
                             {/* Content */}
-                            <div className={`flex-1 p-5 rounded-xl border ${
-                              isCompleted ? 'bg-slate-100/20 border-emerald-500/20' :
-                              isNext ? 'bg-slate-100 border-cyan-500/30' :
-                              'bg-white/30 border-slate-200'
+                            <div className={`flex-1 p-5 rounded-2xl border backdrop-blur-md transition-all duration-300 ${
+                              isCompleted ? 'bg-emerald-50 border-emerald-200 opacity-90' :
+                              isNext ? 'bg-cyan-50 border-cyan-200 shadow-[0_0_20px_rgba(6,182,212,0.15)] opacity-100 transform -translate-y-1' :
+                              isDelayed ? 'bg-rose-50 border-rose-200 shadow-[0_0_20px_rgba(244,63,94,0.15)] opacity-100' :
+                              'bg-white border-slate-200 opacity-70'
                             }`}>
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div>
                                   <div className="flex items-center gap-3 mb-2">
-                                    <h5 className={`font-bold text-lg ${isCompleted ? 'text-emerald-400' : isNext ? 'text-cyan-400' : 'text-slate-600'}`}>
+                                    <h5 className={`font-bold text-lg ${isCompleted ? 'text-emerald-500' : isNext ? 'text-cyan-600' : isDelayed ? 'text-rose-500' : 'text-slate-600'}`}>
                                       Cycle {cycle.cycle_number}
                                     </h5>
-                                    <Badge variant="outline" className="border-slate-200 text-slate-500 bg-slate-950">
+                                    <Badge variant="outline" className="border-slate-200 text-slate-500 bg-white shadow-sm">
                                       {cycle.scheduled_date}
                                     </Badge>
                                   </div>
@@ -231,15 +235,19 @@ export default function DoctorTreatmentPlans() {
                                       <div className="flex flex-wrap gap-4 mt-1 text-sm">
                                         <div className="flex items-center gap-1.5 text-slate-500">
                                           <Beaker className="w-4 h-4 text-violet-400" />
-                                          Labs: {isCompleted ? '✓ Cleared' : 'Pending'}
+                                          Labs: {isCompleted || cycle.labs_uploaded ? '✓ Uploaded' : 'Pending'}
                                         </div>
                                         <div className="flex items-center gap-1.5 text-slate-500">
                                           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                                          Clearance: {cycle.doctor_clearance ? '✓ Approved' : 'Pending'}
+                                          Clearance: {isCompleted || cycle.pharmacy_vials_approved ? '✓ Vials Auth' : cycle.ai_fit_check_passed ? '✓ Fit-Check Passed' : 'Pending'}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-slate-500">
+                                          <CalendarDays className="w-4 h-4 text-cyan-400" />
+                                          Booking: {isCompleted ? '✓ Completed' : cycle.status === 'SCHEDULED' ? '✓ Scheduled' : cycle.ready_for_booking ? 'Unlocked' : 'Pending'}
                                         </div>
                                         <div className="flex items-center gap-1.5 text-slate-500">
                                           <FlaskConical className="w-4 h-4 text-amber-400" />
-                                          Dose: {cycle.dose_status.replace('_', ' ')}
+                                          Dose: {cycle.dose_status ? cycle.dose_status.replace('_', ' ') : 'FULL DOSE'}
                                         </div>
                                       </div>
                                     )}
@@ -252,7 +260,8 @@ export default function DoctorTreatmentPlans() {
                                     <Button 
                                       size="sm" 
                                       variant="outline" 
-                                      className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300"
+                                      disabled={cycle.status !== 'SCHEDULED' || !cycle.scheduled_date || new Date(cycle.scheduled_date).setHours(0,0,0,0) > new Date().setHours(0,0,0,0)}
+                                      className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                       onClick={() => updateCycleMutation.mutate({ cycleId: cycle.id, status: "COMPLETED" })}
                                     >
                                       <CheckCircle className="w-4 h-4 mr-2" /> Mark Complete
@@ -290,9 +299,9 @@ export default function DoctorTreatmentPlans() {
       </div>
 
       <Dialog open={delayModalOpen} onOpenChange={setDelayModalOpen}>
-        <DialogContent className="bg-white border-slate-200 text-slate-200 sm:max-w-[425px]">
+        <DialogContent className="bg-white border-slate-200 text-slate-900 sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-xl text-rose-400 flex items-center gap-2">
+            <DialogTitle className="text-xl text-rose-500 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" /> Delay Cycle
             </DialogTitle>
             <DialogDescription className="text-slate-500">
@@ -308,7 +317,7 @@ export default function DoctorTreatmentPlans() {
                 max="60"
                 value={delayDays}
                 onChange={(e) => setDelayDays(parseInt(e.target.value))}
-                className="flex h-10 w-full rounded-md border border-slate-200 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
+                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -317,16 +326,16 @@ export default function DoctorTreatmentPlans() {
                 value={delayReason}
                 onChange={(e) => setDelayReason(e.target.value)}
                 placeholder="e.g. Low neutrophils"
-                className="flex h-10 w-full rounded-md border border-slate-200 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
+                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" className="border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-700 hover:text-slate-900" onClick={() => setDelayModalOpen(false)}>
+            <Button variant="outline" className="border-slate-200 bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900" onClick={() => setDelayModalOpen(false)}>
               Cancel
             </Button>
             <Button 
-              className="bg-rose-600 text-slate-900 hover:bg-rose-500" 
+              className="bg-rose-600 text-white hover:bg-rose-500 shadow-md shadow-rose-600/20" 
               onClick={() => delayCycleMutation.mutate()}
               disabled={delayCycleMutation.isPending}
             >

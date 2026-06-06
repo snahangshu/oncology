@@ -134,7 +134,7 @@ def update_cycle(cycle_id: int, update: TreatmentCycleUpdate, db: Session = Depe
     if cycle.status == "COMPLETED":
         plan = db.query(TreatmentPlan).filter(TreatmentPlan.id == cycle.treatment_plan_id).first()
         if plan:
-            plan.current_cycle = cycle.cycle_number
+            plan.current_cycle = cycle.cycle_number + 1
             db.commit()
             
     return {"message": "Cycle updated successfully", "status": cycle.status}
