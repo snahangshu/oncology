@@ -332,12 +332,21 @@ def get_receptionist_dashboard(db: Session = Depends(get_db)):
 
     doctors_available = db.query(Doctor).filter(Doctor.status == "active").count()
 
+    from app.modules.intake.models import TreatmentCycle, TreatmentPlan
+    stuck_patients_count = db.query(TreatmentCycle).join(TreatmentPlan).filter(
+        TreatmentCycle.cycle_number == TreatmentPlan.current_cycle,
+        TreatmentPlan.status == 'Active',
+        TreatmentCycle.ready_for_booking == False,
+        TreatmentCycle.status.in_(['PLANNED', 'SCHEDULED'])
+    ).count()
+
     return {
         "waiting_patients": waiting_list,
         "doctors_available": doctors_available,
         "today_appointments": result,
         "upcoming_appointments": upcoming_result,
-        "total_upcoming": len(result) + len(upcoming_result)
+        "total_upcoming": len(result) + len(upcoming_result),
+        "stuck_patients_count": stuck_patients_count
     }
 
 @router.get("/nurse", dependencies=[Depends(require_role([Role.NURSE]))])
@@ -366,9 +375,18 @@ def get_nurse_dashboard(db: Session = Depends(get_db)):
                 "appointment_time": a.start_time.strftime("%H:%M")
             })
             
+    from app.modules.intake.models import TreatmentCycle, TreatmentPlan
+    stuck_patients_count = db.query(TreatmentCycle).join(TreatmentPlan).filter(
+        TreatmentCycle.cycle_number == TreatmentPlan.current_cycle,
+        TreatmentPlan.status == 'Active',
+        TreatmentCycle.ready_for_booking == False,
+        TreatmentCycle.status.in_(['PLANNED', 'SCHEDULED'])
+    ).count()
+            
     return {
         "pending_vitals": len(queue),
-        "patients_queue": queue
+        "patients_queue": queue,
+        "stuck_patients_count": stuck_patients_count
     }
 
 @router.get("/patient", dependencies=[Depends(require_role([Role.PATIENT]))])

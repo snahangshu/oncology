@@ -105,21 +105,21 @@ export default function PatientDetails() {
       )}
 
       {/* 2. Clinical Snapshot Header */}
-      <Card className="bg-slate-900/80 border-slate-700/50 backdrop-blur-xl relative overflow-hidden">
+      <Card className="bg-white/80 border-slate-200 backdrop-blur-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <CardContent className="p-6">
           <div className="flex flex-col xl:flex-row justify-between gap-6">
             
             {/* Left: Demographics */}
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg shrink-0">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-2xl font-bold text-slate-900 shadow-lg shrink-0">
                 {patient.first_name[0]}{patient.last_name[0]}
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
                   {patient.first_name} {patient.last_name}
                 </h1>
-                <div className="flex items-center gap-3 mt-2 text-slate-400 text-sm font-medium">
+                <div className="flex items-center gap-3 mt-2 text-slate-500 text-sm font-medium">
                   <span>{age} Years</span>
                   <span className="w-1 h-1 rounded-full bg-slate-600" />
                   <span>{patient.gender || 'Unspecified'}</span>
@@ -130,10 +130,10 @@ export default function PatientDetails() {
             </div>
 
             {/* Middle: Clinical Snapshot */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 xl:gap-8 flex-1 border-y xl:border-y-0 xl:border-l border-slate-700/50 py-4 xl:py-0 xl:pl-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 xl:gap-8 flex-1 border-y xl:border-y-0 xl:border-l border-slate-200 py-4 xl:py-0 xl:pl-8">
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Diagnosis</p>
-                <p className="text-white font-medium text-sm truncate" title={snapshot.cancerType}>{snapshot.cancerType}</p>
+                <p className="text-slate-900 font-medium text-sm truncate" title={snapshot.cancerType}>{snapshot.cancerType}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Status</p>
@@ -141,7 +141,7 @@ export default function PatientDetails() {
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Oncologist</p>
-                <p className="text-white font-medium text-sm">{snapshot.assignedOncologist}</p>
+                <p className="text-slate-900 font-medium text-sm">{snapshot.assignedOncologist}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">Urgency</p>
@@ -156,10 +156,10 @@ export default function PatientDetails() {
 
             {/* Right: Quick Actions */}
             <div className="flex flex-row xl:flex-col gap-2 shrink-0">
-              <Button size="sm" className="bg-cyan-500 hover:bg-cyan-600 text-white w-full flex items-center justify-center gap-2">
+              <Button size="sm" className="bg-cyan-500 hover:bg-cyan-600 text-slate-900 w-full flex items-center justify-center gap-2">
                 <CalendarPlus className="w-4 h-4" /> <span className="hidden sm:inline">Schedule</span>
               </Button>
-              <Button size="sm" variant="outline" className="border-slate-700 hover:bg-slate-800 text-slate-300 w-full flex items-center justify-center gap-2">
+              <Button size="sm" variant="outline" className="border-slate-200 hover:bg-slate-100 text-slate-600 w-full flex items-center justify-center gap-2">
                 <FileUp className="w-4 h-4" /> <span className="hidden sm:inline">Upload</span>
               </Button>
               <Button size="sm" variant="outline" className="border-violet-500/30 text-violet-400 hover:bg-violet-500/10 w-full flex items-center justify-center gap-2">
@@ -172,15 +172,15 @@ export default function PatientDetails() {
 
       {/* 3. Main Content Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="bg-slate-900/50 border border-slate-700/50 p-1 mb-6 flex flex-wrap h-auto w-full justify-start rounded-xl">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg px-6 py-2">Overview</TabsTrigger>
-          <TabsTrigger value="timeline" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg px-6 py-2">Timeline</TabsTrigger>
-          <TabsTrigger value="documents" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg px-6 py-2">Documents</TabsTrigger>
-          <TabsTrigger value="labs" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg px-6 py-2 flex gap-2 items-center">
+        <TabsList className="bg-white border border-slate-200 p-1 mb-6 flex flex-wrap h-auto w-full justify-start rounded-xl">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 rounded-lg px-6 py-2">Overview</TabsTrigger>
+          <TabsTrigger value="timeline" className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 rounded-lg px-6 py-2">Timeline</TabsTrigger>
+          <TabsTrigger value="documents" className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 rounded-lg px-6 py-2">Documents</TabsTrigger>
+          <TabsTrigger value="labs" className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 rounded-lg px-6 py-2 flex gap-2 items-center">
             <FlaskConical className="w-4 h-4" /> Labs
           </TabsTrigger>
-          <TabsTrigger value="appointments" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg px-6 py-2">Appointments</TabsTrigger>
-          <TabsTrigger value="treatmentplans" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg px-6 py-2 flex gap-2 items-center">
+          <TabsTrigger value="appointments" className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 rounded-lg px-6 py-2">Appointments</TabsTrigger>
+          <TabsTrigger value="treatmentplans" className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 rounded-lg px-6 py-2 flex gap-2 items-center">
             <Pill className="w-4 h-4" /> Treatment Plans
           </TabsTrigger>
           <TabsTrigger value="aisummary" className="data-[state=active]:bg-violet-900/50 data-[state=active]:text-violet-300 rounded-lg px-6 py-2 flex gap-2 items-center">
@@ -237,9 +237,9 @@ function OverviewTab({ dashboard }: { dashboard: DashboardData }) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       
       {/* Intake Progress */}
-      <Card className="bg-slate-900/50 border-slate-700/50">
+      <Card className="bg-white border-slate-200">
         <CardHeader>
-          <CardTitle className="text-lg text-white flex items-center gap-2">
+          <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
             Intake Progress
           </CardTitle>
@@ -247,10 +247,10 @@ function OverviewTab({ dashboard }: { dashboard: DashboardData }) {
         <CardContent>
           <div className="space-y-4">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-300">Phase 1 Completion</span>
+              <span className="text-slate-600">Phase 1 Completion</span>
               <span className="text-cyan-400 font-bold">{intake.completion_percentage}%</span>
             </div>
-            <Progress value={intake.completion_percentage} className="h-2 bg-slate-800" />
+            <Progress value={intake.completion_percentage} className="h-2 bg-slate-100" />
             <div className={`mt-4 px-3 py-2 rounded-lg text-center font-bold text-sm ${
               intake.status === 'COMPLETE' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
             }`}>
@@ -261,39 +261,39 @@ function OverviewTab({ dashboard }: { dashboard: DashboardData }) {
       </Card>
 
       {/* Quick Vitals (Mock for now) */}
-      <Card className="bg-slate-900/50 border-slate-700/50">
+      <Card className="bg-white border-slate-200">
         <CardHeader>
-          <CardTitle className="text-lg text-white flex items-center gap-2">
+          <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
             <Activity className="w-5 h-5 text-rose-400" />
             Latest Vitals
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+            <div className="bg-slate-100 p-3 rounded-xl border border-slate-200">
               <p className="text-xs text-slate-500 uppercase font-bold">Blood Pressure</p>
-              <p className="text-lg text-white font-medium mt-1">120/80</p>
+              <p className="text-lg text-slate-900 font-medium mt-1">120/80</p>
             </div>
-            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+            <div className="bg-slate-100 p-3 rounded-xl border border-slate-200">
               <p className="text-xs text-slate-500 uppercase font-bold">Heart Rate</p>
-              <p className="text-lg text-white font-medium mt-1">72 bpm</p>
+              <p className="text-lg text-slate-900 font-medium mt-1">72 bpm</p>
             </div>
-            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+            <div className="bg-slate-100 p-3 rounded-xl border border-slate-200">
               <p className="text-xs text-slate-500 uppercase font-bold">Weight</p>
-              <p className="text-lg text-white font-medium mt-1">155 lbs</p>
+              <p className="text-lg text-slate-900 font-medium mt-1">155 lbs</p>
             </div>
-            <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+            <div className="bg-slate-100 p-3 rounded-xl border border-slate-200">
               <p className="text-xs text-slate-500 uppercase font-bold">Temp</p>
-              <p className="text-lg text-white font-medium mt-1">98.6 °F</p>
+              <p className="text-lg text-slate-900 font-medium mt-1">98.6 °F</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Insurance Info */}
-      <Card className="bg-slate-900/50 border-slate-700/50">
+      <Card className="bg-white border-slate-200">
         <CardHeader>
-          <CardTitle className="text-lg text-white flex items-center gap-2">
+          <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
             <FileText className="w-5 h-5 text-violet-400" />
             Insurance
           </CardTitle>
@@ -302,10 +302,10 @@ function OverviewTab({ dashboard }: { dashboard: DashboardData }) {
           {insurance.length > 0 ? (
             <div className="space-y-4">
               {insurance.map((ins, i) => (
-                <div key={i} className="border-b border-slate-700/50 last:border-0 pb-3 last:pb-0">
-                  <p className="text-white font-bold">{ins.provider_name}</p>
-                  <p className="text-slate-400 text-sm mt-1">Policy: <span className="text-slate-300">{ins.policy_number}</span></p>
-                  {ins.group_number && <p className="text-slate-400 text-sm">Group: <span className="text-slate-300">{ins.group_number}</span></p>}
+                <div key={i} className="border-b border-slate-200 last:border-0 pb-3 last:pb-0">
+                  <p className="text-slate-900 font-bold">{ins.provider_name}</p>
+                  <p className="text-slate-500 text-sm mt-1">Policy: <span className="text-slate-600">{ins.policy_number}</span></p>
+                  {ins.group_number && <p className="text-slate-500 text-sm">Group: <span className="text-slate-600">{ins.group_number}</span></p>}
                 </div>
               ))}
             </div>
@@ -322,9 +322,9 @@ function OverviewTab({ dashboard }: { dashboard: DashboardData }) {
 function TimelineTab({ timeline }: { timeline: any[] }) {
   if (!timeline || timeline.length === 0) {
     return (
-      <Card className="bg-slate-900/50 border-slate-700/50 p-12 text-center">
+      <Card className="bg-white border-slate-200 p-12 text-center">
         <Clock className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-        <h3 className="text-slate-300 font-bold">No Events Yet</h3>
+        <h3 className="text-slate-600 font-bold">No Events Yet</h3>
         <p className="text-slate-500 mt-2">The timeline will populate automatically as documents are uploaded and appointments are made.</p>
       </Card>
     );
@@ -336,27 +336,27 @@ function TimelineTab({ timeline }: { timeline: any[] }) {
       case 'INTAKE_CREATED': return <Plus className="w-4 h-4 text-cyan-400" />;
       case 'INTAKE_COMPLETED': return <CheckCircle2 className="w-4 h-4 text-emerald-400" />;
       case 'APPOINTMENT_CREATED': return <Calendar className="w-4 h-4 text-violet-400" />;
-      default: return <Clock className="w-4 h-4 text-slate-400" />;
+      default: return <Clock className="w-4 h-4 text-slate-500" />;
     }
   }
 
   return (
-    <Card className="bg-slate-900/50 border-slate-700/50">
+    <Card className="bg-white border-slate-200">
       <CardContent className="p-8">
         <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent">
           {timeline.map((event, idx) => (
             <div key={event.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border border-slate-700 bg-slate-900 text-slate-400 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full border border-slate-200 bg-white text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
                 {getIcon(event.eventType)}
               </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-700/50 bg-slate-800/30 backdrop-blur shadow-sm">
+              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-200 bg-slate-50 backdrop-blur shadow-sm">
                 <div className="flex items-center justify-between mb-1">
                   <div className="font-bold text-slate-200">{event.title}</div>
                   <time className="text-xs font-medium text-cyan-400 ml-2">
                     {event.createdAt ? new Date(event.createdAt).toLocaleDateString() : 'Unknown'}
                   </time>
                 </div>
-                <div className="text-slate-400 text-sm">{event.description}</div>
+                <div className="text-slate-500 text-sm">{event.description}</div>
               </div>
             </div>
           ))}
@@ -397,7 +397,7 @@ function DocumentsTab({ patientId, documents, role }: { patientId: string, docum
     <div className="space-y-8">
       {/* Phase 1 */}
       <section>
-        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
           <span className="w-6 h-6 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">1</span>
           Intake Documents
         </h3>
@@ -413,7 +413,7 @@ function DocumentsTab({ patientId, documents, role }: { patientId: string, docum
 
       {/* Phase 2 */}
       <section>
-        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
           <span className="w-6 h-6 rounded bg-violet-500/20 text-violet-400 flex items-center justify-center text-xs">2</span>
           Consultation & Labs
         </h3>
@@ -431,7 +431,7 @@ function DocumentsTab({ patientId, documents, role }: { patientId: string, docum
 
       {/* Phase 3 */}
       <section>
-        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
           <span className="w-6 h-6 rounded bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs">3</span>
           Treatment Records
         </h3>
@@ -514,14 +514,14 @@ function DocumentUploader({ patientId, docType, label, files, canDelete, onSucce
   };
 
   return (
-    <Card className={`border-dashed border transition-all duration-300 bg-slate-900/30 border-slate-700/30 hover:border-slate-500/50 flex flex-col ${expanded ? 'h-full min-h-[300px]' : ''}`}>
+    <Card className={`border-dashed border transition-all duration-300 bg-white/30 border-slate-200 hover:border-slate-500/50 flex flex-col ${expanded ? 'h-full min-h-[300px]' : ''}`}>
       <CardContent className="p-0 flex flex-col flex-1">
         {/* Dropzone Area */}
-        <div {...getRootProps()} className="cursor-pointer p-4 flex items-center justify-between group border-b border-slate-800/50">
+        <div {...getRootProps()} className="cursor-pointer p-4 flex items-center justify-between group border-b border-slate-200">
           <input {...getInputProps()} />
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-slate-800/80 rounded-lg group-hover:bg-cyan-900/50 transition-colors">
-               {isUploading ? <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" /> : <FileUp className={`w-5 h-5 ${isDragActive ? 'text-cyan-400' : 'text-slate-400'}`} />}
+             <div className="p-2 bg-slate-100/80 rounded-lg group-hover:bg-cyan-900/50 transition-colors">
+               {isUploading ? <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" /> : <FileUp className={`w-5 h-5 ${isDragActive ? 'text-cyan-400' : 'text-slate-500'}`} />}
              </div>
              <div>
                <p className="text-sm font-bold text-slate-200 group-hover:text-cyan-300 transition-colors">{label}</p>
@@ -529,7 +529,7 @@ function DocumentUploader({ patientId, docType, label, files, canDelete, onSucce
              </div>
           </div>
           {files.length > 0 && (
-            <div className="px-2 py-0.5 rounded-full bg-slate-800 text-xs font-bold text-slate-300 border border-slate-700">
+            <div className="px-2 py-0.5 rounded-full bg-slate-100 text-xs font-bold text-slate-600 border border-slate-200">
               {files.length}
             </div>
           )}
@@ -541,11 +541,11 @@ function DocumentUploader({ patientId, docType, label, files, canDelete, onSucce
             <p className="text-center text-xs text-slate-600 py-4 italic">No documents uploaded.</p>
           ) : (
             files.map((file: any) => (
-              <div key={file.id} className="flex items-center justify-between p-2 rounded-md bg-slate-900 border border-slate-800 hover:border-cyan-500/30 transition-colors group/link">
+              <div key={file.id} className="flex items-center justify-between p-2 rounded-md bg-white border border-slate-800 hover:border-cyan-500/30 transition-colors group/link">
                 <button onClick={(e) => { e.preventDefault(); setPreviewDoc({ name: file.original_name, url: file.file_url }); }} className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer text-left">
                   <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-xs text-slate-300 truncate group-hover/link:text-cyan-300 transition-colors">
+                    <p className="text-xs text-slate-600 truncate group-hover/link:text-cyan-300 transition-colors">
                       {file.original_name}
                     </p>
                     <p className="text-[10px] text-slate-500 mt-0.5">
@@ -565,9 +565,9 @@ function DocumentUploader({ patientId, docType, label, files, canDelete, onSucce
       </CardContent>
       {/* Document Preview Dialog */}
       <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
-        <DialogContent className="max-w-6xl w-[90vw] h-[90vh] bg-slate-900 border-slate-700 p-0 flex flex-col z-[100]">
-          <DialogHeader className="p-4 border-b border-slate-800 bg-slate-900/50 shrink-0">
-            <DialogTitle className="text-white capitalize flex items-center gap-2">
+        <DialogContent className="max-w-6xl w-[90vw] h-[90vh] bg-white border-slate-200 p-0 flex flex-col z-[100]">
+          <DialogHeader className="p-4 border-b border-slate-800 bg-white shrink-0">
+            <DialogTitle className="text-slate-900 capitalize flex items-center gap-2">
               <FileText className="w-5 h-5 text-emerald-400" />
               {previewDoc?.name}
             </DialogTitle>
@@ -614,34 +614,34 @@ function AppointmentsTab({ appointments, patientId, role }: { appointments: any[
 
   if (!appointments || appointments.length === 0) {
     return (
-      <Card className="bg-slate-900/50 border-slate-700/50 p-12 text-center">
+      <Card className="bg-white border-slate-200 p-12 text-center">
         <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-        <h3 className="text-slate-300 font-bold">No Appointments</h3>
+        <h3 className="text-slate-600 font-bold">No Appointments</h3>
         <p className="text-slate-500 mt-2">There are no upcoming or past appointments scheduled.</p>
-        <Button className="mt-6 bg-cyan-600 hover:bg-cyan-500 text-white">Schedule Now</Button>
+        <Button className="mt-6 bg-cyan-600 hover:bg-cyan-500 text-slate-900">Schedule Now</Button>
       </Card>
     );
   }
 
   return (
-    <Card className="bg-slate-900/50 border-slate-700/50">
+    <Card className="bg-white border-slate-200">
       <CardContent className="p-6">
         <div className="space-y-4">
           {appointments.map((appt) => (
-            <div key={appt.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/50 hover:border-cyan-500/50 transition-colors gap-4">
+            <div key={appt.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-cyan-500/50 transition-colors gap-4">
               <div className="flex items-start gap-4 flex-1">
-                 <div className="p-3 bg-slate-800 rounded-xl border border-slate-700 text-center min-w-[70px]">
-                   <p className="text-xs text-slate-400 uppercase font-bold">{new Date(appt.start_time).toLocaleString('default', { month: 'short' })}</p>
-                   <p className="text-2xl text-white font-bold">{new Date(appt.start_time).getDate()}</p>
+                 <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 text-center min-w-[70px]">
+                   <p className="text-xs text-slate-500 uppercase font-bold">{new Date(appt.start_time).toLocaleString('default', { month: 'short' })}</p>
+                   <p className="text-2xl text-slate-900 font-bold">{new Date(appt.start_time).getDate()}</p>
                  </div>
                  <div className="flex-1">
-                   <h4 className="text-white font-bold text-lg">{appt.type}</h4>
-                   <p className="text-slate-400 text-sm mt-1 flex items-center gap-2">
+                   <h4 className="text-slate-900 font-bold text-lg">{appt.type}</h4>
+                   <p className="text-slate-500 text-sm mt-1 flex items-center gap-2">
                      <Clock className="w-3.5 h-3.5" />
                      {new Date(appt.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                    </p>
                    {appt.prescription_notes && (
-                     <div className="mt-3 p-3 rounded-md bg-slate-900/80 border border-slate-700/50 text-sm text-slate-300">
+                     <div className="mt-3 p-3 rounded-md bg-white/80 border border-slate-200 text-sm text-slate-600">
                        <strong className="text-cyan-400 flex items-center gap-2 mb-1"><Pill className="w-4 h-4" /> Prescription / Notes</strong>
                        {appt.prescription_notes}
                      </div>
@@ -649,7 +649,7 @@ function AppointmentsTab({ appointments, patientId, role }: { appointments: any[
                  </div>
               </div>
               <div className="flex flex-col items-end gap-3 shrink-0">
-                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${appt.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 border-slate-700 text-slate-300'}`}>
+                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${appt.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-100 border-slate-200 text-slate-600'}`}>
                    {appt.status}
                  </span>
                  {canComplete && appt.status !== 'Completed' && (
@@ -661,25 +661,25 @@ function AppointmentsTab({ appointments, patientId, role }: { appointments: any[
                        setCompletingAppt(null);
                      }
                    }}>
-                     <Button size="sm" onClick={() => setCompletingAppt(appt.id)} className="bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2">
+                     <Button size="sm" onClick={() => setCompletingAppt(appt.id)} className="bg-emerald-600 hover:bg-emerald-500 text-slate-900 flex items-center gap-2">
                        <CheckCircle2 className="w-4 h-4" /> Complete
                      </Button>
-                     <DialogContent className="bg-slate-900 border-slate-700/50">
+                     <DialogContent className="bg-white border-slate-200">
                         <DialogHeader>
-                          <DialogTitle className="text-white">Complete Appointment</DialogTitle>
+                          <DialogTitle className="text-slate-900">Complete Appointment</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 pt-4">
-                          <p className="text-slate-400 text-sm">Add any prescription notes or clinical remarks before marking this appointment as complete.</p>
+                          <p className="text-slate-500 text-sm">Add any prescription notes or clinical remarks before marking this appointment as complete.</p>
                           <textarea
                             value={prescriptionNotes}
                             onChange={(e) => setPrescriptionNotes(e.target.value)}
                             placeholder="Enter prescriptions (e.g. Ondansetron 8mg bid prn)..."
-                            className="w-full h-32 rounded-md bg-slate-950 border border-slate-800 text-white p-3 text-sm focus:border-cyan-500/50 outline-none resize-none"
+                            className="w-full h-32 rounded-md bg-slate-950 border border-slate-800 text-slate-900 p-3 text-sm focus:border-cyan-500/50 outline-none resize-none"
                           />
                           <Button 
                             onClick={() => handleComplete(appt.id)} 
                             disabled={isSubmitting}
-                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-900"
                           >
                             {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
                             Mark Complete & Save
@@ -712,9 +712,9 @@ function AISummaryTab({ aiSummary }: { aiSummary: any }) {
     <div className="space-y-6">
       <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-6 text-center">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mx-auto shadow-lg shadow-violet-500/20 mb-4">
-          <Bot className="w-8 h-8 text-white" />
+          <Bot className="w-8 h-8 text-slate-900" />
         </div>
-        <h2 className="text-2xl font-bold text-white">AI Clinical Agents</h2>
+        <h2 className="text-2xl font-bold text-slate-900">AI Clinical Agents</h2>
         <p className="text-violet-200 mt-2 max-w-2xl mx-auto">
           This dashboard is wired to the upcoming multi-agent system. As soon as the AI agents are deployed, they will automatically populate these reports based on the documents you upload.
         </p>
@@ -722,22 +722,22 @@ function AISummaryTab({ aiSummary }: { aiSummary: any }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {placeholders.map((agent, i) => (
-          <Card key={i} className="bg-slate-900/50 border-slate-700/50 opacity-75">
+          <Card key={i} className="bg-white border-slate-200 opacity-75">
             <CardHeader className="pb-3 border-b border-slate-800">
-              <CardTitle className="text-lg text-slate-300 flex items-center gap-2">
+              <CardTitle className="text-lg text-slate-600 flex items-center gap-2">
                 <Stethoscope className="w-5 h-5 text-violet-400/50" />
                 {agent.title}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
                {aiSummary[agent.key] ? (
-                 <div className="text-white whitespace-pre-wrap">{aiSummary[agent.key]}</div>
+                 <div className="text-slate-900 whitespace-pre-wrap">{aiSummary[agent.key]}</div>
                ) : (
                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                   <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-3">
+                   <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mb-3">
                      <Loader2 className="w-5 h-5 text-slate-500" />
                    </div>
-                   <p className="text-slate-400 font-medium">Awaiting Agent Deployment</p>
+                   <p className="text-slate-500 font-medium">Awaiting Agent Deployment</p>
                    <p className="text-xs text-slate-500 mt-2 max-w-[250px] mx-auto">{agent.desc}</p>
                  </div>
                )}
@@ -752,19 +752,19 @@ function AISummaryTab({ aiSummary }: { aiSummary: any }) {
 function TreatmentPlansTab() {
   return (
     <div className="space-y-6">
-      <Card className="bg-slate-900/50 border-slate-700/50">
-        <CardHeader className="border-b border-slate-800/50">
-          <CardTitle className="text-white flex items-center gap-2 text-lg">
+      <Card className="bg-white border-slate-200">
+        <CardHeader className="border-b border-slate-200">
+          <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
             <Pill className="w-5 h-5 text-cyan-400" />
             Active Treatment Plans
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-12 text-center">
-            <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 mx-auto mb-4">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-12 text-center">
+            <div className="w-16 h-16 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 mx-auto mb-4">
               <Pill className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold text-slate-300 mb-1">No Active Treatment Plans</h3>
+            <h3 className="text-xl font-bold text-slate-600 mb-1">No Active Treatment Plans</h3>
             <p className="text-slate-500 max-w-sm mx-auto">This patient currently does not have any active chemotherapy or radiation regimens assigned.</p>
           </div>
         </CardContent>

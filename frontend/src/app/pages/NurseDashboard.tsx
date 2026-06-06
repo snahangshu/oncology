@@ -133,48 +133,48 @@ export default function NurseDashboard() {
         <h1 className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent mb-2">
           Nurse Station
         </h1>
-        <p className="text-slate-400">Patient preparation and vitals tracking</p>
+        <p className="text-slate-500">Patient preparation and vitals tracking</p>
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all">
+        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Patients Waiting</p>
-                <h3 className="text-white mt-2">{isLoading ? '...' : pendingVitalsCount}</h3>
+                <p className="text-slate-500 text-sm">Patients Waiting</p>
+                <h3 className="text-slate-900 mt-2">{isLoading ? '...' : pendingVitalsCount}</h3>
               </div>
               <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 shadow-lg">
-                <Heart className="w-5 h-5 text-white" />
+                <Heart className="w-5 h-5 text-slate-900" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all">
+        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Vitals Recorded</p>
-                <h3 className="text-white mt-2">0</h3>
+                <p className="text-slate-500 text-sm">Vitals Recorded</p>
+                <h3 className="text-slate-900 mt-2">0</h3>
               </div>
               <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 shadow-lg">
-                <Activity className="w-5 h-5 text-white" />
+                <Activity className="w-5 h-5 text-slate-900" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden hover:border-violet-500/30 transition-all">
+        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-violet-500/30 transition-all">
           <CardContent className="p-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-slate-400 text-sm">Ready for Doctor</p>
-                <h3 className="text-white mt-2">0</h3>
+                <p className="text-slate-500 text-sm">Ready for Doctor</p>
+                <h3 className="text-slate-900 mt-2">0</h3>
               </div>
               <div className="p-3 rounded-xl bg-gradient-to-br from-violet-500 to-rose-500 shadow-lg">
-                <CheckCircle className="w-5 h-5 text-white" />
+                <CheckCircle className="w-5 h-5 text-slate-900" />
               </div>
             </div>
           </CardContent>
@@ -182,9 +182,9 @@ export default function NurseDashboard() {
       </div>
 
       {/* Vitals Queue */}
-      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden">
+      <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-slate-900 flex items-center gap-2">
             <Heart className="w-5 h-5 text-emerald-400" />
             Patient Vitals Queue
           </CardTitle>
@@ -192,16 +192,16 @@ export default function NurseDashboard() {
         <CardContent>
           <div className="space-y-3">
             {isLoading ? (
-              <div className="text-slate-400 text-center py-8">
+              <div className="text-slate-500 text-center py-8">
                 <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-2" />
                 Loading vitals queue...
               </div>
             ) : patientList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center text-slate-500">
-                <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center mb-4">
                   <Activity className="w-8 h-8 text-slate-500" />
                 </div>
-                <p className="text-lg font-medium text-slate-300">Queue is empty</p>
+                <p className="text-lg font-medium text-slate-600">Queue is empty</p>
                 <p className="mt-1">No patients currently waiting for vitals.</p>
               </div>
             ) : patientList.map((patient, index) => (
@@ -209,19 +209,19 @@ export default function NurseDashboard() {
                 <DialogTrigger asChild>
                   <div
                     onClick={() => setSelectedPatient(patient)}
-                    className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/30 hover:border-emerald-500/50 transition-all cursor-pointer hover:shadow-lg hover:shadow-emerald-500/10 animate-in slide-in-from-left duration-500"
+                    className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-emerald-500/50 transition-all cursor-pointer hover:shadow-lg hover:shadow-emerald-500/10 animate-in slide-in-from-left duration-500"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg">
-                          <span className="text-white">
+                          <span className="text-slate-900">
                             {patient.name && typeof patient.name === 'string' ? patient.name.split(' ').filter(Boolean).map(n => n[0]).join('') : 'P'}
                           </span>
                         </div>
                         <div>
-                          <h4 className="text-white">{patient.name}</h4>
-                          <p className="text-slate-400 text-sm">
+                          <h4 className="text-slate-900">{patient.name}</h4>
+                          <p className="text-slate-500 text-sm">
                             Arrived: {patient.arrived} • Appt: {patient.appointmentTime}
                           </p>
                         </div>
@@ -235,9 +235,9 @@ export default function NurseDashboard() {
                     </div>
                   </div>
                 </DialogTrigger>
-                <DialogContent className="bg-slate-900 border-slate-700/30 max-w-2xl">
+                <DialogContent className="bg-white border-slate-200 max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle className="text-white flex items-center gap-2">
+                    <DialogTitle className="text-slate-900 flex items-center gap-2">
                       <Activity className="w-5 h-5 text-emerald-400" />
                       Record Vitals - {selectedPatient?.name}
                     </DialogTitle>
@@ -257,24 +257,24 @@ export default function NurseDashboard() {
                           size="sm" 
                           onClick={handleRunSafetyCheck}
                           disabled={isCheckingSafety}
-                          className="bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 hover:text-white border border-indigo-500/30"
+                          className="bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 hover:text-slate-900 border border-indigo-500/30"
                         >
                           {isCheckingSafety ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
                           {isCheckingSafety ? "Reviewing..." : "Run AI Safety Check"}
                         </Button>
                       </div>
                       <div className="grid grid-cols-2 text-sm gap-2">
-                        <div><span className="text-slate-400">Regimen:</span> <span className="text-white">{mockRegimen.proposed_regimen}</span></div>
-                        <div><span className="text-slate-400">Allergies:</span> <span className="text-white">{mockRegimen.allergies}</span></div>
-                        <div><span className="text-slate-400">Renal:</span> <span className="text-white">{mockRegimen.renal_function}</span></div>
-                        <div><span className="text-slate-400">Hepatic:</span> <span className="text-white">{mockRegimen.hepatic_function}</span></div>
+                        <div><span className="text-slate-500">Regimen:</span> <span className="text-slate-900">{mockRegimen.proposed_regimen}</span></div>
+                        <div><span className="text-slate-500">Allergies:</span> <span className="text-slate-900">{mockRegimen.allergies}</span></div>
+                        <div><span className="text-slate-500">Renal:</span> <span className="text-slate-900">{mockRegimen.renal_function}</span></div>
+                        <div><span className="text-slate-500">Hepatic:</span> <span className="text-slate-900">{mockRegimen.hepatic_function}</span></div>
                       </div>
                     </div>
 
                     {/* Vitals Input Form */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="bp" className="text-slate-300 flex items-center gap-2">
+                        <Label htmlFor="bp" className="text-slate-600 flex items-center gap-2">
                           <AlertCircle className="w-4 h-4 text-rose-400" />
                           Blood Pressure
                         </Label>
@@ -283,12 +283,12 @@ export default function NurseDashboard() {
                           placeholder="120/80"
                           value={vitals.bloodPressure}
                           onChange={(e) => setVitals({ ...vitals, bloodPressure: e.target.value })}
-                          className="bg-slate-800/50 border-slate-700/30 text-white"
+                          className="bg-slate-100 border-slate-200 text-slate-900"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="hr" className="text-slate-300 flex items-center gap-2">
+                        <Label htmlFor="hr" className="text-slate-600 flex items-center gap-2">
                           <Heart className="w-4 h-4 text-rose-400" />
                           Heart Rate (bpm)
                         </Label>
@@ -297,12 +297,12 @@ export default function NurseDashboard() {
                           placeholder="72"
                           value={vitals.heartRate}
                           onChange={(e) => setVitals({ ...vitals, heartRate: e.target.value })}
-                          className="bg-slate-800/50 border-slate-700/30 text-white"
+                          className="bg-slate-100 border-slate-200 text-slate-900"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="temp" className="text-slate-300 flex items-center gap-2">
+                        <Label htmlFor="temp" className="text-slate-600 flex items-center gap-2">
                           <Activity className="w-4 h-4 text-cyan-400" />
                           Temperature (°F)
                         </Label>
@@ -311,12 +311,12 @@ export default function NurseDashboard() {
                           placeholder="98.6"
                           value={vitals.temperature}
                           onChange={(e) => setVitals({ ...vitals, temperature: e.target.value })}
-                          className="bg-slate-800/50 border-slate-700/30 text-white"
+                          className="bg-slate-100 border-slate-200 text-slate-900"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="weight" className="text-slate-300">
+                        <Label htmlFor="weight" className="text-slate-600">
                           Weight (lbs)
                         </Label>
                         <Input
@@ -324,13 +324,13 @@ export default function NurseDashboard() {
                           placeholder="150"
                           value={vitals.weight}
                           onChange={(e) => setVitals({ ...vitals, weight: e.target.value })}
-                          className="bg-slate-800/50 border-slate-700/30 text-white"
+                          className="bg-slate-100 border-slate-200 text-slate-900"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="complaints" className="text-slate-300">
+                      <Label htmlFor="complaints" className="text-slate-600">
                         Initial Patient Complaints
                       </Label>
                       <Textarea
@@ -338,14 +338,14 @@ export default function NurseDashboard() {
                         placeholder="Record any patient complaints or concerns..."
                         value={vitals.complaints}
                         onChange={(e) => setVitals({ ...vitals, complaints: e.target.value })}
-                        className="bg-slate-800/50 border-slate-700/30 text-white min-h-[100px]"
+                        className="bg-slate-100 border-slate-200 text-slate-900 min-h-[100px]"
                       />
                     </div>
 
-                    <div className="flex gap-3 pt-4 mt-2 border-t border-slate-700/50">
+                    <div className="flex gap-3 pt-4 mt-2 border-t border-slate-200">
                       <Button
                         onClick={handleRecordVitals}
-                        className="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/20 py-5"
+                        className="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-900 shadow-lg shadow-emerald-500/20 py-5"
                       >
                         <Activity className="w-4 h-4 mr-2" />
                         Record Vitals
@@ -353,13 +353,13 @@ export default function NurseDashboard() {
                       <Button
                         onClick={handleAssessToxicity}
                         disabled={isAssessingToxicity}
-                        className="flex-1 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-600 hover:to-cyan-600 text-white shadow-lg shadow-violet-500/20 py-5"
+                        className="flex-1 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-600 hover:to-cyan-600 text-slate-900 shadow-lg shadow-violet-500/20 py-5"
                       >
                         {isAssessingToxicity ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
                         {isAssessingToxicity ? "Assess Toxicity" : "Assess Toxicity (AI)"}
                       </Button>
                       <Button
-                        className="flex-1 bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white shadow-lg shadow-rose-500/20 py-5"
+                        className="flex-1 bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-slate-900 shadow-lg shadow-rose-500/20 py-5"
                       >
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Ready for Doctor
