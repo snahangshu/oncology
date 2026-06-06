@@ -49,7 +49,6 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
             "lastActive": "Just now"
         })
 
-    # For system events, fetch recent audit logs or return empty
     from app.modules.users.credential_models import AuditLog
     recent_audits = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(10).all()
     system_events = []
@@ -72,7 +71,6 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
     yesterday_start = today_start - timedelta(days=1)
     yesterday_end = today_end - timedelta(days=1)
     
-    # Calculate real today's patients (unique patients with appointments today)
     today_appts = db.query(Appointment).filter(
         Appointment.start_time >= today_start,
         Appointment.start_time <= today_end
@@ -94,7 +92,6 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
 
     today_patients_change = calc_change_str(today_patients, yesterday_patients)
     
-    # Calculate total appointments
     total_appointments = db.query(Appointment).count()
     last_30_start = today_start - timedelta(days=30)
     prev_30_start = last_30_start - timedelta(days=30)
@@ -119,7 +116,6 @@ def get_admin_dashboard(db: Session = Depends(get_db)):
     if total_slots_today > 0:
         utilization_percent = int((booked_slots_today / total_slots_today) * 100)
     else:
-        # Fallback
         utilization_percent = min(int((len(today_appts) / max(doctors_available * 8, 1)) * 100), 100)
 
     utilization_percent_change = "+0%"
@@ -154,14 +150,22 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
         Appointment.status != 'Completed'
     ).order_by(Appointment.start_time.asc()).all()
     
+    upcoming_appts = db.query(Appointment).filter(
+        Appointment.doctor_id == doctor.id,
+        Appointment.start_time > today_end
+    ).order_by(Appointment.start_time.asc()).limit(10).all()
+    
+    # Preload Patients & Intakes for Appointments
+    all_appt_patient_ids = list(set([a.patient_id for a in appointments] + [a.patient_id for a in upcoming_appts]))
+    patients_map = {p.id: p for p in db.query(Patient).filter(Patient.id.in_(all_appt_patient_ids)).all()} if all_appt_patient_ids else {}
+    intakes_map = {i.patient_id: i for i in db.query(OncologyIntake).filter(OncologyIntake.patient_id.in_(all_appt_patient_ids)).all()} if all_appt_patient_ids else {}
+    
     result = []
     for appt in appointments:
-        patient = db.query(Patient).filter(Patient.id == appt.patient_id).first()
-        intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == appt.patient_id).first()
+        patient = patients_map.get(appt.patient_id)
+        intake = intakes_map.get(appt.patient_id)
         
         pat_name = f"{patient.first_name} {patient.last_name}" if patient else "Unknown"
-        primary_dx = patient.primary_diagnosis if patient else "Unknown"
-        urgency = patient.urgency_level if patient else "ROUTINE"
         intake_summary = {}
         if intake:
             if intake.referral_letter: intake_summary['referral_letter'] = intake.referral_letter
@@ -171,7 +175,7 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
         result.append({
             "appointment_id": str(appt.id),
             "patient_id": str(appt.patient_id),
-            "patient_name": f"{patient.first_name} {patient.last_name}" if patient else "Unknown",
+            "patient_name": pat_name,
             "time": appt.start_time.strftime("%I:%M %p"),
             "date": appt.start_time.strftime("%b %d, %Y"),
             "full_time": appt.start_time.isoformat(),
@@ -186,18 +190,13 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
                 "weight": f"{random.randint(140, 190)} lbs"
             },
             "intake_summary": intake_summary,
-            "ai_summary": intake.ai_summary if intake and intake.ai_summary else f"AI Summary based on Intake: Patient presents with {getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown'}. Intake documents include: {', '.join(intake_summary.keys()) or 'None'}."
+            "ai_summary": intake.ai_summary if intake and intake.ai_summary else f"AI Summary based on Intake: Patient presents with {getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown'}."
         })
         
-    upcoming_appts = db.query(Appointment).filter(
-        Appointment.doctor_id == doctor.id,
-        Appointment.start_time > today_end
-    ).order_by(Appointment.start_time.asc()).limit(10).all()
-    
     upcoming_result = []
     for appt in upcoming_appts:
-        patient = db.query(Patient).filter(Patient.id == appt.patient_id).first()
-        intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == appt.patient_id).first()
+        patient = patients_map.get(appt.patient_id)
+        intake = intakes_map.get(appt.patient_id)
         
         intake_summary = {}
         if intake:
@@ -223,14 +222,17 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
             },
             "urgency_level": getattr(patient, 'urgency_level', 'Routine') if patient else 'Routine',
             "intake_summary": intake_summary,
-            "ai_summary": getattr(intake, 'ai_summary', None) if intake else None or f"AI Summary based on Intake: Patient presents with {getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown'}. Intake documents include: {', '.join(intake_summary.keys()) or 'None'}."
+            "ai_summary": getattr(intake, 'ai_summary', None) if intake else f"AI Summary based on Intake: Patient presents with {getattr(patient, 'primary_diagnosis', 'Unknown') if patient else 'Unknown'}."
         })
 
     from app.modules.scheduling.models import ClinicalAlert
     unresolved_alerts = db.query(ClinicalAlert).filter(ClinicalAlert.is_resolved == False).all()
+    alert_patient_ids = list(set([a.patient_id for a in unresolved_alerts]))
+    alert_patients_map = {p.id: p for p in db.query(Patient).filter(Patient.id.in_(alert_patient_ids)).all()} if alert_patient_ids else {}
+    
     alerts_result = []
     for alert in unresolved_alerts:
-        pat = db.query(Patient).filter(Patient.id == alert.patient_id).first()
+        pat = alert_patients_map.get(alert.patient_id)
         alerts_result.append({
             "id": alert.id,
             "patient_name": f"{pat.first_name} {pat.last_name}" if pat else "Unknown",
@@ -242,9 +244,12 @@ def get_doctor_dashboard(current_user: User = Depends(require_role([Role.DOCTOR]
 
     from app.modules.intake.models import TreatmentPlan
     all_plans = db.query(TreatmentPlan).all()
+    plan_patient_ids = list(set([p.patient_id for p in all_plans]))
+    plan_patients_map = {p.id: p for p in db.query(Patient).filter(Patient.id.in_(plan_patient_ids)).all()} if plan_patient_ids else {}
+    
     plans_result = []
     for plan in all_plans:
-        pat = db.query(Patient).filter(Patient.id == plan.patient_id).first()
+        pat = plan_patients_map.get(plan.patient_id)
         plans_result.append({
             "id": plan.id,
             "patient": f"{pat.first_name} {pat.last_name}" if pat else "Unknown",
@@ -268,17 +273,27 @@ def get_receptionist_dashboard(db: Session = Depends(get_db)):
     today_start = datetime.combine(date.today(), time.min)
     today_end = datetime.combine(date.today(), time.max)
     
-    # Query all appointments for today
     appointments = db.query(Appointment).filter(
         Appointment.start_time >= today_start,
         Appointment.start_time <= today_end
     ).order_by(Appointment.start_time.asc()).all()
     
+    upcoming_appts = db.query(Appointment).filter(
+        Appointment.start_time > today_end
+    ).order_by(Appointment.start_time.asc()).limit(10).all()
+    
+    all_appts = appointments + upcoming_appts
+    patient_ids = list(set([a.patient_id for a in all_appts]))
+    doctor_ids = list(set([a.doctor_id for a in all_appts if a.doctor_id]))
+    
+    patients_map = {p.id: p for p in db.query(Patient).filter(Patient.id.in_(patient_ids)).all()} if patient_ids else {}
+    doctors_map = {d.id: d for d in db.query(Doctor).filter(Doctor.id.in_(doctor_ids)).all()} if doctor_ids else {}
+    
     result = []
     waiting_list = []
     for appt in appointments:
-        patient = db.query(Patient).filter(Patient.id == appt.patient_id).first()
-        doctor = db.query(Doctor).filter(Doctor.id == appt.doctor_id).first()
+        patient = patients_map.get(appt.patient_id)
+        doctor = doctors_map.get(appt.doctor_id)
         
         pat_name = f"{patient.first_name} {patient.last_name}" if patient else "Unknown"
         doc_name = f"{doctor.first_name} {doctor.last_name}" if doctor else "Unknown"
@@ -288,7 +303,7 @@ def get_receptionist_dashboard(db: Session = Depends(get_db)):
             "time": appt.start_time.strftime("%I:%M %p"),
             "patient": pat_name,
             "doctor": f"Dr. {doc_name}",
-            "status": appt.status.capitalize()
+            "status": appt.status.capitalize() if appt.status else "Unknown"
         }
         
         result.append(appt_data)
@@ -302,21 +317,17 @@ def get_receptionist_dashboard(db: Session = Depends(get_db)):
                 "status": "Waiting"
             })
     
-    upcoming_appts = db.query(Appointment).filter(
-        Appointment.start_time > today_end
-    ).order_by(Appointment.start_time.asc()).limit(10).all()
-    
     upcoming_result = []
     for appt in upcoming_appts:
-        patient = db.query(Patient).filter(Patient.id == appt.patient_id).first()
-        doctor = db.query(Doctor).filter(Doctor.id == appt.doctor_id).first()
+        patient = patients_map.get(appt.patient_id)
+        doctor = doctors_map.get(appt.doctor_id)
         upcoming_result.append({
             "id": appt.id,
             "date": appt.start_time.strftime("%b %d, %Y"),
             "time": appt.start_time.strftime("%I:%M %p"),
             "patient": f"{patient.first_name} {patient.last_name}" if patient else "Unknown",
             "doctor": f"Dr. {doctor.last_name}" if doctor else "Unknown",
-            "status": appt.status.capitalize()
+            "status": appt.status.capitalize() if appt.status else "Unknown"
         })
 
     doctors_available = db.query(Doctor).filter(Doctor.status == "active").count()
@@ -375,15 +386,22 @@ def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIEN
         
     now = datetime.utcnow()
     
-    # Upcoming Appointments
     appointments = db.query(Appointment).filter(
         Appointment.patient_id == patient.id,
         Appointment.start_time >= now
     ).order_by(Appointment.start_time.asc()).limit(5).all()
     
+    past_appointments = db.query(Appointment).filter(
+        Appointment.patient_id == patient.id,
+        Appointment.start_time < now
+    ).order_by(Appointment.start_time.desc()).limit(10).all()
+    
+    doctor_ids = list(set([a.doctor_id for a in appointments + past_appointments if a.doctor_id]))
+    doctors_map = {d.id: d for d in db.query(Doctor).filter(Doctor.id.in_(doctor_ids)).all()} if doctor_ids else {}
+    
     upcoming_result = []
     for appt in appointments:
-        doc = db.query(Doctor).filter(Doctor.id == appt.doctor_id).first()
+        doc = doctors_map.get(appt.doctor_id)
         doc_name = f"{doc.first_name} {doc.last_name}" if doc else "Unassigned Provider"
         
         upcoming_result.append({
@@ -394,15 +412,9 @@ def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIEN
             "status": appt.status
         })
 
-    # Past Appointments
-    past_appointments = db.query(Appointment).filter(
-        Appointment.patient_id == patient.id,
-        Appointment.start_time < now
-    ).order_by(Appointment.start_time.desc()).limit(10).all()
-
     past_result = []
     for appt in past_appointments:
-        doc = db.query(Doctor).filter(Doctor.id == appt.doctor_id).first()
+        doc = doctors_map.get(appt.doctor_id)
         doc_name = f"{doc.first_name} {doc.last_name}" if doc else "Unassigned Provider"
         
         past_result.append({
@@ -413,7 +425,6 @@ def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIEN
             "status": appt.status
         })
 
-    # Treatment Plans
     treatment_plans = db.query(TreatmentPlan).filter(TreatmentPlan.patient_id == patient.id).order_by(TreatmentPlan.start_date.desc()).all()
     tp_result = []
     for tp in treatment_plans:
@@ -428,7 +439,6 @@ def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIEN
             "current_cycle": tp.current_cycle
         })
         
-    # If no real treatment plans, we can mock one based on primary diagnosis if available to show the UI
     if not tp_result and patient.primary_diagnosis:
         tp_result.append({
             "id": 999,
@@ -441,7 +451,6 @@ def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIEN
             "current_cycle": 1
         })
 
-    # Lab Results
     lab_results = db.query(LabResult).filter(LabResult.patient_id == patient.id).order_by(LabResult.date_collected.desc()).all()
     lab_result_list = []
     for lab in lab_results:
@@ -455,7 +464,6 @@ def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIEN
             "date_collected": lab.date_collected.isoformat() if lab.date_collected else None
         })
 
-    # If no real lab results, mock a few
     if not lab_result_list:
         lab_result_list = [
             {
@@ -487,7 +495,6 @@ def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIEN
             }
         ]
 
-    # Medical History Timeline (mocked based on diagnosis)
     medical_history = []
     if patient.primary_diagnosis:
         medical_history.append({
@@ -520,17 +527,24 @@ def get_patient_dashboard(current_user: User = Depends(require_role([Role.PATIEN
 @router.get("/receptionist/registry", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
 def get_patient_registry(db: Session = Depends(get_db)):
     patients = db.query(Patient).all()
+    patient_ids = [p.id for p in patients]
+    
+    intakes_map = {i.patient_id: i for i in db.query(OncologyIntake).filter(OncologyIntake.patient_id.in_(patient_ids)).all()} if patient_ids else {}
+    
+    # Preload next appointments
+    now = datetime.now()
+    appts = db.query(Appointment).filter(Appointment.start_time > now).order_by(Appointment.start_time.asc()).all()
+    next_appts_map = {}
+    for a in appts:
+        if a.patient_id not in next_appts_map:
+            next_appts_map[a.patient_id] = a
+
     result = []
     for p in patients:
-        intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == p.id).first()
+        intake = intakes_map.get(p.id)
         intake_prog = f"{intake.completion_percentage // 25}/4" if intake else "0/4"
         
-        # Get next appt
-        next_appt = db.query(Appointment).filter(
-            Appointment.patient_id == p.id,
-            Appointment.start_time > datetime.now()
-        ).order_by(Appointment.start_time.asc()).first()
-        
+        next_appt = next_appts_map.get(p.id)
         if next_appt:
             appt_str = next_appt.start_time.strftime("%b %d, %Y")
         else:
@@ -556,9 +570,12 @@ def get_patient_registry(db: Session = Depends(get_db)):
 @router.get("/receptionist/intakes", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
 def get_intake_management(db: Session = Depends(get_db)):
     patients = db.query(Patient).all()
+    patient_ids = [p.id for p in patients]
+    intakes_map = {i.patient_id: i for i in db.query(OncologyIntake).filter(OncologyIntake.patient_id.in_(patient_ids)).all()} if patient_ids else {}
+    
     result = []
     for p in patients:
-        intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == p.id).first()
+        intake = intakes_map.get(p.id)
         if not intake:
             continue
             
@@ -576,9 +593,12 @@ def get_intake_management(db: Session = Depends(get_db)):
 @router.get("/receptionist/referrals", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
 def get_referrals_queue(db: Session = Depends(get_db)):
     patients = db.query(Patient).all()
+    patient_ids = [p.id for p in patients]
+    intakes_map = {i.patient_id: i for i in db.query(OncologyIntake).filter(OncologyIntake.patient_id.in_(patient_ids)).all()} if patient_ids else {}
+
     result = []
     for p in patients:
-        intake = db.query(OncologyIntake).filter(OncologyIntake.patient_id == p.id).first()
+        intake = intakes_map.get(p.id)
         if not intake:
             continue
             
@@ -613,10 +633,16 @@ def get_waiting_room(db: Session = Depends(get_db)):
         Appointment.start_time <= today_end
     ).order_by(Appointment.start_time.asc()).all()
     
+    patient_ids = list(set([a.patient_id for a in appts]))
+    doctor_ids = list(set([a.doctor_id for a in appts if a.doctor_id]))
+    
+    patients_map = {p.id: p for p in db.query(Patient).filter(Patient.id.in_(patient_ids)).all()} if patient_ids else {}
+    doctors_map = {d.id: d for d in db.query(Doctor).filter(Doctor.id.in_(doctor_ids)).all()} if doctor_ids else {}
+    
     result = []
     for a in appts:
-        p = db.query(Patient).filter(Patient.id == a.patient_id).first()
-        doc = db.query(Doctor).filter(Doctor.id == a.doctor_id).first()
+        p = patients_map.get(a.patient_id)
+        doc = doctors_map.get(a.doctor_id)
         
         wait_mins = 0
         if a.status == "waiting":
@@ -636,9 +662,12 @@ def get_waiting_room(db: Session = Depends(get_db)):
 @router.get("/receptionist/insurance", dependencies=[Depends(require_role([Role.RECEPTIONIST, Role.ADMIN]))])
 def get_insurance_auth(db: Session = Depends(get_db)):
     records = db.query(InsuranceRecord).all()
+    patient_ids = list(set([r.patient_id for r in records]))
+    patients_map = {p.id: p for p in db.query(Patient).filter(Patient.id.in_(patient_ids)).all()} if patient_ids else {}
+    
     result = []
     for r in records:
-        p = db.query(Patient).filter(Patient.id == r.patient_id).first()
+        p = patients_map.get(r.patient_id)
         result.append({
             "id": r.id,
             "name": f"{p.first_name} {p.last_name}" if p else "Unknown",

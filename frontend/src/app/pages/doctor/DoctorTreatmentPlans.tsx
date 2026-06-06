@@ -5,6 +5,7 @@ import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Progress } from '../../components/ui/progress';
 import { Button } from '../../components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../components/ui/dialog';
 import { api } from '../../shared/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -12,6 +13,13 @@ import { toast } from 'sonner';
 export default function DoctorTreatmentPlans() {
   const [activeTab, setActiveTab] = useState('chemotherapy');
   const [expandedPlanId, setExpandedPlanId] = useState<number | null>(null);
+  
+  // Delay Modal State
+  const [delayModalOpen, setDelayModalOpen] = useState(false);
+  const [delayCycleId, setDelayCycleId] = useState<number | null>(null);
+  const [delayDays, setDelayDays] = useState(7);
+  const [delayReason, setDelayReason] = useState('Low neutrophil count');
+  
   const queryClient = useQueryClient();
 
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
@@ -59,6 +67,21 @@ export default function DoctorTreatmentPlans() {
     },
     onSuccess: () => {
       toast.success("Cycle updated!");
+      queryClient.invalidateQueries({ queryKey: ['plan_cycles', expandedPlanId] });
+    }
+  });
+
+  const delayCycleMutation = useMutation({
+    mutationFn: async () => {
+      if (!delayCycleId) return;
+      return api.post(`/treatment-plans/cycles/${delayCycleId}/delay`, {
+        days: delayDays,
+        reason: delayReason
+      });
+    },
+    onSuccess: () => {
+      toast.success("Cycle delayed and schedule shifted!");
+      setDelayModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ['plan_cycles', expandedPlanId] });
     }
   });
@@ -117,7 +140,7 @@ export default function DoctorTreatmentPlans() {
               <div className="border-t border-slate-800 bg-slate-950/50 p-6 animate-in slide-in-from-top-4 duration-300">
                 <div className="mb-8 flex items-center justify-between">
                   <h4 className="text-lg font-bold text-slate-200">Treatment Journey Map</h4>
-                  {!cyclesData && !cyclesLoading && (
+                  {(!cyclesData || cyclesData.cycles.length === 0) && !cyclesLoading && (
                     <Button 
                       onClick={() => generateCyclesMutation.mutate(plan.id)}
                       disabled={generateCyclesMutation.isPending}
@@ -130,7 +153,7 @@ export default function DoctorTreatmentPlans() {
 
                 {cyclesLoading ? (
                   <p className="text-slate-400 text-center py-8">Loading cycle data...</p>
-                ) : cyclesData && cyclesData.cycles ? (
+                ) : cyclesData && cyclesData.cycles && cyclesData.cycles.length > 0 ? (
                   <div className="space-y-6">
                     {/* Summary Bar */}
                     <div className="flex gap-6 mb-6 p-4 rounded-xl bg-slate-900 border border-slate-800">
@@ -224,7 +247,7 @@ export default function DoctorTreatmentPlans() {
                                 </div>
                                 
                                 {/* Actions */}
-                                {isNext && (
+                                {(isNext || isDelayed) && (
                                   <div className="flex gap-2">
                                     <Button 
                                       size="sm" 
@@ -238,7 +261,10 @@ export default function DoctorTreatmentPlans() {
                                       size="sm" 
                                       variant="outline" 
                                       className="border-rose-500/50 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
-                                      onClick={() => updateCycleMutation.mutate({ cycleId: cycle.id, status: "DELAYED" })}
+                                      onClick={() => {
+                                        setDelayCycleId(cycle.id);
+                                        setDelayModalOpen(true);
+                                      }}
                                     >
                                       Delay
                                     </Button>
@@ -262,6 +288,53 @@ export default function DoctorTreatmentPlans() {
           </Card>
         ))}
       </div>
+
+      <Dialog open={delayModalOpen} onOpenChange={setDelayModalOpen}>
+        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-rose-400 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" /> Delay Cycle
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              This will update the cycle status and cascade the delay to all subsequent upcoming cycles automatically.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-slate-300">Days to Delay</label>
+              <input
+                type="number"
+                min="1"
+                max="60"
+                value={delayDays}
+                onChange={(e) => setDelayDays(parseInt(e.target.value))}
+                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-slate-300">Clinical Reason</label>
+              <input
+                value={delayReason}
+                onChange={(e) => setDelayReason(e.target.value)}
+                placeholder="e.g. Low neutrophils"
+                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" className="border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white" onClick={() => setDelayModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-rose-600 text-white hover:bg-rose-500" 
+              onClick={() => delayCycleMutation.mutate()}
+              disabled={delayCycleMutation.isPending}
+            >
+              Confirm Delay
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

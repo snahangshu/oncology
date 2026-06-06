@@ -456,7 +456,6 @@ def complete_appointment(
                     )
                     db.add(cycle)
                 db.commit()
-                
         except Exception as e:
             print(f"Error updating treatment plan: {e}")
             db.rollback()

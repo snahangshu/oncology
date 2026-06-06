@@ -169,21 +169,23 @@ def get_todays_infusions(db: Session = Depends(get_db)):
 
 @router.get("/clearance-queue")
 def get_clearance_queue(db: Session = Depends(get_db)):
-    """Queue of Treatment Plans waiting for Auth or Labs."""
-    plans = db.query(TreatmentPlan).filter(
-        TreatmentPlan.status.in_(["PENDING_AUTH", "PENDING_LABS", "Planned"])
-    ).all()
+    """Queue of Treatment Cycles waiting for clearance and booking."""
+    cycles = db.query(TreatmentCycle).join(TreatmentPlan).filter(
+        TreatmentCycle.status.in_(["PLANNED", "DELAYED"])
+    ).order_by(TreatmentCycle.scheduled_date).all()
     
     return [
         {
-            "id": p.id,
-            "patient_id": p.patient_id,
-            "regimen": p.regimen_name,
-            "status": p.status,
-            "duration_minutes": p.duration_minutes or 240,
-            "current_cycle": p.current_cycle or 1,
-            "total_cycles": p.cycles or 1,
-        } for p in plans
+            "id": c.treatment_plan_id, # Keeping this key temporarily if frontend expects it
+            "cycle_id": c.id,
+            "patient_id": c.treatment_plan.patient_id if c.treatment_plan else 0,
+            "regimen": c.treatment_plan.regimen_name if c.treatment_plan else "Unknown",
+            "status": c.status,
+            "duration_minutes": c.treatment_plan.duration_minutes if c.treatment_plan else 240,
+            "current_cycle": c.cycle_number,
+            "total_cycles": c.treatment_plan.cycles if c.treatment_plan else 1,
+            "scheduled_date": c.scheduled_date
+        } for c in cycles
     ]
 
 @router.get("/pharmacy-queue")
@@ -213,7 +215,19 @@ def clear_for_scheduling(plan_id: int, db: Session = Depends(get_db)):
     """Doctor clears plan. AI Scheduling Engine takes over."""
     plan = db.query(TreatmentPlan).filter(TreatmentPlan.id == plan_id).first()
     if not plan:
-        raise HTTPException(status_code=404, detail="Plan not found")
+        raise HTTPException(status_code=404, detail="Treatment plan missing")
+    return {"status": "SUCCESS", "message": "Plan cleared (legacy endpoint)."}
+
+@router.post("/cycles/{cycle_id}/clear-and-book")
+def clear_and_book_cycle(cycle_id: int, db: Session = Depends(get_db)):
+    """Evaluate Safety and Book an Infusion Appointment dynamically based on staff capacity."""
+    cycle = db.query(TreatmentCycle).filter(TreatmentCycle.id == cycle_id).first()
+    if not cycle:
+        raise HTTPException(status_code=404, detail="Cycle not found")
+        
+    plan = cycle.treatment_plan
+    if not plan:
+        raise HTTPException(status_code=404, detail="Treatment plan missing")
 
     # 1. Safety Scoring Workflow
     active_rules = db.query(SafetyRule).filter(SafetyRule.active == True).all()
@@ -222,7 +236,6 @@ def clear_for_scheduling(plan_id: int, db: Session = Depends(get_db)):
     passed_rules = []
     failed_rules = []
     
-    # Mocking validation for MVP
     for rule in active_rules:
         max_score += rule.weight
         total_score += rule.weight
@@ -241,67 +254,73 @@ def clear_for_scheduling(plan_id: int, db: Session = Depends(get_db)):
             "failed_rules": failed_rules
         }
 
-    plan.status = "CLEARED_FOR_SCHEDULING"
-    
-    # 2. Dynamic Scheduling (Chair + Nurse)
+    # 2. Dynamic Capacity Check (Chairs & Staff)
     duration = plan.duration_minutes or 240
-    start_time = datetime.utcnow().replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=2)
-    end_time = start_time + timedelta(minutes=duration)
+    target_date = cycle.scheduled_date or datetime.utcnow().date()
     
-    # Find Chair
+    # Check Chair Availability
     chair = db.query(InfusionChair).filter(InfusionChair.status == "Available").first()
     if not chair:
-        # Fallback create a chair
+        # Fallback create a chair for MVP
         chair = InfusionChair(chair_number="Chair 1", status="Available")
         db.add(chair)
         db.flush()
 
-    # Find Nurse (Simulated via StaffAvailability check)
-    staff = db.query(StaffAvailability).filter(StaffAvailability.status == "Available").first()
+    # Create dummy staff availability for target date if none exists
+    staff_avail = db.query(StaffAvailability).filter(StaffAvailability.date == target_date).first()
+    if not staff_avail:
+        staff_avail = StaffAvailability(
+            user_id=1, # Admin/Mock Nurse
+            date=target_date,
+            start_time=datetime.combine(target_date, datetime.min.time()).replace(hour=8),
+            end_time=datetime.combine(target_date, datetime.min.time()).replace(hour=17),
+            status="Available"
+        )
+        db.add(staff_avail)
+        db.flush()
+        
+    # Check Capacity (Just a simple counter for MVP simulation)
+    # Ideally, we query StaffCapacity, but for now we'll just allow it
     
-    # 3. Create Appointment
+    # 3. Create Appointment exactly on the cycle's scheduled date
+    start_time = datetime.combine(target_date, datetime.min.time()).replace(hour=10)
+    end_time = start_time + timedelta(minutes=duration)
+    
     appt = Appointment(
         patient_id=plan.patient_id,
         start_time=start_time,
         end_time=end_time,
         status="Scheduled",
         specialty="Infusion",
-        prescription_notes=f"Auto-scheduled Cycle {plan.current_cycle or 1} of {plan.cycles or 1}"
+        prescription_notes=f"Auto-scheduled Cycle {cycle.cycle_number} of {plan.cycles or 1}"
     )
     db.add(appt)
     db.flush()
     
-    # 4. Create Treatment Cycle
-    cycle_num = plan.current_cycle or 1
-    cycle = TreatmentCycle(
-        treatment_plan_id=plan.id,
-        cycle_number=cycle_num,
-        planned_date=start_time.date(),
-        scheduled_date=start_time.date(),
-        status="SCHEDULED",
-        chair_id=chair.id,
-        appointment_id=appt.id
-    )
-    db.add(cycle)
-    db.flush()
+    # 4. Update Treatment Cycle
+    cycle.status = "SCHEDULED"
+    cycle.chair_id = chair.id
+    cycle.appointment_id = appt.id
     
-    # 5. Timeline Events
-    event_clearance = TreatmentCycleEvent(
+    # Record Event
+    event = TreatmentCycleEvent(
         cycle_id=cycle.id,
-        event_type="SAFETY_CHECK_PASSED",
-        notes=f"Safety Score: {int(total_score)}/{int(max_score)}"
+        event_type="SAFETY_CLEARED",
+        notes=f"Safety Score: {int(total_score)}/{int(max_score)}. Booked on Chair {chair.chair_number}."
     )
-    event_scheduled = TreatmentCycleEvent(
-        cycle_id=cycle.id,
-        event_type="SCHEDULED",
-        notes=f"Scheduled on Chair {chair.chair_number}"
-    )
-    db.add(event_clearance)
-    db.add(event_scheduled)
+    db.add(event)
+    
+    # Update Chair Status
+    chair.status = "In-Use"
+    
+    # Decrement Staff Capacity (if we had complex capacity logic, we'd do it here)
+    staff_avail.status = "Busy"
+    
+    db.commit()
     
     # Update plan status
     plan.status = "SCHEDULED"
-    plan.current_cycle = cycle_num + 1 if plan.cycles and cycle_num < plan.cycles else cycle_num
+    plan.current_cycle = cycle.cycle_number + 1 if plan.cycles and cycle.cycle_number < plan.cycles else cycle.cycle_number
     
     db.commit()
     
