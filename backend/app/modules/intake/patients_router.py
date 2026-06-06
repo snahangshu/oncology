@@ -411,21 +411,21 @@ def complete_appointment(
         
     if request.regimen_name:
         try:
-            from app.modules.intake.models import TreatmentPlan
+            from app.modules.intake.models import TreatmentPlan, TreatmentCycle
             
             # Find ANY existing plan for this appointment to avoid duplicates
-            existing_plan = db.query(TreatmentPlan).filter(
+            plan = db.query(TreatmentPlan).filter(
                 TreatmentPlan.appointment_id == appt_id
             ).first()
             
-            if existing_plan:
-                existing_plan.regimen_name = request.regimen_name
-                existing_plan.description = request.plan_description
-                existing_plan.cycles = request.cycles or 6
-                existing_plan.status = "Active"
+            if plan:
+                plan.regimen_name = request.regimen_name
+                plan.description = request.plan_description
+                plan.cycles = request.cycles or 6
+                plan.status = "Active"
             else:
                 # Fallback: create a new one if somehow draft was skipped
-                tp = TreatmentPlan(
+                plan = TreatmentPlan(
                     patient_id=patient_id,
                     appointment_id=appt_id,
                     regimen_name=request.regimen_name,
@@ -433,11 +433,30 @@ def complete_appointment(
                     cycles=request.cycles or 6,
                     status="Active"
                 )
-                db.add(tp)
+                db.add(plan)
+            
+            db.commit()
+            db.refresh(plan)
+            
+            # Generate empty TreatmentCycle records if they don't exist
+            existing_cycles = db.query(TreatmentCycle).filter(TreatmentCycle.treatment_plan_id == plan.id).count()
+            if existing_cycles == 0:
+                for i in range(1, plan.cycles + 1):
+                    cycle = TreatmentCycle(
+                        treatment_plan_id=plan.id,
+                        cycle_number=i,
+                        status="PLANNED",
+                        labs_uploaded=False,
+                        ai_fit_check_passed=False,
+                        pharmacy_vials_approved=False,
+                        ready_for_booking=False
+                    )
+                    db.add(cycle)
+                db.commit()
+                
         except Exception as e:
             print(f"Error updating treatment plan: {e}")
-
-    db.commit()
+            db.rollback()
     return {"status": "success", "message": "Appointment marked as completed."}
 
 class SurvivorshipRequest(BaseModel):

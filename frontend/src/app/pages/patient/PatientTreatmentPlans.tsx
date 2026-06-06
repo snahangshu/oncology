@@ -151,7 +151,23 @@ function TreatmentJourneyTimeline({ planId, currentCycle, totalCycles }: { planI
                             <span className="text-sm text-slate-400">4. Booking Unlocked</span>
                           </div>
                           {cycle.ready_for_booking && !cycle.scheduled_date && (
-                             <Button size="sm" className="h-7 text-xs bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold">Book Slot</Button>
+                             <Button 
+                               size="sm" 
+                               className="h-7 text-xs bg-cyan-500 hover:bg-cyan-600 text-slate-950 font-bold"
+                               onClick={async () => {
+                                 try {
+                                   toast.info("Finding optimal infusion slot...");
+                                   await api.post(`/infusion/clear/${planId}`);
+                                   toast.success("Slot booked successfully!");
+                                   // Note: Would normally refetch the specific plan here
+                                   setTimeout(() => window.location.reload(), 1000);
+                                 } catch (e) {
+                                   toast.error("Failed to book slot");
+                                 }
+                               }}
+                             >
+                               Book Slot
+                             </Button>
                           )}
                         </div>
                       </div>

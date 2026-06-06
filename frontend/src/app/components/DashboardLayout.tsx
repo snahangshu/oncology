@@ -23,7 +23,7 @@ import { Link, useLocation, useNavigate, Outlet } from 'react-router';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useState } from 'react';
-import VoiceAssistantWidget from './VoiceAssistantWidget';
+
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -187,8 +187,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </main>
 
-      {/* Voice Assistant Widget floating on all screens */}
-      <VoiceAssistantWidget />
+
     </div>
   );
 }
