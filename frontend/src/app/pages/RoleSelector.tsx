@@ -99,13 +99,13 @@ export default function RoleSelector() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070a13] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-6xl w-full space-y-8 animate-in fade-in duration-700">
         <div className="text-center">
           <h1 className="bg-gradient-to-r from-cyan-400 via-violet-400 to-emerald-400 bg-clip-text text-transparent mb-4">
             Oncology AI: Clinical Optimizer
           </h1>
-          <p className="text-slate-400 text-lg">Welcome back, {user?.name || 'User'}!</p>
+          <p className="text-slate-500 text-lg">Welcome back, {user?.name || 'User'}!</p>
           <p className="text-slate-500 mt-2">Select your role to continue</p>
         </div>
 
@@ -113,20 +113,20 @@ export default function RoleSelector() {
           {roles.map((roleOption, index) => (
             <Card
               key={roleOption.role}
-              className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-700/30 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all hover:shadow-2xl hover:shadow-cyan-500/20 cursor-pointer animate-in slide-in-from-bottom duration-700"
+              className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all hover:shadow-2xl hover:shadow-cyan-500/20 cursor-pointer animate-in slide-in-from-bottom duration-700"
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={() => handleRoleSelect(roleOption.role)}
             >
               <CardHeader>
                 <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${roleOption.gradient} shadow-lg flex items-center justify-center mb-4`}>
-                  <roleOption.icon className="w-8 h-8 text-white" />
+                  <roleOption.icon className="w-8 h-8 text-slate-900" />
                 </div>
-                <CardTitle className="text-white">{roleOption.title}</CardTitle>
+                <CardTitle className="text-slate-900">{roleOption.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-400 mb-4">{roleOption.description}</p>
+                <p className="text-slate-500 mb-4">{roleOption.description}</p>
                 <Button
-                  className={`w-full bg-gradient-to-r ${roleOption.gradient} hover:opacity-90 text-white shadow-lg`}
+                  className={`w-full bg-gradient-to-r ${roleOption.gradient} hover:opacity-90 text-slate-900 shadow-lg`}
                 >
                   Enter as {roleOption.title}
                 </Button>
