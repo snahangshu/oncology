@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Send } from 'lucide-react';
+import { MessageSquare, X, Send, Paperclip } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { api } from '../shared/api';
 import { toast } from 'sonner';
 
-export function PatientAssistantChat({ patientId }: { patientId: number }) {
-  const [isOpen, setIsOpen] = useState(false);
+export function PatientAssistantChat({ patientId, autoOpen = false }: { patientId: number, autoOpen?: boolean }) {
+  const [isOpen, setIsOpen] = useState(autoOpen);
   const [message, setMessage] = useState('');
+  const [file, setFile] = useState<File | null>(null);
   const [history, setHistory] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -21,18 +22,31 @@ export function PatientAssistantChat({ patientId }: { patientId: number }) {
   }, [history, isOpen]);
 
   const sendMessage = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() && !file) return;
     const userMessage = message;
     setMessage('');
-    setHistory(prev => [...prev, { role: 'user', content: userMessage }]);
+    
+    let msgContent = userMessage;
+    if (file) msgContent += `\n📎 ${file.name}`;
+    setHistory(prev => [...prev, { role: 'user', content: msgContent }]);
     setIsLoading(true);
 
     try {
-      const res = await api.post(`/patients/${patientId}/chat`, { message: userMessage });
+      const formData = new FormData();
+      formData.append('message', userMessage || "Here is the document.");
+      if (file) {
+        formData.append('file', file);
+      }
+      
+      const res = await api.post(`/patients/${patientId}/chat`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
       setHistory(prev => [...prev, { role: 'assistant', content: res.data.reply }]);
       if (res.data.action_taken) {
          toast.success(res.data.action_taken);
       }
+      setFile(null);
     } catch (err) {
       toast.error('Failed to send message.');
     } finally {
@@ -86,7 +100,23 @@ export function PatientAssistantChat({ patientId }: { patientId: number }) {
               <div ref={messagesEndRef} />
             </div>
             <div className="p-3 bg-slate-900 border-t border-slate-800">
+              {file && (
+                <div className="flex items-center gap-2 mb-2 text-xs text-cyan-400 bg-cyan-500/10 p-2 rounded-md">
+                  <Paperclip className="w-3 h-3" />
+                  {file.name}
+                  <button onClick={() => setFile(null)} className="ml-auto hover:text-white" type="button"><X className="w-3 h-3" /></button>
+                </div>
+              )}
               <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-center gap-2">
+                <input
+                  type="file"
+                  id="chat-file-upload"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                />
+                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-white" onClick={() => document.getElementById('chat-file-upload')?.click()}>
+                  <Paperclip className="w-4 h-4" />
+                </Button>
                 <input
                   type="text"
                   placeholder="Type a message..."
@@ -94,7 +124,7 @@ export function PatientAssistantChat({ patientId }: { patientId: number }) {
                   onChange={e => setMessage(e.target.value)}
                   className="flex-1 bg-slate-800 border-slate-700 text-sm text-white rounded-full px-4 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-500"
                 />
-                <Button type="submit" disabled={isLoading || !message.trim()} size="icon" className="h-9 w-9 rounded-full bg-cyan-600 hover:bg-cyan-700">
+                <Button type="submit" disabled={isLoading || (!message.trim() && !file)} size="icon" className="h-9 w-9 rounded-full bg-cyan-600 hover:bg-cyan-700">
                   <Send className="w-4 h-4 text-white" />
                 </Button>
               </form>

@@ -67,7 +67,7 @@ function TreatmentJourneyTimeline({ planId, currentCycle, totalCycles }: { planI
 
         {cycles.map((cycle: any, idx: number) => {
           const isCompleted = cycle.status === 'COMPLETED';
-          const isNext = cycle.status === 'SCHEDULED' || cycle.status === 'CLEARED';
+          const isNext = cycle.status === 'SCHEDULED' || cycle.status === 'CLEARED' || (cycle.status === 'PLANNED' && cycle.cycle_number == currentCycle);
           const isPending = !isCompleted && !isNext;
 
           return (

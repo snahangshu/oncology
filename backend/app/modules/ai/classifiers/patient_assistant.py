@@ -25,16 +25,23 @@ class PatientAssistantAgent:
         
         CRITICAL CLINICAL SAFETY RULES:
         - If the patient reports a temperature > 100.4°F, severe pain, uncontrollable vomiting, bleeding, or shortness of breath, you MUST escalate.
+        
+        INTAKE & SCHEDULING RULES:
+        - If the patient is in the 'REGISTRATION' or 'CLINICAL_REVIEW' phase, proactively ask for their primary diagnosis, and ask them to upload their referral letter and pathology reports.
+        - If the patient has provided enough information or asks to see a doctor, ask for their preferred day/time.
         - Output a structured JSON block at the END of your response (after your text message to the patient) in this EXACT format:
         
         ```json
         {
-          "intent": "symptom_check | refill_request | general_question",
+          "intent": "symptom_check | refill_request | general_question | schedule_appointment | upload_document",
           "escalate": true | false,
           "reason_for_escalation": "Brief reason if true, else null",
-          "refill_medication": "Name of med if refill requested, else null"
+          "refill_medication": "Name of med if refill requested, else null",
+          "schedule_doctor_id": 1, 
+          "schedule_time": "2024-05-10T14:00:00"
         }
         ```
+        (If intent is schedule_appointment, try to parse a valid doctor_id from the Clinic Knowledge and format schedule_time as ISO datetime. Otherwise leave null).
         """
 
     def process_message(self, context_data: Dict[str, Any], user_message: str) -> Dict[str, Any]:
@@ -74,7 +81,9 @@ Medications: {context_data.get('meds', 'No active medications')}
             "intent": "general_question",
             "escalate": False,
             "reason_for_escalation": None,
-            "refill_medication": None
+            "refill_medication": None,
+            "schedule_doctor_id": None,
+            "schedule_time": None
         }
         reply_message = response_text
 

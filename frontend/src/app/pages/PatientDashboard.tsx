@@ -266,7 +266,7 @@ export default function PatientDashboard() {
       </Card>
 
       {/* Chat Widget */}
-      {intake?.patient_id && <PatientAssistantChat patientId={intake.patient_id} />}
+      {intake?.patient_id && <PatientAssistantChat patientId={intake.patient_id} autoOpen={intake.intake_status !== 'COMPLETE'} />}
     </div>
   );
 }
