@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form, File, UploadFile, BackgroundTasks
 from sqlalchemy.orm import Session
 from datetime import datetime
 
@@ -291,7 +291,8 @@ def get_patient_dashboard(
 @router.post("/{patient_id}/chat", response_model=ChatResponse)
 def patient_chat(
     patient_id: int,
-    request: ChatRequest,
+    message: str = Form(...),
+    file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
@@ -343,7 +344,7 @@ def patient_chat(
         "clinical_docs": docs_str
     }
     
-    result = agent.process_message(context_data, request.message)
+    result = agent.process_message(context_data, message)
     metadata = result.get("metadata", {})
     action = None
     
@@ -359,6 +360,55 @@ def patient_chat(
         db.commit()
         action = "Escalated to clinical staff."
         
+    elif metadata.get("intent") == "schedule_appointment":
+        from app.modules.scheduling.models import Appointment
+        doc_id = metadata.get("schedule_doctor_id") or 1
+        time_str = metadata.get("schedule_time") or datetime.utcnow().isoformat()
+        try:
+            import dateutil.parser
+            appt_time = dateutil.parser.parse(time_str)
+            appt_time = appt_time.replace(tzinfo=None)
+        except Exception:
+            appt_time = datetime.utcnow()
+            
+        appt = Appointment(
+            patient_id=patient_id,
+            doctor_id=doc_id,
+            start_time=appt_time,
+            end_time=appt_time,
+            status="Scheduled",
+            specialty="Oncology"
+        )
+        db.add(appt)
+        db.commit()
+        action = f"Appointment scheduled for {appt_time.strftime('%Y-%m-%d %H:%M')}."
+        
+    elif metadata.get("intent") == "upload_document" or file is not None:
+        if file:
+            from app.modules.ai.ocr import DocumentParserAgent
+            from app.modules.intake.models import DocumentType, UploadedDocument
+            ocr_agent = DocumentParserAgent()
+            file_bytes = file.file.read()
+            extracted_text = ocr_agent.parse_pdf(file_bytes)
+            
+            doc = UploadedDocument(
+                patient_id=patient_id,
+                document_type=DocumentType.PATHOLOGY_REPORT,
+                file_path=f"mock_storage/{file.filename}",
+                extracted_text=extracted_text,
+                status="PROCESSED"
+            )
+            db.add(doc)
+            db.commit()
+            
+            if intake:
+                intake.pathology_report = extracted_text[:1000]
+                db.commit()
+            
+            action = f"Document '{file.filename}' uploaded and processed successfully."
+        else:
+            action = "Please provide the document."
+
     elif metadata.get("intent") == "refill_request":
         med_name = metadata.get("refill_medication")
         action = f"Refill requested for {med_name}."

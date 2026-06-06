@@ -32,6 +32,9 @@ export default function CredentialingDashboard() {
       try {
         const res = await api.get('/dashboards/admin/credentialing');
         setStats(res.data);
+        if (res.data.pending_staff) {
+          setPendingStaff(res.data.pending_staff);
+        }
       } catch (err) {
         console.error('Failed to load credentialing stats', err);
         setStats({ pending_reviews: 0, expired_documents: 0, expiring_soon: 0 }); // Fallback
@@ -120,7 +123,7 @@ export default function CredentialingDashboard() {
             <TableBody>
               {pendingStaff.map(staff => (
                 <TableRow key={staff.id} className="border-slate-200 hover:bg-slate-50 transition-colors">
-                  <TableCell className="font-medium text-slate-200">{staff.name}</TableCell>
+                  <TableCell className="font-semibold text-slate-900">{staff.name}</TableCell>
                   <TableCell className="text-slate-500">{staff.role}</TableCell>
                   <TableCell>
                     {staff.status === 'PENDING_REVIEW' ? (

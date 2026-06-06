@@ -56,3 +56,19 @@ def require_role(roles: list[Role]):
             )
         return current_user
     return role_checker
+
+async def get_current_user_ws(token: str) -> User:
+    from app.dependencies import SessionLocal
+    db = SessionLocal()
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("email")
+        if email is None:
+            return None
+        repo = UserRepository(db)
+        user = repo.get_by_email(email=email)
+        return user
+    except Exception:
+        return None
+    finally:
+        db.close()

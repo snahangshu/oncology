@@ -86,6 +86,10 @@ def get_plan_cycles(plan_id: int, db: Session = Depends(get_db)):
                 "actual_date": c.actual_date,
                 "chair_id": c.chair_id,
                 "doctor_clearance": c.doctor_clearance,
+                "labs_uploaded": c.labs_uploaded,
+                "ai_fit_check_passed": c.ai_fit_check_passed,
+                "pharmacy_vials_approved": c.pharmacy_vials_approved,
+                "ready_for_booking": c.ready_for_booking,
                 "notes": c.notes,
                 "appointment_id": c.appointment_id,
                 "labs_uploaded": c.labs_uploaded,
@@ -130,7 +134,7 @@ def update_cycle(cycle_id: int, update: TreatmentCycleUpdate, db: Session = Depe
     if cycle.status == "COMPLETED":
         plan = db.query(TreatmentPlan).filter(TreatmentPlan.id == cycle.treatment_plan_id).first()
         if plan:
-            plan.current_cycle = cycle.cycle_number
+            plan.current_cycle = cycle.cycle_number + 1
             db.commit()
             
     return {"message": "Cycle updated successfully", "status": cycle.status}
