@@ -93,36 +93,36 @@ export default function DoctorTreatmentPlans() {
           <h1 className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-2 text-3xl font-bold tracking-tight">
             Treatment Journey Manager
           </h1>
-          <p className="text-slate-400">Master orchestration of patient regimens and cycle tracking</p>
+          <p className="text-slate-500">Master orchestration of patient regimens and cycle tracking</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {dashboardLoading && <p className="text-slate-400">Loading plans...</p>}
+        {dashboardLoading && <p className="text-slate-500">Loading plans...</p>}
         {plansList.length === 0 && !dashboardLoading && (
-          <div className="text-center py-12 bg-slate-900/50 rounded-xl border border-slate-800">
-            <p className="text-slate-400">No active treatment plans found for your patients.</p>
+          <div className="text-center py-12 bg-white rounded-xl border border-slate-800">
+            <p className="text-slate-500">No active treatment plans found for your patients.</p>
           </div>
         )}
         {plansList.map((plan: any) => (
           <Card 
             key={plan.id} 
-            className="bg-slate-900/80 border-slate-700/50 backdrop-blur-xl shadow-xl overflow-hidden"
+            className="bg-white/80 border-slate-200 backdrop-blur-xl shadow-xl overflow-hidden"
           >
             <div 
-              className="p-6 cursor-pointer hover:bg-slate-800/30 transition-colors"
+              className="p-6 cursor-pointer hover:bg-slate-50 transition-colors"
               onClick={() => setExpandedPlanId(expandedPlanId === plan.id ? null : plan.id)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold">
                     <User className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{plan.patient}</h3>
+                    <h3 className="text-xl font-bold text-slate-900 mb-1 group-hover:text-cyan-400 transition-colors">{plan.patient}</h3>
                     <div className="flex items-center gap-3">
                       <span className="text-cyan-400 font-medium bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">{plan.regimen}</span>
-                      <span className="text-slate-400 text-sm">Total Cycles: {plan.totalCycles}</span>
+                      <span className="text-slate-500 text-sm">Total Cycles: {plan.totalCycles}</span>
                     </div>
                   </div>
                 </div>
@@ -144,7 +144,7 @@ export default function DoctorTreatmentPlans() {
                     <Button 
                       onClick={() => generateCyclesMutation.mutate(plan.id)}
                       disabled={generateCyclesMutation.isPending}
-                      className="bg-cyan-600 hover:bg-cyan-500 text-white"
+                      className="bg-cyan-600 hover:bg-cyan-500 text-slate-900"
                     >
                       Initialize {plan.totalCycles} Cycles
                     </Button>
@@ -152,11 +152,11 @@ export default function DoctorTreatmentPlans() {
                 </div>
 
                 {cyclesLoading ? (
-                  <p className="text-slate-400 text-center py-8">Loading cycle data...</p>
+                  <p className="text-slate-500 text-center py-8">Loading cycle data...</p>
                 ) : cyclesData && cyclesData.cycles && cyclesData.cycles.length > 0 ? (
                   <div className="space-y-6">
                     {/* Summary Bar */}
-                    <div className="flex gap-6 mb-6 p-4 rounded-xl bg-slate-900 border border-slate-800">
+                    <div className="flex gap-6 mb-6 p-4 rounded-xl bg-white border border-slate-800">
                       <div className="flex-1 text-center border-r border-slate-800">
                         <p className="text-slate-500 text-xs uppercase mb-1">Completed</p>
                         <p className="text-2xl font-bold text-emerald-400">{cyclesData.plan.completed_cycles}</p>
@@ -182,7 +182,7 @@ export default function DoctorTreatmentPlans() {
                           <div key={cycle.id} className="relative flex gap-6">
                             {/* Line connecting nodes */}
                             {idx !== cyclesData.cycles.length - 1 && (
-                              <div className={`absolute left-[19px] top-[38px] bottom-[-20px] w-0.5 ${isCompleted ? 'bg-emerald-500/50' : 'bg-slate-800'}`} />
+                              <div className={`absolute left-[19px] top-[38px] bottom-[-20px] w-0.5 ${isCompleted ? 'bg-emerald-500/50' : 'bg-slate-100'}`} />
                             )}
                             
                             {/* Node */}
@@ -191,7 +191,7 @@ export default function DoctorTreatmentPlans() {
                                 isCompleted ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' :
                                 isNext ? 'bg-cyan-500/20 border-cyan-500 text-cyan-400 animate-pulse shadow-[0_0_15px_rgba(6,182,212,0.5)]' :
                                 isDelayed ? 'bg-rose-500/20 border-rose-500 text-rose-400' :
-                                'bg-slate-800 border-slate-700 text-slate-500'
+                                'bg-slate-100 border-slate-200 text-slate-500'
                               }`}>
                                 {isCompleted ? <CheckCircle className="w-5 h-5" /> : 
                                  isDelayed ? <AlertTriangle className="w-5 h-5" /> :
@@ -201,17 +201,17 @@ export default function DoctorTreatmentPlans() {
 
                             {/* Content */}
                             <div className={`flex-1 p-5 rounded-xl border ${
-                              isCompleted ? 'bg-slate-800/20 border-emerald-500/20' :
-                              isNext ? 'bg-slate-800/50 border-cyan-500/30' :
-                              'bg-slate-900/30 border-slate-800/50'
+                              isCompleted ? 'bg-slate-100/20 border-emerald-500/20' :
+                              isNext ? 'bg-slate-100 border-cyan-500/30' :
+                              'bg-white/30 border-slate-200'
                             }`}>
                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div>
                                   <div className="flex items-center gap-3 mb-2">
-                                    <h5 className={`font-bold text-lg ${isCompleted ? 'text-emerald-400' : isNext ? 'text-cyan-400' : 'text-slate-300'}`}>
+                                    <h5 className={`font-bold text-lg ${isCompleted ? 'text-emerald-400' : isNext ? 'text-cyan-400' : 'text-slate-600'}`}>
                                       Cycle {cycle.cycle_number}
                                     </h5>
-                                    <Badge variant="outline" className="border-slate-700 text-slate-400 bg-slate-950">
+                                    <Badge variant="outline" className="border-slate-200 text-slate-500 bg-slate-950">
                                       {cycle.scheduled_date}
                                     </Badge>
                                   </div>
@@ -220,24 +220,24 @@ export default function DoctorTreatmentPlans() {
                                   <div className="flex flex-col gap-2 mt-3 text-sm">
                                     {cycle.events && cycle.events.length > 0 ? (
                                       cycle.events.map((evt: any) => (
-                                        <div key={evt.id} className="flex items-center gap-2 text-slate-400">
+                                        <div key={evt.id} className="flex items-center gap-2 text-slate-500">
                                           <div className="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>
-                                          <span className="font-medium text-slate-300">{evt.event_type.replace(/_/g, ' ')}:</span>
+                                          <span className="font-medium text-slate-600">{evt.event_type.replace(/_/g, ' ')}:</span>
                                           <span>{evt.notes}</span>
                                           <span className="text-xs text-slate-500 ml-auto">{new Date(evt.event_time).toLocaleDateString()}</span>
                                         </div>
                                       ))
                                     ) : (
                                       <div className="flex flex-wrap gap-4 mt-1 text-sm">
-                                        <div className="flex items-center gap-1.5 text-slate-400">
+                                        <div className="flex items-center gap-1.5 text-slate-500">
                                           <Beaker className="w-4 h-4 text-violet-400" />
                                           Labs: {isCompleted ? '✓ Cleared' : 'Pending'}
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-slate-400">
+                                        <div className="flex items-center gap-1.5 text-slate-500">
                                           <ShieldCheck className="w-4 h-4 text-emerald-400" />
                                           Clearance: {cycle.doctor_clearance ? '✓ Approved' : 'Pending'}
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-slate-400">
+                                        <div className="flex items-center gap-1.5 text-slate-500">
                                           <FlaskConical className="w-4 h-4 text-amber-400" />
                                           Dose: {cycle.dose_status.replace('_', ' ')}
                                         </div>
@@ -280,7 +280,7 @@ export default function DoctorTreatmentPlans() {
                 ) : (
                   <div className="text-center py-8">
                     <CalendarDays className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                    <p className="text-slate-400">No cycles initialized for this plan yet.</p>
+                    <p className="text-slate-500">No cycles initialized for this plan yet.</p>
                   </div>
                 )}
               </div>
@@ -290,43 +290,43 @@ export default function DoctorTreatmentPlans() {
       </div>
 
       <Dialog open={delayModalOpen} onOpenChange={setDelayModalOpen}>
-        <DialogContent className="bg-slate-900 border-slate-800 text-slate-200 sm:max-w-[425px]">
+        <DialogContent className="bg-white border-slate-800 text-slate-200 sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="text-xl text-rose-400 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5" /> Delay Cycle
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-slate-500">
               This will update the cycle status and cascade the delay to all subsequent upcoming cycles automatically.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-slate-300">Days to Delay</label>
+              <label className="text-sm font-medium text-slate-600">Days to Delay</label>
               <input
                 type="number"
                 min="1"
                 max="60"
                 value={delayDays}
                 onChange={(e) => setDelayDays(parseInt(e.target.value))}
-                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-slate-300">Clinical Reason</label>
+              <label className="text-sm font-medium text-slate-600">Clinical Reason</label>
               <input
                 value={delayReason}
                 onChange={(e) => setDelayReason(e.target.value)}
                 placeholder="e.g. Low neutrophils"
-                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm ring-offset-slate-950 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-900"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" className="border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white" onClick={() => setDelayModalOpen(false)}>
+            <Button variant="outline" className="border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-700 hover:text-slate-900" onClick={() => setDelayModalOpen(false)}>
               Cancel
             </Button>
             <Button 
-              className="bg-rose-600 text-white hover:bg-rose-500" 
+              className="bg-rose-600 text-slate-900 hover:bg-rose-500" 
               onClick={() => delayCycleMutation.mutate()}
               disabled={delayCycleMutation.isPending}
             >

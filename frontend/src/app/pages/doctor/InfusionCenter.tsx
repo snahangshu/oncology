@@ -79,22 +79,22 @@ export default function InfusionCenter() {
           <h1 className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent mb-2 text-3xl font-bold tracking-tight">
             Infusion Center
           </h1>
-          <p className="text-slate-400">Manage daily infusions and clinical clearance workflows</p>
+          <p className="text-slate-500">Manage daily infusions and clinical clearance workflows</p>
         </div>
       </div>
 
       <Tabs defaultValue="today" className="w-full">
-        <TabsList className="bg-slate-900 border border-slate-700/50 mb-6 p-1">
-          <TabsTrigger value="today" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 text-slate-400">
+        <TabsList className="bg-white border border-slate-200 mb-6 p-1">
+          <TabsTrigger value="today" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 text-slate-500">
             Today's Infusions
           </TabsTrigger>
-          <TabsTrigger value="pharmacy" className="data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-400 text-slate-400 flex items-center gap-2">
+          <TabsTrigger value="pharmacy" className="data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-400 text-slate-500 flex items-center gap-2">
             Pharmacy Vials Auth
             {pharmacyQueue?.length > 0 && (
               <span className="bg-rose-500 text-slate-950 text-xs font-bold px-2 py-0.5 rounded-full">{pharmacyQueue.length}</span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="clearance" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-slate-400 flex items-center gap-2">
+          <TabsTrigger value="clearance" className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-slate-500 flex items-center gap-2">
             Clearance Queue
             {pendingPlans.length > 0 && (
               <span className="bg-amber-500 text-slate-950 text-xs font-bold px-2 py-0.5 rounded-full">{pendingPlans.length}</span>
@@ -105,18 +105,18 @@ export default function InfusionCenter() {
         <TabsContent value="today" className="space-y-6 outline-none">
           {/* Top Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
+            <Card className="bg-white backdrop-blur-xl border-slate-200">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400">
                     <Droplet className="w-4 h-4" />
                   </div>
-                  <p className="text-sm text-slate-400 uppercase tracking-wider font-bold">Total Scheduled</p>
+                  <p className="text-sm text-slate-500 uppercase tracking-wider font-bold">Total Scheduled</p>
                 </div>
-                <h2 className="text-3xl font-bold text-white">{activeAppointments.length}</h2>
+                <h2 className="text-3xl font-bold text-slate-900">{activeAppointments.length}</h2>
               </CardContent>
             </Card>
-            <Card className="bg-slate-900/50 backdrop-blur-xl border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+            <Card className="bg-white backdrop-blur-xl border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
@@ -124,26 +124,26 @@ export default function InfusionCenter() {
                   </div>
                   <p className="text-sm text-emerald-400 uppercase tracking-wider font-bold">Active Chairs</p>
                 </div>
-                <h2 className="text-3xl font-bold text-white">{chairs.filter((c: any) => c.status === 'In-Use').length} / {chairs.length}</h2>
+                <h2 className="text-3xl font-bold text-slate-900">{chairs.filter((c: any) => c.status === 'In-Use').length} / {chairs.length}</h2>
               </CardContent>
             </Card>
-            <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
+            <Card className="bg-white backdrop-blur-xl border-slate-200">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400">
                     <CheckCircle className="w-4 h-4" />
                   </div>
-                  <p className="text-sm text-slate-400 uppercase tracking-wider font-bold">Completed</p>
+                  <p className="text-sm text-slate-500 uppercase tracking-wider font-bold">Completed</p>
                 </div>
-                <h2 className="text-3xl font-bold text-white">{activeAppointments.filter((a: any) => a.status === 'Completed').length}</h2>
+                <h2 className="text-3xl font-bold text-slate-900">{activeAppointments.filter((a: any) => a.status === 'Completed').length}</h2>
               </CardContent>
             </Card>
           </div>
 
           {/* Main Board */}
-          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-slate-800/50 bg-slate-900/20">
-              <CardTitle className="text-white text-lg flex items-center gap-2">
+          <Card className="bg-white border-slate-200 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-slate-200 bg-slate-50/80">
+              <CardTitle className="text-slate-900 text-lg flex items-center gap-2">
                 <Droplet className="w-5 h-5 text-cyan-400" />
                 Active Infusion Board
               </CardTitle>
@@ -152,40 +152,40 @@ export default function InfusionCenter() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-900/80 border-b border-slate-700/50">
-                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Patient ID</th>
-                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Schedule</th>
-                      <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                    <tr className="bg-white/80 border-b border-slate-200">
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Patient ID</th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Schedule</th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/50">
                     {todayLoading ? (
-                      <tr><td colSpan={3} className="p-8 text-center text-slate-400">Loading...</td></tr>
+                      <tr><td colSpan={3} className="p-8 text-center text-slate-500">Loading...</td></tr>
                     ) : activeAppointments.length > 0 ? (
                       activeAppointments.map((appt: any, idx: number) => (
                         <tr 
                           key={appt.id} 
-                          className="hover:bg-slate-800/40 transition-colors group"
+                          className="hover:bg-slate-100 transition-colors group"
                         >
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold shrink-0">
+                              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold shrink-0">
                                  <User className="w-4 h-4" />
                               </div>
                               <div>
-                                <p className="text-white font-bold">Patient #{appt.patient_id}</p>
+                                <p className="text-slate-900 font-bold">Patient #{appt.patient_id}</p>
                               </div>
                             </div>
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-2 mb-1">
-                              <Clock className="w-3.5 h-3.5 text-slate-400" />
-                              <span className="text-white font-medium">{new Date(appt.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                              <Clock className="w-3.5 h-3.5 text-slate-500" />
+                              <span className="text-slate-900 font-medium">{new Date(appt.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                             </div>
                           </td>
                           <td className="p-4">
                             <select 
-                              className="bg-slate-900 border border-slate-700 text-slate-300 rounded px-2 py-1 text-sm outline-none focus:border-cyan-500"
+                              className="bg-white border border-slate-200 text-slate-600 rounded px-2 py-1 text-sm outline-none focus:border-cyan-500"
                               value={appt.status}
                               onChange={(e) => updateApptStatusMutation.mutate({ apptId: appt.id, status: e.target.value })}
                               disabled={updateApptStatusMutation.isPending}
@@ -213,9 +213,9 @@ export default function InfusionCenter() {
         </TabsContent>
 
         <TabsContent value="clearance" className="outline-none">
-          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-slate-800/50 bg-slate-900/20">
-              <CardTitle className="text-white text-lg flex items-center gap-2">
+          <Card className="bg-white border-slate-200 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-slate-200 bg-slate-50/80">
+              <CardTitle className="text-slate-900 text-lg flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-amber-400" />
                 Clinical Clearance Queue
               </CardTitle>
@@ -223,24 +223,24 @@ export default function InfusionCenter() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 {queueLoading ? (
-                  <p className="text-slate-400 text-center py-8">Loading queue...</p>
+                  <p className="text-slate-500 text-center py-8">Loading queue...</p>
                 ) : pendingPlans.length > 0 ? (
                   pendingPlans.map((plan: any) => (
-                    <div key={plan.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/50 hover:border-amber-500/30 transition-colors gap-4">
+                    <div key={plan.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-amber-500/30 transition-colors gap-4">
                       <div className="flex items-start gap-4">
-                        <div className="p-3 bg-slate-800 rounded-xl border border-slate-700 text-center">
+                        <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 text-center">
                           <AlertTriangle className="w-6 h-6 text-amber-400 mx-auto mb-1" />
                         </div>
                         <div>
-                          <h4 className="text-white font-bold text-lg">Patient #{plan.patient_id} - {plan.regimen}</h4>
+                          <h4 className="text-slate-900 font-bold text-lg">Patient #{plan.patient_id} - {plan.regimen}</h4>
                           <div className="flex flex-wrap gap-4 mt-2">
-                            <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300">
+                            <Badge variant="outline" className="bg-slate-950 border-slate-200 text-slate-600">
                               Cycle {plan.current_cycle} of {plan.total_cycles}
                             </Badge>
                             <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/30 text-cyan-400">
                               <CalendarCheck className="w-3 h-3 mr-1" /> {plan.scheduled_date}
                             </Badge>
-                            <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300">
+                            <Badge variant="outline" className="bg-slate-950 border-slate-200 text-slate-600">
                               <Clock className="w-3 h-3 mr-1" /> {plan.duration_minutes} mins
                             </Badge>
                             <Badge variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-400 uppercase">
@@ -250,11 +250,11 @@ export default function InfusionCenter() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <Button variant="outline" className="border-slate-600 bg-slate-800 text-slate-300 hover:text-white">
+                        <Button variant="outline" className="border-slate-600 bg-slate-100 text-slate-600 hover:text-slate-900">
                           Review Labs
                         </Button>
                         <Button 
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20"
+                          className="bg-emerald-600 hover:bg-emerald-500 text-slate-900 shadow-lg shadow-emerald-900/20"
                           onClick={() => clearMutation.mutate(plan.cycle_id)}
                           disabled={clearMutation.isPending}
                         >
@@ -267,7 +267,7 @@ export default function InfusionCenter() {
                 ) : (
                   <div className="text-center py-12">
                     <CheckCircle className="w-12 h-12 text-emerald-500/50 mx-auto mb-4" />
-                    <h3 className="text-slate-300 font-bold text-lg">Queue is Empty</h3>
+                    <h3 className="text-slate-600 font-bold text-lg">Queue is Empty</h3>
                     <p className="text-slate-500">All treatment plans have been cleared for scheduling.</p>
                   </div>
                 )}
@@ -277,9 +277,9 @@ export default function InfusionCenter() {
         </TabsContent>
 
         <TabsContent value="pharmacy" className="space-y-6 outline-none">
-          <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
-            <CardHeader className="border-b border-slate-800/50 bg-slate-900/20">
-              <CardTitle className="text-white text-lg flex items-center gap-2">
+          <Card className="bg-white border-slate-200 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-slate-200 bg-slate-50/80">
+              <CardTitle className="text-slate-900 text-lg flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-rose-400" />
                 Pharmacy Vials Authorization Queue
               </CardTitle>
@@ -287,18 +287,18 @@ export default function InfusionCenter() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 {pharmacyLoading ? (
-                  <p className="text-slate-400 text-center py-8">Loading queue...</p>
+                  <p className="text-slate-500 text-center py-8">Loading queue...</p>
                 ) : pharmacyQueue?.length > 0 ? (
                   pharmacyQueue.map((item: any) => (
-                    <div key={item.cycle_id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-slate-800/30 border border-slate-700/50 hover:border-rose-500/30 transition-colors gap-4">
+                    <div key={item.cycle_id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-rose-500/30 transition-colors gap-4">
                       <div className="flex items-start gap-4">
-                        <div className="p-3 bg-slate-800 rounded-xl border border-slate-700 text-center">
+                        <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 text-center">
                           <CheckCircle className="w-6 h-6 text-rose-400 mx-auto mb-1" />
                         </div>
                         <div>
-                          <h4 className="text-white font-bold text-lg">{item.patient_name} - {item.regimen}</h4>
+                          <h4 className="text-slate-900 font-bold text-lg">{item.patient_name} - {item.regimen}</h4>
                           <div className="flex gap-4 mt-2">
-                            <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300">
+                            <Badge variant="outline" className="bg-slate-950 border-slate-200 text-slate-600">
                               Cycle {item.cycle_number}
                             </Badge>
                             <Badge variant="outline" className="bg-emerald-500/10 border-emerald-500/30 text-emerald-400 uppercase">
@@ -309,7 +309,7 @@ export default function InfusionCenter() {
                       </div>
                       <div className="flex items-center gap-3">
                         <Button 
-                          className="bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/20"
+                          className="bg-rose-600 hover:bg-rose-500 text-slate-900 shadow-lg shadow-rose-900/20"
                           onClick={async () => {
                             try {
                               await api.post(`/journey/cycle/${item.cycle_id}/pharmacy-auth`);
@@ -329,7 +329,7 @@ export default function InfusionCenter() {
                 ) : (
                   <div className="text-center py-12">
                     <CheckCircle className="w-12 h-12 text-emerald-500/50 mx-auto mb-4" />
-                    <h3 className="text-slate-300 font-bold text-lg">Queue is Empty</h3>
+                    <h3 className="text-slate-600 font-bold text-lg">Queue is Empty</h3>
                     <p className="text-slate-500">All requested drugs have been authorized.</p>
                   </div>
                 )}
@@ -341,13 +341,13 @@ export default function InfusionCenter() {
 
       {/* Safety Score Dialog */}
       <Dialog open={isSafetyModalOpen} onOpenChange={setIsSafetyModalOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 sm:max-w-[425px]">
+        <DialogContent className="bg-white border-slate-200 text-slate-100 sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <ShieldCheck className={`w-6 h-6 ${safetyResult?.status === 'BLOCKED' ? 'text-rose-500' : 'text-emerald-500'}`} />
               Safety Check Result
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-slate-500">
               Automated safety rules evaluation for treatment progression.
             </DialogDescription>
           </DialogHeader>
@@ -355,7 +355,7 @@ export default function InfusionCenter() {
           {safetyResult && (
             <div className="py-4">
               <div className="flex justify-between items-center mb-6 p-4 rounded-xl bg-slate-950 border border-slate-800">
-                <span className="text-slate-400 font-medium">Safety Score</span>
+                <span className="text-slate-500 font-medium">Safety Score</span>
                 <span className={`text-2xl font-bold ${safetyResult.status === 'BLOCKED' ? 'text-rose-400' : 'text-emerald-400'}`}>
                   {safetyResult.score}
                 </span>
@@ -374,10 +374,10 @@ export default function InfusionCenter() {
                   </div>
                 ))}
                 {safetyResult.status !== 'BLOCKED' && (
-                  <div className="text-sm text-slate-300">
+                  <div className="text-sm text-slate-600">
                     <p className="mb-2">{safetyResult.message}</p>
                     <p className="text-emerald-400 font-medium">✓ Scheduled on {safetyResult.chair}</p>
-                    <p className="text-slate-400 mt-1">
+                    <p className="text-slate-500 mt-1">
                       Time: {new Date(safetyResult.scheduled_time).toLocaleString()}
                     </p>
                   </div>
@@ -390,7 +390,7 @@ export default function InfusionCenter() {
             <Button 
               variant="outline" 
               onClick={() => setIsSafetyModalOpen(false)}
-              className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+              className="border-slate-200 bg-slate-100 text-slate-200 hover:bg-slate-700"
             >
               Close
             </Button>
