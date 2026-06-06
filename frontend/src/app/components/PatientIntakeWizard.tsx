@@ -103,8 +103,8 @@ export function PatientIntakeWizard({ intake, allDocs, onUploadSuccess }: any) {
       </div>
 
       {/* Wizard Content */}
-      <Card className="bg-white/40 border-slate-200 overflow-hidden relative min-h-[350px] flex flex-col">
-        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+      <Card className="bg-white border-slate-200 overflow-hidden relative min-h-[350px] flex flex-col">
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
           <div>
             <p className="text-cyan-400 text-xs font-bold uppercase tracking-wider mb-1">Step {currentStep + 1} of {PHASE_1_DOCS.length}</p>
             <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ export function PatientIntakeWizard({ intake, allDocs, onUploadSuccess }: any) {
                   <TooltipTrigger>
                     <Info className="w-4 h-4 text-slate-500 hover:text-cyan-400 transition-colors" />
                   </TooltipTrigger>
-                  <TooltipContent className="bg-slate-100 border-slate-200 text-slate-200 max-w-xs">
+                  <TooltipContent className="bg-white border-slate-200 text-slate-700 max-w-xs shadow-sm">
                     {currentDoc.description}
                   </TooltipContent>
                 </Tooltip>
@@ -129,11 +129,11 @@ export function PatientIntakeWizard({ intake, allDocs, onUploadSuccess }: any) {
           <div className="max-w-md mx-auto w-full">
             <Card className={`border-dashed border-2 transition-all duration-500 ${
               isCompleted
-                ? 'bg-emerald-950/20 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)]'
+                ? 'bg-emerald-50 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)]'
                 : isDragActive 
-                  ? 'bg-cyan-950/30 border-cyan-400 scale-105 shadow-2xl' 
+                  ? 'bg-cyan-50 border-cyan-400 scale-105 shadow-2xl' 
                   : isDeferred
-                    ? 'bg-amber-950/20 border-amber-500/30 hover:border-amber-400'
+                    ? 'bg-amber-50 border-amber-500/30 hover:border-amber-400'
                     : 'bg-white border-slate-200 hover:border-cyan-500/50'
             }`}>
               <CardContent className="p-6 relative">
@@ -148,8 +148,8 @@ export function PatientIntakeWizard({ intake, allDocs, onUploadSuccess }: any) {
                       <CheckCircle2 className="w-10 h-10 text-emerald-400" />
                     </div>
                     <div>
-                      <p className="text-lg font-bold text-emerald-100">Successfully Uploaded</p>
-                      <p className="text-sm text-emerald-400/70 truncate max-w-[250px] mt-1" title={existingData.originalName}>
+                      <p className="text-lg font-bold text-emerald-700">Successfully Uploaded</p>
+                      <p className="text-sm text-emerald-600 truncate max-w-[250px] mt-1" title={existingData.originalName}>
                         {existingData.originalName}
                       </p>
                     </div>
@@ -168,11 +168,11 @@ export function PatientIntakeWizard({ intake, allDocs, onUploadSuccess }: any) {
                 ) : (
                   <div {...getRootProps()} className="cursor-pointer flex flex-col items-center justify-center text-center space-y-4 py-8">
                     <input {...getInputProps()} />
-                    <div className={`p-4 rounded-full transition-colors ${isDeferred ? 'bg-amber-900/50' : 'bg-slate-100/80 group-hover:bg-cyan-950/50'}`}>
+                    <div className={`p-4 rounded-full transition-colors ${isDeferred ? 'bg-amber-100' : 'bg-slate-100 group-hover:bg-cyan-50'}`}>
                       <FileUp className={`w-10 h-10 ${isDragActive ? 'text-cyan-400' : isDeferred ? 'text-amber-400' : 'text-slate-500'}`} />
                     </div>
                     <div>
-                      <p className="text-base font-bold text-slate-200">
+                      <p className="text-base font-bold text-slate-700">
                         {isDragActive ? "Drop it here!" : "Drag & Drop your file"}
                       </p>
                       <p className="text-sm mt-1 text-slate-500">
@@ -187,7 +187,7 @@ export function PatientIntakeWizard({ intake, allDocs, onUploadSuccess }: any) {
         </div>
 
         {/* Wizard Controls */}
-        <div className="p-4 bg-slate-950/50 border-t border-slate-800 flex justify-between items-center mt-auto">
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center mt-auto">
           <Button 
             variant="ghost" 
             onClick={() => setCurrentStep(prev => prev - 1)}
@@ -200,7 +200,7 @@ export function PatientIntakeWizard({ intake, allDocs, onUploadSuccess }: any) {
           
           <div className="flex gap-1">
             {PHASE_1_DOCS.map((_, i) => (
-              <div key={i} className={`h-2 rounded-full transition-all ${i === currentStep ? 'w-6 bg-cyan-400' : 'w-2 bg-slate-700'}`} />
+              <div key={i} className={`h-2 rounded-full transition-all ${i === currentStep ? 'w-6 bg-cyan-400' : 'w-2 bg-slate-300'}`} />
             ))}
           </div>
 

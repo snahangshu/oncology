@@ -52,18 +52,18 @@ function PatientTimeSeriesUploadZone({ docType, label, uploadedFiles, onUploadSu
         <div {...getRootProps()} className="cursor-pointer p-4 flex items-center justify-between group">
           <input {...getInputProps()} />
           <div className="flex items-center gap-3">
-             <div className="p-2 bg-slate-50/80 rounded-lg group-hover:bg-violet-900/50 transition-colors">
-               {isUploading ? <Loader2 className="w-5 h-5 text-violet-400 animate-spin" /> : <FileUp className={`w-5 h-5 ${isDragActive ? 'text-violet-400' : 'text-slate-500'}`} />}
+             <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-violet-100 transition-colors">
+               {isUploading ? <Loader2 className="w-5 h-5 text-violet-500 animate-spin" /> : <FileUp className={`w-5 h-5 ${isDragActive ? 'text-violet-500' : 'text-slate-500'}`} />}
              </div>
              <div>
-               <p className="text-sm font-bold text-slate-200 group-hover:text-violet-300 transition-colors">{label}</p>
+               <p className="text-sm font-bold text-slate-700 group-hover:text-violet-600 transition-colors">{label}</p>
                <p className="text-xs text-slate-500 mt-0.5">{isDragActive ? "Drop here!" : "Click to add"}</p>
              </div>
           </div>
           {hasFiles && <div className="px-2 py-0.5 rounded-full bg-slate-50 text-xs font-bold text-slate-700 border border-slate-200">{uploadedFiles.length}</div>}
         </div>
         {hasFiles && (
-          <div className="bg-slate-950/50 p-3 max-h-[150px] overflow-y-auto border-t border-slate-200 space-y-2">
+          <div className="bg-slate-50 p-3 max-h-[150px] overflow-y-auto border-t border-slate-200 space-y-2">
             {uploadedFiles.map((file: any) => (
               <a key={file.id} href={file.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded-md bg-white border border-slate-200 hover:border-violet-500/30 transition-colors group/link">
                 <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
