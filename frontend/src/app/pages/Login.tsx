@@ -91,7 +91,7 @@ export default function Login() {
               <Activity className="w-8 h-8 text-slate-900" />
             </div>
             <div className="text-left">
-              <h1 className="bg-gradient-to-r from-cyan-400 via-violet-400 to-emerald-400 bg-clip-text text-transparent">
+              <h1 className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent text-3xl font-bold">
                 Oncology AI
               </h1>
               <p className="text-slate-500 text-sm">Clinical Optimizer</p>
@@ -101,7 +101,7 @@ export default function Login() {
         </div>
 
         {/* Login Card */}
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden shadow-2xl">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50">
           <CardHeader>
             <CardTitle className="text-slate-900 text-center">Welcome Back</CardTitle>
           </CardHeader>
@@ -109,7 +109,7 @@ export default function Login() {
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-slate-600 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-cyan-400" />
+                  <Mail className="w-4 h-4 text-blue-500" />
                   Email Address
                 </Label>
                 <Input
@@ -118,7 +118,7 @@ export default function Login() {
                   placeholder="doctor@clinic.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-slate-100 border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500/50 focus:ring-blue-500/20"
                   required
                 />
               </div>
@@ -134,7 +134,7 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-slate-100 border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-violet-500/50 focus:ring-violet-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-violet-500/50 focus:ring-violet-500/20"
                   required
                 />
               </div>
@@ -143,11 +143,11 @@ export default function Login() {
                 <label className="flex items-center gap-2 text-slate-500 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 rounded border-slate-200 bg-slate-100 text-cyan-500 focus:ring-cyan-500/20"
+                    className="w-4 h-4 rounded border-slate-300 bg-white text-blue-600 focus:ring-blue-500/20"
                   />
                   Remember me
                 </label>
-                <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                <a href="#" className="text-blue-600 hover:text-blue-700 transition-colors font-medium">
                   Forgot password?
                 </a>
               </div>
@@ -155,7 +155,7 @@ export default function Login() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-cyan-500 to-violet-500 hover:from-cyan-600 hover:to-violet-600 text-slate-900 shadow-lg shadow-cyan-500/20 transition-all hover:shadow-xl hover:shadow-cyan-500/30"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 transition-all hover:shadow-xl hover:shadow-blue-500/30"
               >
                 {isLoading ? (
                   <>
@@ -223,7 +223,7 @@ export default function Login() {
                 Don't have an account?{' '}
                 <Link
                   to="/signup"
-                  className="text-cyan-400 hover:text-cyan-300 transition-colors font-medium"
+                  className="text-blue-600 hover:text-blue-700 transition-colors font-medium"
                 >
                   Sign up
                 </Link>

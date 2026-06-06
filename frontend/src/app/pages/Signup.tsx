@@ -128,7 +128,7 @@ export default function Signup() {
               <Activity className="w-8 h-8 text-slate-900" />
             </div>
             <div className="text-left">
-              <h1 className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent">
+              <h1 className="bg-gradient-to-r from-emerald-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent text-3xl font-bold">
                 Oncology AI
               </h1>
               <p className="text-slate-500 text-sm">Clinical Optimizer</p>
@@ -138,7 +138,7 @@ export default function Signup() {
         </div>
 
         {/* Signup Card */}
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden shadow-2xl">
+        <Card className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden shadow-xl shadow-slate-200/50">
           <CardHeader>
             <CardTitle className="text-slate-900 text-center">Create Account</CardTitle>
           </CardHeader>
@@ -155,7 +155,7 @@ export default function Signup() {
                   placeholder="Dr. Sarah Chen"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="bg-slate-100 border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500/50 focus:ring-emerald-500/20"
                   required
                 />
               </div>
@@ -171,7 +171,7 @@ export default function Signup() {
                   placeholder="sarah.chen@clinic.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="bg-slate-100 border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   required
                 />
               </div>
@@ -216,7 +216,7 @@ export default function Signup() {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="bg-slate-100 border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-violet-500/50 focus:ring-violet-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-violet-500/50 focus:ring-violet-500/20"
                   required
                 />
               </div>
@@ -232,7 +232,7 @@ export default function Signup() {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="bg-slate-100 border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-rose-500/50 focus:ring-rose-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-rose-500/50 focus:ring-rose-500/20"
                   required
                 />
               </div>
@@ -246,11 +246,11 @@ export default function Signup() {
                 />
                 <label htmlFor="terms" className="text-slate-500 text-sm">
                   I agree to the{' '}
-                  <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                  <a href="#" className="text-emerald-600 hover:text-emerald-700 transition-colors">
                     Terms of Service
                   </a>{' '}
                   and{' '}
-                  <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                  <a href="#" className="text-emerald-600 hover:text-emerald-700 transition-colors">
                     Privacy Policy
                   </a>
                 </label>
@@ -259,7 +259,7 @@ export default function Signup() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-900 shadow-lg shadow-emerald-500/20 transition-all hover:shadow-xl hover:shadow-emerald-500/30"
+                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/20 transition-all hover:shadow-xl hover:shadow-emerald-500/30"
               >
                 {isLoading ? (
                   <>
@@ -327,7 +327,7 @@ export default function Signup() {
                 Already have an account?{' '}
                 <Link
                   to="/login"
-                  className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium"
+                  className="text-emerald-600 hover:text-emerald-700 transition-colors font-medium"
                 >
                   Sign in
                 </Link>
