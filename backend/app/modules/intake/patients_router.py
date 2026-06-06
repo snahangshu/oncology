@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
 from sqlalchemy.orm import Session
 from datetime import datetime
 
@@ -393,6 +393,7 @@ def complete_appointment(
     patient_id: int,
     appt_id: int,
     request: AppointmentCompleteRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
@@ -459,6 +460,19 @@ def complete_appointment(
         except Exception as e:
             print(f"Error updating treatment plan: {e}")
             db.rollback()
+            
+        # Send WebSocket notification to patient
+        if patient.user_id:
+            from app.api.v1.ws import manager
+            import asyncio
+            def send_ws_notification():
+                asyncio.run(manager.send_personal_message({
+                    "type": "NEW_PLAN_APPROVED",
+                    "message": "New Plan Approved. Action Required: Upload Cycle 1 Labs.",
+                    "plan_id": plan.id if 'plan' in locals() else None
+                }, str(patient.user_id)))
+            background_tasks.add_task(send_ws_notification)
+
     return {"status": "success", "message": "Appointment marked as completed."}
 
 class SurvivorshipRequest(BaseModel):
