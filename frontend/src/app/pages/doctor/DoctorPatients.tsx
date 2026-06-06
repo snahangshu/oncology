@@ -52,7 +52,7 @@ export default function DoctorPatients() {
           <h1 className="bg-gradient-to-r from-violet-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-2 text-3xl font-bold tracking-tight">
             My Patients
           </h1>
-          <p className="text-slate-400">Manage and monitor your patient panel</p>
+          <p className="text-slate-500">Manage and monitor your patient panel</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-80">
@@ -61,10 +61,10 @@ export default function DoctorPatients() {
               placeholder="Search patients, cancer type..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 bg-slate-900/50 border-slate-700/50 focus-visible:ring-cyan-500/50 text-white"
+              className="pl-9 bg-white/50 border-slate-200/50 focus-visible:ring-cyan-500/50 text-slate-900"
             />
           </div>
-          <Button variant="outline" className="border-slate-700/50 bg-slate-900/50 text-slate-300 hover:bg-slate-800 hover:text-white shrink-0">
+          <Button variant="outline" className="border-slate-200/50 bg-white/50 text-slate-700 hover:bg-slate-50 hover:text-slate-900 shrink-0">
             <Filter className="w-4 h-4 mr-2" />
             Filters
           </Button>
@@ -73,8 +73,8 @@ export default function DoctorPatients() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="active" onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-slate-900/50 border border-slate-700/50 p-1 mb-6 flex flex-wrap h-auto w-full justify-start rounded-xl shadow-lg">
-          <TabsTrigger value="all" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white rounded-lg px-6 py-2 flex items-center gap-2">
+        <TabsList className="bg-white/50 border border-slate-200/50 p-1 mb-6 flex flex-wrap h-auto w-full justify-start rounded-xl shadow-lg">
+          <TabsTrigger value="all" className="data-[state=active]:bg-slate-50 data-[state=active]:text-slate-900 rounded-lg px-6 py-2 flex items-center gap-2">
              <UserCircle2 className="w-4 h-4" /> All
           </TabsTrigger>
           <TabsTrigger value="active" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-300 rounded-lg px-6 py-2 flex items-center gap-2">
@@ -94,17 +94,17 @@ export default function DoctorPatients() {
           </TabsTrigger>
         </TabsList>
 
-        <Card className="bg-slate-900/50 border-slate-700/30 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+        <Card className="bg-white/50 border-slate-200 shadow-sm backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-900/80 border-b border-slate-700/50">
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Patient</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Diagnosis & Stage</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Urgency</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Last Visit</th>
-                  <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Action</th>
+                <tr className="bg-white/80 border-b border-slate-200/50">
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Patient</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Diagnosis & Stage</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Urgency</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Last Visit</th>
+                  <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50">
@@ -112,16 +112,16 @@ export default function DoctorPatients() {
                   filteredPatients.map((patient, idx) => (
                     <tr 
                       key={patient.id} 
-                      className="hover:bg-slate-800/40 transition-colors group animate-in slide-in-from-left duration-500"
+                      className="hover:bg-slate-50/40 transition-colors group animate-in slide-in-from-left duration-500"
                       style={{ animationDelay: `${idx * 50}ms` }}
                     >
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/20 to-cyan-500/20 border border-slate-700 flex items-center justify-center text-cyan-400 font-bold shrink-0 shadow-inner">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/20 to-cyan-500/20 border border-slate-200 flex items-center justify-center text-cyan-400 font-bold shrink-0 shadow-inner">
                             {patient.avatar}
                           </div>
                           <div>
-                            <p className="text-white font-medium group-hover:text-cyan-400 transition-colors">{patient.name}</p>
+                            <p className="text-slate-900 font-medium group-hover:text-cyan-400 transition-colors">{patient.name}</p>
                             <p className="text-xs text-slate-500">{patient.age} yrs • {patient.doctor}</p>
                           </div>
                         </div>
@@ -153,14 +153,14 @@ export default function DoctorPatients() {
                           </span>
                         </div>
                       </td>
-                      <td className="p-4 hidden md:table-cell text-sm text-slate-400">
+                      <td className="p-4 hidden md:table-cell text-sm text-slate-500">
                         {patient.lastVisit}
                       </td>
                       <td className="p-4 text-right">
                         <Button 
                           size="sm" 
                           onClick={() => navigate(`/patients/${patient.id}`)}
-                          className="bg-slate-800 hover:bg-cyan-600 text-cyan-400 hover:text-white border border-slate-700 transition-all"
+                          className="bg-slate-50 hover:bg-cyan-600 text-cyan-400 hover:text-slate-900 border border-slate-200 transition-all"
                         >
                           Workspace
                         </Button>
@@ -171,11 +171,11 @@ export default function DoctorPatients() {
                   <tr>
                     <td colSpan={6} className="p-12 text-center">
                       <div className="flex flex-col items-center justify-center space-y-4">
-                        <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500">
+                        <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500">
                            <UserCircle2 className="w-8 h-8" />
                         </div>
                         <div className="space-y-1">
-                          <p className="text-lg font-medium text-slate-300">No patients found</p>
+                          <p className="text-lg font-medium text-slate-700">No patients found</p>
                           <p className="text-sm text-slate-500 max-w-sm mx-auto">There are currently no patients matching your criteria or assigned to your panel.</p>
                         </div>
                       </div>

@@ -50,8 +50,8 @@ export default function PatientRegistry() {
       case 'Pending Intake': return <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30">Pending Intake</Badge>;
       case 'New Patient': return <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30">New</Badge>;
       case 'Awaiting Scheduling': return <Badge className="bg-violet-500/10 text-violet-400 border-violet-500/30">Needs Scheduling</Badge>;
-      case 'Completed Treatment': return <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/30">Completed</Badge>;
-      default: return <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/30">{status}</Badge>;
+      case 'Completed Treatment': return <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/30">Completed</Badge>;
+      default: return <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/30">{status}</Badge>;
     }
   };
 
@@ -63,12 +63,12 @@ export default function PatientRegistry() {
           <h1 className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-400 bg-clip-text text-transparent text-3xl font-bold mb-2">
             Patient Registry
           </h1>
-          <p className="text-slate-400">Master index of all clinic patients</p>
+          <p className="text-slate-500">Master index of all clinic patients</p>
         </div>
       </div>
 
       {/* Filters and Search */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
+      <Card className="bg-white/50 backdrop-blur-xl border-slate-200 shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row justify-between gap-4">
             <div className="flex flex-wrap gap-2">
@@ -79,7 +79,7 @@ export default function PatientRegistry() {
                   onClick={() => setActiveFilter(filter)}
                   className={activeFilter === filter 
                     ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/50" 
-                    : "border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                    : "border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                   }
                   size="sm"
                 >
@@ -88,12 +88,12 @@ export default function PatientRegistry() {
               ))}
             </div>
             <div className="relative w-full md:w-64">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <Input
                 placeholder="Search name or MRN..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 bg-slate-800/50 border-slate-700/50 text-white"
+                className="pl-9 bg-slate-50/50 border-slate-200/50 text-slate-900"
               />
             </div>
           </div>
@@ -101,11 +101,11 @@ export default function PatientRegistry() {
       </Card>
 
       {/* Data Table */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
+      <Card className="bg-white/50 backdrop-blur-xl border-slate-200 shadow-sm">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-300">
-              <thead className="text-xs uppercase bg-slate-800/50 text-slate-400 border-b border-slate-700/50">
+            <table className="w-full text-left text-sm text-slate-700">
+              <thead className="text-xs uppercase bg-slate-50/50 text-slate-500 border-b border-slate-200/50">
                 <tr>
                   <th className="px-6 py-4 font-medium">Patient</th>
                   <th className="px-6 py-4 font-medium">MRN</th>
@@ -121,14 +121,14 @@ export default function PatientRegistry() {
                   filteredPatients.map((patient, idx) => (
                     <tr 
                       key={patient.id} 
-                      className="border-b border-slate-700/30 hover:bg-slate-800/30 transition-colors"
+                      className="border-b border-slate-200 shadow-sm hover:bg-slate-50 transition-colors"
                     >
-                      <td className="px-6 py-4 font-medium text-white">{patient.name}</td>
-                      <td className="px-6 py-4 font-mono text-xs text-slate-400">{patient.mrn}</td>
+                      <td className="px-6 py-4 font-medium text-slate-900">{patient.name}</td>
+                      <td className="px-6 py-4 font-mono text-xs text-slate-500">{patient.mrn}</td>
                       <td className="px-6 py-4">{patient.diagnosis}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-16 h-2 rounded-full bg-slate-800">
+                          <div className="w-16 h-2 rounded-full bg-slate-50">
                             <div 
                               className={`h-full rounded-full ${patient.intake === '4/4' ? 'bg-emerald-500' : patient.intake === '0/4' ? 'bg-rose-500' : 'bg-amber-500'}`} 
                               style={{ width: `${(parseInt(patient.intake[0]) / 4) * 100}%` }}

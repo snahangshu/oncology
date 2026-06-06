@@ -155,7 +155,7 @@ export default function Signup() {
                   placeholder="Dr. Sarah Chen"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500/50 focus:ring-emerald-500/20"
                   required
                 />
               </div>
@@ -171,7 +171,7 @@ export default function Signup() {
                   placeholder="sarah.chen@clinic.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   required
                 />
               </div>
@@ -216,7 +216,7 @@ export default function Signup() {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-violet-500/50 focus:ring-violet-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-violet-500/50 focus:ring-violet-500/20"
                   required
                 />
               </div>
@@ -232,7 +232,7 @@ export default function Signup() {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-rose-500/50 focus:ring-rose-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-rose-500/50 focus:ring-rose-500/20"
                   required
                 />
               </div>
@@ -259,7 +259,7 @@ export default function Signup() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/20 transition-all hover:shadow-xl hover:shadow-emerald-500/30"
+                className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-900 shadow-lg shadow-emerald-500/20 transition-all hover:shadow-xl hover:shadow-emerald-500/30"
               >
                 {isLoading ? (
                   <>

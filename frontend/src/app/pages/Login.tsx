@@ -118,7 +118,7 @@ export default function Login() {
                   placeholder="doctor@clinic.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500/50 focus:ring-blue-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-blue-500/50 focus:ring-blue-500/20"
                   required
                 />
               </div>
@@ -134,7 +134,7 @@ export default function Login() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-violet-500/50 focus:ring-violet-500/20"
+                  className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-violet-500/50 focus:ring-violet-500/20"
                   required
                 />
               </div>
@@ -155,7 +155,7 @@ export default function Login() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 transition-all hover:shadow-xl hover:shadow-blue-500/30"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-slate-900 shadow-lg shadow-blue-500/20 transition-all hover:shadow-xl hover:shadow-blue-500/30"
               >
                 {isLoading ? (
                   <>

@@ -41,7 +41,7 @@ export default function IntakeManagement() {
       case 'Missing Documents': return <Badge className="bg-rose-500/10 text-rose-400 border-rose-500/30">Missing Docs</Badge>;
       case 'New Referral': return <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/30">New Referral</Badge>;
       case 'Urgent Case': return <Badge className="bg-red-500/10 text-red-400 border-red-500/50 animate-pulse">Urgent</Badge>;
-      default: return <Badge className="bg-slate-500/10 text-slate-400 border-slate-500/30">{status}</Badge>;
+      default: return <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/30">{status}</Badge>;
     }
   };
 
@@ -59,25 +59,25 @@ export default function IntakeManagement() {
           <h1 className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-violet-400 bg-clip-text text-transparent text-3xl font-bold mb-2">
             Intake Management
           </h1>
-          <p className="text-slate-400">Global queue for tracking new patient onboarding and document collection</p>
+          <p className="text-slate-500">Global queue for tracking new patient onboarding and document collection</p>
         </div>
         <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <Input
             placeholder="Search patients..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 bg-slate-800/50 border-slate-700/50 text-white"
+            className="pl-9 bg-slate-50/50 border-slate-200/50 text-slate-900"
           />
         </div>
       </div>
 
       {/* Global Queue Table */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/30">
+      <Card className="bg-white/50 backdrop-blur-xl border-slate-200 shadow-sm">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-300">
-              <thead className="text-xs uppercase bg-slate-800/50 text-slate-400 border-b border-slate-700/50">
+            <table className="w-full text-left text-sm text-slate-700">
+              <thead className="text-xs uppercase bg-slate-50/50 text-slate-500 border-b border-slate-200/50">
                 <tr>
                   <th className="px-6 py-4 font-medium">Patient</th>
                   <th className="px-6 py-4 font-medium text-center">Referral</th>
@@ -93,9 +93,9 @@ export default function IntakeManagement() {
                   filteredIntakes.map((intake, idx) => (
                     <tr 
                       key={intake.id} 
-                      className="border-b border-slate-700/30 hover:bg-slate-800/30 transition-colors"
+                      className="border-b border-slate-200 shadow-sm hover:bg-slate-50 transition-colors"
                     >
-                      <td className="px-6 py-4 font-medium text-white">{intake.name}</td>
+                      <td className="px-6 py-4 font-medium text-slate-900">{intake.name}</td>
                       <td className="px-6 py-4">{renderCheckmark(intake.referral)}</td>
                       <td className="px-6 py-4">{renderCheckmark(intake.pathology)}</td>
                       <td className="px-6 py-4">{renderCheckmark(intake.imaging)}</td>

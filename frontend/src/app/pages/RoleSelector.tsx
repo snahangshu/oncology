@@ -113,7 +113,7 @@ export default function RoleSelector() {
           {roles.map((roleOption, index) => (
             <Card
               key={roleOption.role}
-              className="bg-gradient-to-br from-slate-900/50 to-slate-950/50 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all hover:shadow-2xl hover:shadow-cyan-500/20 cursor-pointer animate-in slide-in-from-bottom duration-700"
+              className="bg-white/80 backdrop-blur-xl border-slate-200 rounded-2xl overflow-hidden hover:border-cyan-500/50 transition-all hover:shadow-2xl hover:shadow-cyan-500/20 cursor-pointer animate-in slide-in-from-bottom duration-700"
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={() => handleRoleSelect(roleOption.role)}
             >

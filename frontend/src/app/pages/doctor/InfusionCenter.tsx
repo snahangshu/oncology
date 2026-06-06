@@ -254,7 +254,7 @@ export default function InfusionCenter() {
                           Review Labs
                         </Button>
                         <Button 
-                          className="bg-emerald-600 hover:bg-emerald-500 text-slate-900 shadow-lg shadow-emerald-900/20"
+                          className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20"
                           onClick={() => clearMutation.mutate(plan.cycle_id)}
                           disabled={clearMutation.isPending}
                         >
@@ -309,7 +309,7 @@ export default function InfusionCenter() {
                       </div>
                       <div className="flex items-center gap-3">
                         <Button 
-                          className="bg-rose-600 hover:bg-rose-500 text-slate-900 shadow-lg shadow-rose-900/20"
+                          className="bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/20"
                           onClick={async () => {
                             try {
                               await api.post(`/journey/cycle/${item.cycle_id}/pharmacy-auth`);
@@ -354,7 +354,7 @@ export default function InfusionCenter() {
           
           {safetyResult && (
             <div className="py-4">
-              <div className="flex justify-between items-center mb-6 p-4 rounded-xl bg-slate-950 border border-slate-800">
+              <div className="flex justify-between items-center mb-6 p-4 rounded-xl bg-slate-950 border border-slate-200">
                 <span className="text-slate-500 font-medium">Safety Score</span>
                 <span className={`text-2xl font-bold ${safetyResult.status === 'BLOCKED' ? 'text-rose-400' : 'text-emerald-400'}`}>
                   {safetyResult.score}

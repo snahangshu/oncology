@@ -541,7 +541,7 @@ function DocumentUploader({ patientId, docType, label, files, canDelete, onSucce
             <p className="text-center text-xs text-slate-600 py-4 italic">No documents uploaded.</p>
           ) : (
             files.map((file: any) => (
-              <div key={file.id} className="flex items-center justify-between p-2 rounded-md bg-white border border-slate-800 hover:border-cyan-500/30 transition-colors group/link">
+              <div key={file.id} className="flex items-center justify-between p-2 rounded-md bg-white border border-slate-200 hover:border-cyan-500/30 transition-colors group/link">
                 <button onClick={(e) => { e.preventDefault(); setPreviewDoc({ name: file.original_name, url: file.file_url }); }} className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer text-left">
                   <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                   <div className="min-w-0">
@@ -566,7 +566,7 @@ function DocumentUploader({ patientId, docType, label, files, canDelete, onSucce
       {/* Document Preview Dialog */}
       <Dialog open={!!previewDoc} onOpenChange={(open) => !open && setPreviewDoc(null)}>
         <DialogContent className="max-w-6xl w-[90vw] h-[90vh] bg-white border-slate-200 p-0 flex flex-col z-[100]">
-          <DialogHeader className="p-4 border-b border-slate-800 bg-white shrink-0">
+          <DialogHeader className="p-4 border-b border-slate-200 bg-white shrink-0">
             <DialogTitle className="text-slate-900 capitalize flex items-center gap-2">
               <FileText className="w-5 h-5 text-emerald-400" />
               {previewDoc?.name}
@@ -661,7 +661,7 @@ function AppointmentsTab({ appointments, patientId, role }: { appointments: any[
                        setCompletingAppt(null);
                      }
                    }}>
-                     <Button size="sm" onClick={() => setCompletingAppt(appt.id)} className="bg-emerald-600 hover:bg-emerald-500 text-slate-900 flex items-center gap-2">
+                     <Button size="sm" onClick={() => setCompletingAppt(appt.id)} className="bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2">
                        <CheckCircle2 className="w-4 h-4" /> Complete
                      </Button>
                      <DialogContent className="bg-white border-slate-200">
@@ -674,12 +674,12 @@ function AppointmentsTab({ appointments, patientId, role }: { appointments: any[
                             value={prescriptionNotes}
                             onChange={(e) => setPrescriptionNotes(e.target.value)}
                             placeholder="Enter prescriptions (e.g. Ondansetron 8mg bid prn)..."
-                            className="w-full h-32 rounded-md bg-slate-950 border border-slate-800 text-slate-900 p-3 text-sm focus:border-cyan-500/50 outline-none resize-none"
+                            className="w-full h-32 rounded-md bg-slate-950 border border-slate-200 text-slate-900 p-3 text-sm focus:border-cyan-500/50 outline-none resize-none"
                           />
                           <Button 
                             onClick={() => handleComplete(appt.id)} 
                             disabled={isSubmitting}
-                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-900"
+                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
                           >
                             {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
                             Mark Complete & Save
@@ -723,7 +723,7 @@ function AISummaryTab({ aiSummary }: { aiSummary: any }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {placeholders.map((agent, i) => (
           <Card key={i} className="bg-white border-slate-200 opacity-75">
-            <CardHeader className="pb-3 border-b border-slate-800">
+            <CardHeader className="pb-3 border-b border-slate-200">
               <CardTitle className="text-lg text-slate-600 flex items-center gap-2">
                 <Stethoscope className="w-5 h-5 text-violet-400/50" />
                 {agent.title}
