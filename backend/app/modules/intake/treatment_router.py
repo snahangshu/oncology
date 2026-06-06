@@ -16,6 +16,13 @@ class TreatmentCycleUpdate(BaseModel):
     notes: Optional[str] = None
     actual_date: Optional[date] = None
 
+class CycleDelayRequest(BaseModel):
+    days: int
+    reason: Optional[str] = None
+    doctor_clearance: Optional[bool] = None
+    notes: Optional[str] = None
+    actual_date: Optional[date] = None
+
 @router.post("/{plan_id}/generate-cycles")
 def generate_cycles(plan_id: int, db: Session = Depends(get_db)):
     """Auto-generate cycles for a treatment plan."""
@@ -122,3 +129,33 @@ def update_cycle(cycle_id: int, update: TreatmentCycleUpdate, db: Session = Depe
             db.commit()
             
     return {"message": "Cycle updated successfully", "status": cycle.status}
+
+@router.post("/cycles/{cycle_id}/delay")
+def delay_cycle_cascade(cycle_id: int, request: CycleDelayRequest, db: Session = Depends(get_db)):
+    """Delay a cycle by X days and cascade the shift to all subsequent cycles."""
+    cycle = db.query(TreatmentCycle).filter(TreatmentCycle.id == cycle_id).first()
+    if not cycle:
+        raise HTTPException(status_code=404, detail="Cycle not found")
+        
+    plan_id = cycle.treatment_plan_id
+    
+    # Update the target cycle's status
+    cycle.status = "DELAYED"
+    if request.reason:
+        cycle.notes = f"Delayed by {request.days} days: {request.reason}"
+    else:
+        cycle.notes = f"Delayed by {request.days} days"
+        
+    # Find all cycles from this cycle onwards
+    subsequent_cycles = db.query(TreatmentCycle).filter(
+        TreatmentCycle.treatment_plan_id == plan_id,
+        TreatmentCycle.cycle_number >= cycle.cycle_number
+    ).order_by(TreatmentCycle.cycle_number).all()
+    
+    # Shift dates
+    for sc in subsequent_cycles:
+        if sc.scheduled_date:
+            sc.scheduled_date = sc.scheduled_date + timedelta(days=request.days)
+            
+    db.commit()
+    return {"message": f"Cycle {cycle.cycle_number} and all subsequent cycles delayed by {request.days} days."}
