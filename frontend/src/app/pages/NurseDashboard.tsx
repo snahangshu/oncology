@@ -47,11 +47,11 @@ export default function NurseDashboard() {
         if (count !== undefined) setPendingVitalsCount(count);
         
         if (queue.length > 0) {
-          const mapped = queue.map((p: any, index: number) => {
+          const mapped = queue.map((p: any) => {
             return {
-              id: index + 1,
+              id: p.patient_id,
               name: p.patient_name,
-              appointmentTime: '--',
+              appointmentTime: p.appointment_time || '--',
               status: p.status,
               arrived: '--',
             };
@@ -342,10 +342,10 @@ export default function NurseDashboard() {
                       />
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 pt-4 mt-2 border-t border-slate-700/50">
                       <Button
                         onClick={handleRecordVitals}
-                        className="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/20"
+                        className="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/20 py-5"
                       >
                         <Activity className="w-4 h-4 mr-2" />
                         Record Vitals
@@ -353,13 +353,13 @@ export default function NurseDashboard() {
                       <Button
                         onClick={handleAssessToxicity}
                         disabled={isAssessingToxicity}
-                        className="flex-1 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-600 hover:to-cyan-600 text-white shadow-lg shadow-violet-500/20"
+                        className="flex-1 bg-gradient-to-r from-violet-500 to-cyan-500 hover:from-violet-600 hover:to-cyan-600 text-white shadow-lg shadow-violet-500/20 py-5"
                       >
                         {isAssessingToxicity ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
                         {isAssessingToxicity ? "Assess Toxicity" : "Assess Toxicity (AI)"}
                       </Button>
                       <Button
-                        className="flex-1 bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white shadow-lg shadow-rose-500/20"
+                        className="flex-1 bg-gradient-to-r from-rose-500 to-orange-500 hover:from-rose-600 hover:to-orange-600 text-white shadow-lg shadow-rose-500/20 py-5"
                       >
                         <CheckCircle className="w-4 h-4 mr-2" />
                         Ready for Doctor

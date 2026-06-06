@@ -331,12 +331,33 @@ def get_receptionist_dashboard(db: Session = Depends(get_db)):
 
 @router.get("/nurse", dependencies=[Depends(require_role([Role.NURSE]))])
 def get_nurse_dashboard(db: Session = Depends(get_db)):
+    from datetime import datetime, date, time
+    from app.modules.scheduling.models import Appointment
+    
+    today = datetime.utcnow().date()
+    today_start = datetime.combine(today, time.min)
+    today_end = datetime.combine(today, time.max)
+    
+    appts = db.query(Appointment).filter(
+        Appointment.start_time >= today_start,
+        Appointment.start_time <= today_end,
+        Appointment.status.notin_(["Completed", "Cancelled"])
+    ).all()
+    
+    queue = []
+    for a in appts:
+        if a.patient:
+            queue.append({
+                "patient_id": a.patient.id,
+                "appointment_id": a.id,
+                "patient_name": f"{a.patient.first_name} {a.patient.last_name}",
+                "status": "Pending Vitals",
+                "appointment_time": a.start_time.strftime("%H:%M")
+            })
+            
     return {
-        "pending_vitals": 3,
-        "patients_queue": [
-            {"patient_name": "John Doe", "status": "Pending Vitals"},
-            {"patient_name": "Alice Brown", "status": "Pending Vitals"}
-        ]
+        "pending_vitals": len(queue),
+        "patients_queue": queue
     }
 
 @router.get("/patient", dependencies=[Depends(require_role([Role.PATIENT]))])

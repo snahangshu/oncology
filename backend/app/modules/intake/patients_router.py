@@ -423,6 +423,8 @@ def complete_appointment(
                 plan.description = request.plan_description
                 plan.cycles = request.cycles or 6
                 plan.status = "Active"
+                if not plan.current_cycle:
+                    plan.current_cycle = 1
             else:
                 # Fallback: create a new one if somehow draft was skipped
                 plan = TreatmentPlan(
@@ -431,7 +433,8 @@ def complete_appointment(
                     regimen_name=request.regimen_name,
                     description=request.plan_description,
                     cycles=request.cycles or 6,
-                    status="Active"
+                    status="Active",
+                    current_cycle=1
                 )
                 db.add(plan)
             
