@@ -446,10 +446,10 @@ export default function AdminDashboard() {
           </DialogHeader>
           <div className="space-y-4 mt-2 max-h-[70vh] overflow-y-auto pr-2">
             {selectedUser && (
-              <div className="p-4 bg-slate-950 rounded-lg border border-slate-200 space-y-2">
-                <p className="text-sm"><span className="text-slate-500">Email:</span> <span className="text-slate-900">{selectedUser.email || 'N/A'}</span></p>
-                <p className="text-sm"><span className="text-slate-500">Role:</span> <span className="text-slate-900">{selectedUser.role}</span></p>
-                <p className="text-sm"><span className="text-slate-500">Status:</span> <span className="text-slate-900">{selectedUser.verification_status ? selectedUser.verification_status.replace('_', ' ') : selectedUser.status}</span></p>
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-2 shadow-sm">
+                <p className="text-sm"><span className="text-slate-500 font-medium">Email:</span> <span className="text-slate-900">{selectedUser.email || 'N/A'}</span></p>
+                <p className="text-sm"><span className="text-slate-500 font-medium">Role:</span> <span className="text-slate-900">{selectedUser.role}</span></p>
+                <p className="text-sm"><span className="text-slate-500 font-medium">Status:</span> <span className="text-slate-900">{selectedUser.verification_status ? selectedUser.verification_status.replace('_', ' ') : selectedUser.status}</span></p>
               </div>
             )}
             
@@ -458,18 +458,18 @@ export default function AdminDashboard() {
               <p className="text-slate-500 text-sm italic py-2">No documents uploaded yet.</p>
             ) : (
               userDocuments.map((doc) => (
-                <div key={doc.id} className="p-4 bg-slate-950 rounded-lg border border-slate-200">
+                <div key={doc.id} className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm transition-all hover:shadow-md">
                   <div className="flex justify-between items-start mb-2">
-                    <span className="font-medium text-cyan-400">{doc.document_type}</span>
+                    <span className="font-semibold text-cyan-700">{doc.document_type}</span>
                     <Badge variant="outline" className={
-                      doc.status === 'VERIFIED' ? 'border-emerald-500/50 text-emerald-400' : 
-                      doc.status === 'REJECTED' ? 'border-rose-500/50 text-rose-400' :
-                      'border-amber-500/50 text-amber-400'
+                      doc.status === 'VERIFIED' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 
+                      doc.status === 'REJECTED' ? 'border-rose-200 bg-rose-50 text-rose-700' :
+                      'border-amber-200 bg-amber-50 text-amber-700'
                     }>
                       {doc.status}
                     </Badge>
                   </div>
-                  <p className="text-sm text-slate-500 mb-2 truncate">File: <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline">{doc.file_url}</a></p>
+                  <p className="text-sm text-slate-500 mb-2 truncate">File: <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline hover:text-cyan-700 font-medium">{doc.file_url.split('/').pop()}</a></p>
                   <div className="text-xs text-slate-500 flex justify-between">
                     <span>Issued: {doc.issue_date || 'N/A'}</span>
                     <span>Expires: {doc.expiry_date || 'N/A'}</span>

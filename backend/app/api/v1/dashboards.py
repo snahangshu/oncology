@@ -27,10 +27,25 @@ def get_credentialing_dashboard(db: Session = Depends(get_db)):
         StaffDocument.expiry_date >= datetime.utcnow().date()
     ).count()
 
+    # Get staff members who have pending documents or are pending review
+    from app.modules.users.models import User, VerificationStatus
+    pending_users = db.query(User).filter(User.verification_status == VerificationStatus.PENDING_REVIEW).all()
+    
+    pending_staff = []
+    for u in pending_users:
+        pending_staff.append({
+            "id": u.id,
+            "name": u.full_name,
+            "role": u.role.value if u.role else "UNKNOWN",
+            "status": "PENDING_REVIEW",
+            "submitted_at": u.created_at.strftime("%Y-%m-%d") if u.created_at else "Recently"
+        })
+
     return {
         "pending_reviews": pending_count,
         "expired_documents": expired_count,
-        "expiring_soon": expiring_soon
+        "expiring_soon": expiring_soon,
+        "pending_staff": pending_staff
     }
 
 @router.get("/admin", dependencies=[Depends(require_role([Role.ADMIN]))])
