@@ -126,7 +126,7 @@ export default function PatientDashboard() {
                 <div className="flex gap-3 mt-auto">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button className="w-full bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white">
+                      <Button className="flex-1 bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white">
                         View Details
                       </Button>
                     </DialogTrigger>
@@ -162,7 +162,7 @@ export default function PatientDashboard() {
                       </div>
                     </DialogContent>
                   </Dialog>
-                  <Button variant="outline" className="w-full border-slate-200 text-slate-600 hover:bg-slate-100" asChild>
+                  <Button variant="outline" className="flex-1 border-slate-200 text-slate-600 hover:bg-slate-100" asChild>
                     <Link to="/patient/appointments">View All</Link>
                   </Button>
                 </div>
