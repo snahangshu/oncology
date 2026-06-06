@@ -32,8 +32,8 @@ export default function InfusionCenter() {
   const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
 
   const clearMutation = useMutation({
-    mutationFn: async (planId: number) => {
-      const res = await api.post(`/infusion/clear/${planId}`);
+    mutationFn: async (cycleId: number) => {
+      const res = await api.post(`/infusion/cycles/${cycleId}/clear-and-book`);
       return res.data;
     },
     onSuccess: (data) => {
@@ -219,9 +219,12 @@ export default function InfusionCenter() {
                         </div>
                         <div>
                           <h4 className="text-white font-bold text-lg">Patient #{plan.patient_id} - {plan.regimen}</h4>
-                          <div className="flex gap-4 mt-2">
+                          <div className="flex flex-wrap gap-4 mt-2">
                             <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300">
                               Cycle {plan.current_cycle} of {plan.total_cycles}
+                            </Badge>
+                            <Badge variant="outline" className="bg-cyan-500/10 border-cyan-500/30 text-cyan-400">
+                              <CalendarCheck className="w-3 h-3 mr-1" /> {plan.scheduled_date}
                             </Badge>
                             <Badge variant="outline" className="bg-slate-950 border-slate-700 text-slate-300">
                               <Clock className="w-3 h-3 mr-1" /> {plan.duration_minutes} mins
@@ -238,7 +241,7 @@ export default function InfusionCenter() {
                         </Button>
                         <Button 
                           className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20"
-                          onClick={() => clearMutation.mutate(plan.id)}
+                          onClick={() => clearMutation.mutate(plan.cycle_id)}
                           disabled={clearMutation.isPending}
                         >
                           <CalendarCheck className="w-4 h-4 mr-2" />
